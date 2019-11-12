@@ -112,7 +112,7 @@ class Stage {
 
 var danceDesigner = {
   scene: null, camera: null, renderer: null,
-  controls: null, loader: null, container: null,
+  controls: null, loader: null, container: null, light: null,
   plane: null, selection: null, offset: new THREE.Vector3(),
   raycaster: new THREE.Raycaster(), dancerPos: [], s: null,
   dancersArr: [], dancers: {},
@@ -208,12 +208,12 @@ var danceDesigner = {
 
     this.scene.add( spotLightJanet );
 
-    var light = new THREE.PointLight(0xFFFFFF);
-    light.position.x = 0;
-    light.position.y = 10;
-    light.position.z = 0;
-    light.intensity = 1;
-    this.scene.add(light);
+    this.light = new THREE.PointLight(0xFFFFFF);
+    this.light.position.x = 0;
+    this.light.position.y = 10;
+    this.light.position.z = 0;
+    this.light.intensity = 1;
+    this.scene.add(this.light);
 
     // Add the stage
     var geometry = new THREE.PlaneGeometry( 30, 20, 5, 2 );
@@ -263,7 +263,6 @@ var danceDesigner = {
         }
       }
       this.dancerPos.push(newDancerPosObj);
-      console.log(this.dancerPos);
     }
     // Plane, that helps to determinate an intersection position
     this.plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(500, 500, 8, 8), new THREE.MeshBasicMaterial({color: 0xffffff, visible: false}));
@@ -287,7 +286,6 @@ var danceDesigner = {
       danceDesigner.selection = intersects[0].object;
       // Calculate the offset
       var intersects = danceDesigner.raycaster.intersectObject(danceDesigner.plane);
-      console.log(intersects);
       danceDesigner.offset.copy(intersects[0].point).sub(danceDesigner.plane.position);
     }
   },
@@ -305,14 +303,10 @@ var danceDesigner = {
       // Check the position where the plane is intersected
       var intersects = danceDesigner.raycaster.intersectObject(danceDesigner.plane);
       // Reposition the object based on the intersection point with the plane
-      console.log(intersects);
-      console.log('danceDesigner.selection', danceDesigner.selection);
       danceDesigner.selection.position.copy(intersects[0].point.sub(danceDesigner.offset));
     } else {
       // Update position of the plane if need
-      console.log(danceDesigner.dancersArr);
       var intersects = danceDesigner.raycaster.intersectObjects(danceDesigner.dancersArr);
-      console.log(intersects);
       if (intersects.length > 0) {
         danceDesigner.plane.position.copy(intersects[0].object.position);
         danceDesigner.plane.lookAt(danceDesigner.camera.position);
@@ -326,20 +320,20 @@ var danceDesigner = {
   }
 };
 function animate(lightAngle, t) {
-  // var i;
-  // for (i = 0; i < danceDesigner.dancerPos.length; i++) {
-  //   var d = danceDesigner.dancerPos[i].Dancer;
-  //   if (danceDesigner.dancerPos[i][t] != null) {
-  //     danceDesigner.dancers[d.name].position.x = danceDesigner.dancerPos[i][t].x;
-  //     danceDesigner.dancers[d.name].position.y = danceDesigner.dancerPos[i][t].y;
-  //     danceDesigner.dancers[d.name].position.z = danceDesigner.dancerPos[i][t].z;
-  //   }
-  // }
-  // t += 1;
-  // lightAngle += 5;
-  // if (lightAngle > 360) { lightAngle = 0;};
-  // light.position.x = 5 * Math.cos(lightAngle * Math.PI / 180);
-  // light.position.z = 5 * Math.sin(lightAngle * Math.PI / 180);
+  var i;
+  for (i = 0; i < danceDesigner.dancerPos.length; i++) {
+    var d = danceDesigner.dancerPos[i].Dancer;
+    if (danceDesigner.dancerPos[i][t] != null) {
+      danceDesigner.dancers[d.name].position.x = danceDesigner.dancerPos[i][t].x;
+      danceDesigner.dancers[d.name].position.y = danceDesigner.dancerPos[i][t].y;
+      danceDesigner.dancers[d.name].position.z = danceDesigner.dancerPos[i][t].z;
+    }
+  }
+  t += 1;
+  lightAngle += 5;
+  if (lightAngle > 360) { lightAngle = 0;};
+  danceDesigner.light.position.x = 5 * Math.cos(lightAngle * Math.PI / 180);
+  danceDesigner.light.position.z = 5 * Math.sin(lightAngle * Math.PI / 180);
   requestAnimationFrame( animate );
   render();
   update();
