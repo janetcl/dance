@@ -46,11 +46,9 @@ class Dancer {
 
   // Removes the position at time t from the dancer's positions
   removePosition(t) {
-    console.log(this.positions);
     this.positions = this.positions.filter(function(position, index, arr){
         return position.time !== t;
     });
-    console.log(this.positions);
   }
 
   // Returns the position at time t if it exists
@@ -58,7 +56,6 @@ class Dancer {
     var i;
     for (i = 0; i < this.positions.length; i++) {
       if (this.positions[i].time === t) {
-        console.log(this.positions[i]);
         return this.positions[i];
       }
     }
@@ -84,7 +81,6 @@ class Stage {
     // Check to make sure the dancer does not already exist onstage
     for (i = 0; i < this.dancers.length; i++) {
       if (this.dancers[i] === dan) {
-        console.log(this.dancers[i]);
         return;
       }
     }
@@ -92,21 +88,17 @@ class Stage {
   }
 
   removeDancer(dan) {
-    console.log(this.dancers);
     this.dancers = this.dancers.filter(function(dancer, index, arr){
         return dancer !== dan;
     });
-    console.log(this.dancers);
   }
 
   play() {
     var i;
     for (i = 0; i < this.dancers.length; i++) {
       const d = this.dancers[i];
-      console.log(d.name);
       var j;
       for (j = 0; j < d.positions.length; j++) {
-        console.log(d.positions[j]);
       }
     }
     return;
@@ -209,7 +201,7 @@ floor.position.y = -1;
 scene.add( floor );
 
 // Set the camera and orbit controls
-camera.position.z = 6;
+camera.position.z = 8;
 camera.position.y = 3;
 var controls = new THREE.OrbitControls( camera, renderer.domElement );
 controls.target.set( 0, 0, -2 );
@@ -245,7 +237,69 @@ for (i = 0; i < s.dancers.length; i++) {
   }
   dancerPos.push(newDancerPosObj);
 }
-console.log(dancerPos);
+
+var spotLight = new THREE.SpotLight( {color: 0xffffff, intensity: 0.1});
+spotLight.position.set( -1, 60, 20 );
+
+spotLight.castShadow = true;
+
+spotLight.shadow.mapSize.width = 1024;
+spotLight.shadow.mapSize.height = 1024;
+
+spotLight.shadow.camera.near = 500;
+spotLight.shadow.camera.far = 4000;
+spotLight.shadow.camera.fov = 30;
+
+spotLight.target = phillipMesh;
+
+scene.add( spotLight );
+
+var spotLightJanet = new THREE.SpotLight( {color: 0xffffff, intensity: 0.1});
+spotLightJanet.position.set( -3, 50, 20 );
+
+spotLightJanet.castShadow = true;
+
+spotLightJanet.shadow.mapSize.width = 1024;
+spotLightJanet.shadow.mapSize.height = 1024;
+
+spotLightJanet.shadow.camera.near = 500;
+spotLightJanet.shadow.camera.far = 4000;
+spotLightJanet.shadow.camera.fov = 30;
+
+spotLightJanet.target = janetMesh;
+
+scene.add( spotLightJanet );
+//
+// var raycaster = new THREE.Raycaster();
+//
+// // Plane, that helps to determinate an intersection position
+// this.plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(500, 500, 8, 8), new THREE.MeshBasicMaterial({color: 0xffffff}));
+// this.plane.visible = false;
+// this.scene.add(this.plane);
+//
+// onDocumentMouseDown: function (event) {
+//   // Get mouse position
+//   var mouseX = (event.clientX / window.innerWidth) * 2 - 1;
+//   var mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+//   // Get 3D vector from 3D mouse position using 'unproject' function
+//   var vector = new THREE.Vector3(mouseX, mouseY, 1);
+//   vector.unproject(lesson10.camera);
+//   // Set the raycaster position
+//   lesson10.raycaster.set( lesson10.camera.position, vector.sub( lesson10.camera.position ).normalize() );
+//   // Find all intersected objects
+//   var intersects = lesson10.raycaster.intersectObjects(lesson10.objects);
+//   if (intersects.length > 0) {
+//     // Disable the controls
+//     lesson10.controls.enabled = false;
+//     // Set the selection - first intersected object
+//     lesson10.selection = intersects[0].object;
+//     // Calculate the offset
+//     var intersects = lesson10.raycaster.intersectObject(lesson10.plane);
+//     lesson10.offset.copy(intersects[0].point).sub(lesson10.plane.position);
+//   }
+// }
+
+
 
 var lightAngle = 0;
 var t = 0;
@@ -260,10 +314,10 @@ function animate() {
     }
   }
   t += 1;
-  lightAngle += 5;
-  if (lightAngle > 360) { lightAngle = 0;};
-  light.position.x = 5 * Math.cos(lightAngle * Math.PI / 180);
-  light.position.z = 5 * Math.sin(lightAngle * Math.PI / 180);
+  // lightAngle += 5;
+  // if (lightAngle > 360) { lightAngle = 0;};
+  // light.position.x = 5 * Math.cos(lightAngle * Math.PI / 180);
+  // light.position.z = 5 * Math.sin(lightAngle * Math.PI / 180);
   requestAnimationFrame( animate );
   controls.update();
   renderer.render( scene, camera );
