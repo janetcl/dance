@@ -176,6 +176,38 @@ var danceDesigner = {
     this.dancersArr = [janetMesh, phillipMesh];
     this.s.play();
 
+    var spotLight = new THREE.SpotLight( {color: 0xffffff, intensity: 0.1});
+    spotLight.position.set( -1, 60, 20 );
+
+    spotLight.castShadow = true;
+
+    spotLight.shadow.mapSize.width = 1024;
+    spotLight.shadow.mapSize.height = 1024;
+
+    spotLight.shadow.camera.near = 500;
+    spotLight.shadow.camera.far = 4000;
+    spotLight.shadow.camera.fov = 30;
+
+    spotLight.target = phillipMesh;
+
+    this.scene.add( spotLight );
+
+    var spotLightJanet = new THREE.SpotLight( {color: 0xffffff, intensity: 0.1});
+    spotLightJanet.position.set( -3, 50, 20 );
+
+    spotLightJanet.castShadow = true;
+
+    spotLightJanet.shadow.mapSize.width = 1024;
+    spotLightJanet.shadow.mapSize.height = 1024;
+
+    spotLightJanet.shadow.camera.near = 500;
+    spotLightJanet.shadow.camera.far = 4000;
+    spotLightJanet.shadow.camera.fov = 30;
+
+    spotLightJanet.target = janetMesh;
+
+    this.scene.add( spotLightJanet );
+
     var light = new THREE.PointLight(0xFFFFFF);
     light.position.x = 0;
     light.position.y = 10;
