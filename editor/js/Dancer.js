@@ -103,10 +103,10 @@ class Stage {
     var i;
     for (i = 0; i < this.dancers.length; i++) {
       const d = this.dancers[i];
-      // console.log(d.name);
+      console.log(d.name);
       var j;
       for (j = 0; j < d.positions.length; j++) {
-        // console.log(d.positions[j]);
+        console.log(d.positions[j]);
       }
     }
     return;
@@ -119,7 +119,6 @@ class Stage {
 }
 
 // Iterate through every dancer at a given time t, check if you have to update the position
-
 // Go to the hashmap, for every time t in the map, update hte positions of the dancers at that time
 
 var width = window.innerWidth;
@@ -160,7 +159,6 @@ var j2 = new Position(2, 0, -5, 250);
 janet.addPosition(j1);
 janet.addPosition(j2);
 var geometry = new THREE.BoxGeometry(1, 2, 1);
-// var material = new THREE.MeshLambertMaterial({ color: 0x00ff00});
 var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: loader.load('files/janet.jpg')});
 var janetMesh = new THREE.Mesh(geometry, material);
 janetMesh.position.x = j1.x;
@@ -172,8 +170,10 @@ var phillip = new Dancer("Phillip");
 phillip.updateColor(0xf8f833);
 var p1 = new Position(2, 0, -3, 0);
 var p2 = new Position(-2, 0, -3, 150);
+var p3 = new Position(-2, 0, -10, 250);
 phillip.addPosition(p1);
 phillip.addPosition(p2);
+phillip.addPosition(p3);
 var geometry = new THREE.BoxGeometry(1, 2, 1);
 var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: loader.load('files/yoon.jpg')});
 var phillipMesh = new THREE.Mesh(geometry, material);
@@ -237,9 +237,9 @@ for (i = 0; i < s.dancers.length; i++) {
     for (k = firstTime; k < secondTime; k++) {
       newDancerPosObj[k] =
       {
-        x: ((secondPosX - firstPosX) * k / (secondTime - firstTime)) + firstPosX,
-        y: ((secondPosY - firstPosY) * k / (secondTime - firstTime)) + firstPosY,
-        z: ((secondPosZ - firstPosZ) * k / (secondTime - firstTime)) + firstPosZ,
+        x: ((secondPosX - firstPosX) * (k - firstTime) / (secondTime - firstTime)) + firstPosX,
+        y: ((secondPosY - firstPosY) * (k - firstTime) / (secondTime - firstTime)) + firstPosY,
+        z: ((secondPosZ - firstPosZ) * (k - firstTime) / (secondTime - firstTime)) + firstPosZ,
       };
     }
   }
