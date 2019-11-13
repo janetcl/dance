@@ -299,7 +299,7 @@ var danceDesigner = {
       // Find the dancer based on the initial pose
       if (danceDesigner.movingDancer) {
         if (newPosThreeVector) {
-          var newPos = new Position(newPosThreeVector.x, newPosThreeVector.y, newPosThreeVector.z, 0);
+          var newPos = new Position(newPosThreeVector.x, newPosThreeVector.y, newPosThreeVector.z, t);
           danceDesigner.movingDancer.addPotentialPos(newPos);
         }
       }
@@ -321,6 +321,7 @@ var danceDesigner = {
 var t = 0;
 var lightAngle = 0;
 var play = false;
+var getPosition = false;
 function animate() {
   if (play) {
     if (danceDesigner.maxT === 0) {
@@ -343,6 +344,18 @@ function animate() {
     if (lightAngle > 360) { lightAngle = 0;};
     danceDesigner.light.position.x = 5 * Math.cos(lightAngle * Math.PI / 180);
     danceDesigner.light.position.z = 5 * Math.sin(lightAngle * Math.PI / 180);
+  } else if (getPosition) {
+    for (i = 0; i < danceDesigner.dancerPos.length; i++) {
+      var d = danceDesigner.dancerPos[i].Dancer;
+      console.log(t);
+      console.log(danceDesigner.dancerPos[i][t]);
+      if (danceDesigner.dancerPos[i][t] != null) {
+        danceDesigner.dancers[d.name].position.x = danceDesigner.dancerPos[i][t].x;
+        danceDesigner.dancers[d.name].position.y = danceDesigner.dancerPos[i][t].y;
+        danceDesigner.dancers[d.name].position.z = danceDesigner.dancerPos[i][t].z;
+      }
+    }
+    getPosition = false;
   }
   requestAnimationFrame( animate );
   render();
@@ -357,6 +370,9 @@ function render(lightAngle, t) {
 // Update controls and stats
 function update() {
   document.getElementById("Time").innerHTML = "Time: " + t;
+  document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes;
+  gotoKeyFrame = document.getElementById("gotoKeyFrame").value;
+  document.getElementById("currentKeyFrame").innerHTML = "Current Keyframe: " + ((t / 50) | 0);
   danceDesigner.controls.update();
 }
 
@@ -365,16 +381,64 @@ var buttons = document.getElementsByTagName("button");
 for (let i = 0; i < buttons.length; i++) {
   buttons[i].addEventListener("click", onButtonClick, false);
 };
+var keyframes = 0;
+var gotoKeyFrame = document.getElementById("gotoKeyFrame").value;
 document.getElementById("Time").innerHTML = "Time: " + t;
+document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes;
+document.getElementById("currentKeyFrame").innerHTML = "Current Keyframe: " + ((t / 50) | 0);
 var newPosThreeVector = null;
 function onButtonClick(event) {
-  if (event.target.id === "addKeyFrame") {
+  if (event.target.id === "setPosition") {
+    for (i = 0; i < danceDesigner.s.dancers.length; i++) {
+      var potentialPose = danceDesigner.s.dancers[i].potentialPose;
+      if (potentialPose) {
+        danceDesigner.s.dancers[i].addPosition(potentialPose);
+        danceDesigner.s.dancers[i].potentialPose = null;
+      }
+    }
+    danceDesigner.dancerPos = [];
+    var i;
+    // prepare for every single dancer, interpolate their path from a to b
+    for (i = 0; i < danceDesigner.s.dancers.length; i++) {
+      var d = danceDesigner.s.dancers[i];
+      var newDancerPosObj = {Dancer: d}
+      var j;
+      for (j = 0; j < d.positions.length - 1; j++) {
+        var firstPosX = d.positions[j].x;
+        var firstPosY = d.positions[j].y;
+        var firstPosZ = d.positions[j].z;
+        var firstTime = d.positions[j].time;
+        var secondPosX = d.positions[j+1].x;
+        var secondPosY = d.positions[j+1].y;
+        var secondPosZ = d.positions[j+1].z;
+        var secondTime = d.positions[j+1].time;
+        var k;
+        for (k = firstTime; k < secondTime; k++) {
+          newDancerPosObj[k] =
+          {
+            x: ((secondPosX - firstPosX) * (k - firstTime) / (secondTime - firstTime)) + firstPosX,
+            y: ((secondPosY - firstPosY) * (k - firstTime) / (secondTime - firstTime)) + firstPosY,
+            z: ((secondPosZ - firstPosZ) * (k - firstTime) / (secondTime - firstTime)) + firstPosZ,
+          };
+        }
+      }
+      danceDesigner.dancerPos.push(newDancerPosObj);
+    }
+  } else if (event.target.id === "getPosition") {
+    if (gotoKeyFrame > danceDesigner.maxT / 50) {
+      alert("Invalid Keyframe");
+    }
+    t = gotoKeyFrame * 50;
+    getPosition = true;
+  } else if (event.target.id === "addKeyFrame") {
     danceDesigner.maxT += 50;
     for (i = 0; i < danceDesigner.s.dancers.length; i++) {
       var dancerMesh = danceDesigner.dancers[danceDesigner.s.dancers[i].name];
       var newPos = new Position(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z, danceDesigner.maxT);
       danceDesigner.s.dancers[i].addPosition(newPos);
     }
+    keyframes++;
+    console.log(keyframes);
     console.log(danceDesigner.s.dancers);
   } else if (event.target.id === "clear") {
     for (i = 0; i < danceDesigner.s.dancers.length; i++) {
@@ -384,14 +448,8 @@ function onButtonClick(event) {
       danceDesigner.s.dancers[i].addPosition(newPos);
     }
     danceDesigner.maxT = 0;
+    keyframes = 0;
   } else if (event.target.id === "play") {
-    // for (i = 0; i < danceDesigner.s.dancers.length; i++) {
-    //   var potentialPose = danceDesigner.s.dancers[i].potentialPose;
-    //   if (potentialPose) {
-    //     danceDesigner.s.dancers[i].addPosition(potentialPose);
-    //     danceDesigner.s.dancers[i].potentialPose = null;
-    //   }
-    // }
     play = false;
     danceDesigner.dancerPos = [];
     var i;
