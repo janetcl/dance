@@ -348,6 +348,7 @@ function animate() {
     for (i = 0; i < danceDesigner.dancerPos.length; i++) {
       var d = danceDesigner.dancerPos[i].Dancer;
       console.log(t);
+      console.log(danceDesigner.dancerPos[i]);
       console.log(danceDesigner.dancerPos[i][t]);
       if (danceDesigner.dancerPos[i][t] != null) {
         danceDesigner.dancers[d.name].position.x = danceDesigner.dancerPos[i][t].x;
@@ -402,6 +403,12 @@ function onButtonClick(event) {
     for (i = 0; i < danceDesigner.s.dancers.length; i++) {
       var d = danceDesigner.s.dancers[i];
       var newDancerPosObj = {Dancer: d}
+      newDancerPosObj[0] =
+      {
+        x: d.positions[0].x,
+        y: d.positions[0].y,
+        z: d.positions[0].z,
+      };
       var j;
       for (j = 0; j < d.positions.length - 1; j++) {
         var firstPosX = d.positions[j].x;
@@ -413,7 +420,7 @@ function onButtonClick(event) {
         var secondPosZ = d.positions[j+1].z;
         var secondTime = d.positions[j+1].time;
         var k;
-        for (k = firstTime; k < secondTime; k++) {
+        for (k = firstTime + 1; k <= secondTime; k++) {
           newDancerPosObj[k] =
           {
             x: ((secondPosX - firstPosX) * (k - firstTime) / (secondTime - firstTime)) + firstPosX,
@@ -457,6 +464,12 @@ function onButtonClick(event) {
     for (i = 0; i < danceDesigner.s.dancers.length; i++) {
       var d = danceDesigner.s.dancers[i];
       var newDancerPosObj = {Dancer: d}
+      newDancerPosObj[0] =
+      {
+        x: d.positions[0].x,
+        y: d.positions[0].y,
+        z: d.positions[0].z,
+      };
       var j;
       for (j = 0; j < d.positions.length - 1; j++) {
         var firstPosX = d.positions[j].x;
@@ -468,7 +481,7 @@ function onButtonClick(event) {
         var secondPosZ = d.positions[j+1].z;
         var secondTime = d.positions[j+1].time;
         var k;
-        for (k = firstTime; k < secondTime; k++) {
+        for (k = firstTime + 1; k <= secondTime; k++) {
           newDancerPosObj[k] =
           {
             x: ((secondPosX - firstPosX) * (k - firstTime) / (secondTime - firstTime)) + firstPosX,
