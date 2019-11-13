@@ -12,6 +12,7 @@ class Dancer {
   constructor(name) {
     this.positions = [];
     this.name = name;
+    this.potentialPose = null;
 
     this.geometry = new THREE.BoxGeometry(1, 2, 1);
     this.material = new THREE.MeshLambertMaterial({ color: 0xff0000});
@@ -31,6 +32,10 @@ class Dancer {
 
   clearPositions() {
     this.positions = [];
+  }
+
+  addPotentialPos(pos) {
+    this.potentialPose = pos;
   }
 
   addPosition(pos) {
@@ -160,9 +165,9 @@ var danceDesigner = {
     var janet = new Dancer("Janet");
     janet.updateColor(0x293fff);
     var j1 = new Position(-2, 0, -5, 0);
-    var j2 = new Position(2, 0, -5, 250);
+    // var j2 = new Position(2, 0, -5, 250);
     janet.addPosition(j1);
-    janet.addPosition(j2);
+    // janet.addPosition(j2);
     var geometry = new THREE.BoxGeometry(1, 2, 1);
     var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: this.loader.load('files/janet.jpg')});
     var janetMesh = new THREE.Mesh(geometry, material);
@@ -174,11 +179,11 @@ var danceDesigner = {
     var phillip = new Dancer("Phillip");
     phillip.updateColor(0xf8f833);
     var p1 = new Position(2, 0, -3, 0);
-    var p2 = new Position(-2, 0, -3, 150);
-    var p3 = new Position(-2, 0, -10, 250);
+    // var p2 = new Position(-2, 0, -3, 150);
+    // var p3 = new Position(-2, 0, -10, 250);
     phillip.addPosition(p1);
-    phillip.addPosition(p2);
-    phillip.addPosition(p3);
+    // phillip.addPosition(p2);
+    // phillip.addPosition(p3);
     var geometry = new THREE.BoxGeometry(1, 2, 1);
     var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: this.loader.load('files/yoon.jpg')});
     var phillipMesh = new THREE.Mesh(geometry, material);
@@ -290,12 +295,13 @@ var danceDesigner = {
       var intersects = danceDesigner.raycaster.intersectObject(danceDesigner.plane);
       // Reposition the object based on the intersection point with the plane
       danceDesigner.selection.position.copy(intersects[0].point.sub(danceDesigner.offset));
+      newPosThreeVector = intersects[0].point.sub(danceDesigner.offset);
       // Find the dancer based on the initial pose
-      console.log(danceDesigner.movingDancer);
       if (danceDesigner.movingDancer) {
-        var newPosThreeVector = intersects[0].point.sub(danceDesigner.offset);
-        var newPos = new Position(newPosThreeVector.x, newPosThreeVector.y, newPosThreeVector.z, 0);
-        danceDesigner.movingDancer.addPosition(newPos);
+        if (newPosThreeVector) {
+          var newPos = new Position(newPosThreeVector.x, newPosThreeVector.y, newPosThreeVector.z, 0);
+          danceDesigner.movingDancer.addPotentialPos(newPos);
+        }
       }
     } else {
       // Update position of the plane if need
@@ -328,8 +334,6 @@ function animate() {
     }
     t += 1;
     if (t === danceDesigner.maxT) {
-      console.log(danceDesigner.maxT);
-      console.log("maxTime!!! BREAK");
       play = false;
     }
     lightAngle += 5;
@@ -357,17 +361,30 @@ var buttons = document.getElementsByTagName("button");
 for (let i = 0; i < buttons.length; i++) {
   buttons[i].addEventListener("click", onButtonClick, false);
 };
+var newPosThreeVector = null;
 function onButtonClick(event) {
   if (event.target.id === "addKeyFrame") {
-    
+    danceDesigner.maxT += 50;
+    for (i = 0; i < danceDesigner.s.dancers.length; i++) {
+      var dancerMesh = danceDesigner.dancers[danceDesigner.s.dancers[i].name];
+      var newPos = new Position(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z, danceDesigner.maxT);
+      danceDesigner.s.dancers[i].addPosition(newPos);
+    }
+    console.log(danceDesigner.s.dancers);
   } else if (event.target.id === "play") {
+    // for (i = 0; i < danceDesigner.s.dancers.length; i++) {
+    //   var potentialPose = danceDesigner.s.dancers[i].potentialPose;
+    //   if (potentialPose) {
+    //     danceDesigner.s.dancers[i].addPosition(potentialPose);
+    //     danceDesigner.s.dancers[i].potentialPose = null;
+    //   }
+    // }
     play = false;
     danceDesigner.dancerPos = [];
     var i;
     // prepare for every single dancer, interpolate their path from a to b
     for (i = 0; i < danceDesigner.s.dancers.length; i++) {
       var d = danceDesigner.s.dancers[i];
-      console.log(d);
       var newDancerPosObj = {Dancer: d}
       var j;
       for (j = 0; j < d.positions.length - 1; j++) {
@@ -391,7 +408,6 @@ function onButtonClick(event) {
       }
       danceDesigner.dancerPos.push(newDancerPosObj);
     }
-    console.log(danceDesigner.dancerPos);
     t = 0;
     lightAngle = 0;
     play = true;

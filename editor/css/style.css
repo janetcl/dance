@@ -6,6 +6,7 @@ body {
 .top {
   margin-top: 20px;
   font-family: "Courier New", Courier, monospace;
+  font-size: 18px;
 }
 
 .ui {

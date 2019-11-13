@@ -28,7 +28,7 @@ class Position {
 // to something that modifies the internal data structure. Make this be the starting position before the play button is hit. Figure
 // out mouse input.
 // 3. Figure out how to add a new key frame in.
-// 4.
+// 4. Add new key
 
 class Dancer {
   // store the times sorted
