@@ -195,7 +195,7 @@ var danceDesigner = {
     this.s = new Stage();
     this.s.addDancer(janet);
     this.s.addDancer(phillip);
-    this.maxT = 250;
+    this.maxT = 0;
     this.dancers = {[janet.name]: janetMesh, [phillip.name]: phillipMesh};
     this.dancersArr = [janetMesh, phillipMesh];
     this.s.play();
@@ -332,10 +332,10 @@ function animate() {
         danceDesigner.dancers[d.name].position.z = danceDesigner.dancerPos[i][t].z;
       }
     }
-    t += 1;
     if (t === danceDesigner.maxT) {
       play = false;
     }
+    t += 1;
     lightAngle += 5;
     if (lightAngle > 360) { lightAngle = 0;};
     danceDesigner.light.position.x = 5 * Math.cos(lightAngle * Math.PI / 180);
@@ -353,6 +353,7 @@ function render(lightAngle, t) {
 }
 // Update controls and stats
 function update() {
+  document.getElementById("Time").innerHTML = "Time: " + t;
   danceDesigner.controls.update();
 }
 
@@ -361,6 +362,7 @@ var buttons = document.getElementsByTagName("button");
 for (let i = 0; i < buttons.length; i++) {
   buttons[i].addEventListener("click", onButtonClick, false);
 };
+document.getElementById("Time").innerHTML = "Time: " + t;
 var newPosThreeVector = null;
 function onButtonClick(event) {
   if (event.target.id === "addKeyFrame") {

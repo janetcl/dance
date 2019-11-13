@@ -9,6 +9,14 @@ body {
   font-size: 18px;
 }
 
+.time {
+  right: 10px;
+  margin-left: auto;
+  color: white;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 18px;
+}
+
 .ui {
   position: absolute;
 }
