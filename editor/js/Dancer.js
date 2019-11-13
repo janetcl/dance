@@ -388,51 +388,16 @@ document.getElementById("currentKeyFrame").innerHTML = "Current Keyframe: " + ((
 var newPosThreeVector = null;
 function onButtonClick(event) {
   if (event.target.id === "setPosition") {
+    if (gotoKeyFrame > danceDesigner.maxT / 50) {
+      alert("Invalid Keyframe");
+    }
     for (i = 0; i < danceDesigner.s.dancers.length; i++) {
       var potentialPose = danceDesigner.s.dancers[i].potentialPose;
-      console.log(potentialPose);
       if (potentialPose) {
         danceDesigner.s.dancers[i].addPosition(potentialPose);
         danceDesigner.s.dancers[i].potentialPose = null;
       }
     }
-    console.log(danceDesigner.s.dancers);
-    // danceDesigner.dancerPos = [];
-    // var i;
-    // // prepare for every single dancer, interpolate their path from a to b
-    // for (i = 0; i < danceDesigner.s.dancers.length; i++) {
-    //   var d = danceDesigner.s.dancers[i];
-    //   var newDancerPosObj = {Dancer: d}
-    //   newDancerPosObj[0] =
-    //   {
-    //     x: d.positions[0].x,
-    //     y: d.positions[0].y,
-    //     z: d.positions[0].z,
-    //   };
-    //   var j;
-    //   for (j = 0; j < d.positions.length - 1; j++) {
-    //     var firstPosX = d.positions[j].x;
-    //     var firstPosY = d.positions[j].y;
-    //     var firstPosZ = d.positions[j].z;
-    //     var firstTime = d.positions[j].time;
-    //     var secondPosX = d.positions[j+1].x;
-    //     var secondPosY = d.positions[j+1].y;
-    //     var secondPosZ = d.positions[j+1].z;
-    //     var secondTime = d.positions[j+1].time;
-    //     var k;
-    //     for (k = firstTime + 1; k <= secondTime; k++) {
-    //       newDancerPosObj[k] =
-    //       {
-    //         x: ((secondPosX - firstPosX) * (k - firstTime) / (secondTime - firstTime)) + firstPosX,
-    //         y: ((secondPosY - firstPosY) * (k - firstTime) / (secondTime - firstTime)) + firstPosY,
-    //         z: ((secondPosZ - firstPosZ) * (k - firstTime) / (secondTime - firstTime)) + firstPosZ,
-    //       };
-    //     }
-    //   }
-    //   danceDesigner.dancerPos.push(newDancerPosObj);
-      // console.log(danceDesigner.dancerPos);
-
-    // }
   } else if (event.target.id === "getPosition") {
     if (gotoKeyFrame > danceDesigner.maxT / 50) {
       alert("Invalid Keyframe");
@@ -447,8 +412,6 @@ function onButtonClick(event) {
       danceDesigner.s.dancers[i].addPosition(newPos);
     }
     keyframes++;
-    console.log(keyframes);
-    console.log(danceDesigner.s.dancers);
   } else if (event.target.id === "clear") {
     for (i = 0; i < danceDesigner.s.dancers.length; i++) {
       danceDesigner.s.dancers[i].positions = [];
