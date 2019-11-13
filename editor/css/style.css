@@ -1,0 +1,17 @@
+body {
+  overflow: hidden;
+  margin: 0;
+}
+
+.top {
+  margin-top: 20px;
+  font-family: "Courier New", Courier, monospace;
+}
+
+.ui {
+  position: absolute;
+}
+
+button{
+  margin: 20px;
+}
