@@ -323,6 +323,9 @@ var lightAngle = 0;
 var play = false;
 function animate() {
   if (play) {
+    if (danceDesigner.maxT === 0) {
+      play = false;
+    }
     var i;
     for (i = 0; i < danceDesigner.dancerPos.length; i++) {
       var d = danceDesigner.dancerPos[i].Dancer;
@@ -332,10 +335,10 @@ function animate() {
         danceDesigner.dancers[d.name].position.z = danceDesigner.dancerPos[i][t].z;
       }
     }
+    t += 1;
     if (t === danceDesigner.maxT) {
       play = false;
     }
-    t += 1;
     lightAngle += 5;
     if (lightAngle > 360) { lightAngle = 0;};
     danceDesigner.light.position.x = 5 * Math.cos(lightAngle * Math.PI / 180);
@@ -373,6 +376,14 @@ function onButtonClick(event) {
       danceDesigner.s.dancers[i].addPosition(newPos);
     }
     console.log(danceDesigner.s.dancers);
+  } else if (event.target.id === "clear") {
+    for (i = 0; i < danceDesigner.s.dancers.length; i++) {
+      danceDesigner.s.dancers[i].positions = [];
+      var dancerMesh = danceDesigner.dancers[danceDesigner.s.dancers[i].name];
+      var newPos = new Position(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z, 0);
+      danceDesigner.s.dancers[i].addPosition(newPos);
+    }
+    danceDesigner.maxT = 0;
   } else if (event.target.id === "play") {
     // for (i = 0; i < danceDesigner.s.dancers.length; i++) {
     //   var potentialPose = danceDesigner.s.dancers[i].potentialPose;
