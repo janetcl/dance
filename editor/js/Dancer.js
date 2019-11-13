@@ -101,16 +101,14 @@ class Stage {
   getDancer(threeJSPose) {
     var i;
     for (i = 0; i < this.dancers.length; i++) {
-      if ((Math.abs(this.dancers[i].positions[0].x - threeJSPose.x) < 1) &&
-      (Math.abs(this.dancers[i].positions[0].y - threeJSPose.y) < 1) &&
-      (Math.abs(this.dancers[i].positions[0].z - threeJSPose.z) < 1)) {
-        return this.dancers[i];
-      }
       var len = this.dancers[i].positions.length;
-      if ((Math.abs(this.dancers[i].positions[len - 1].x - threeJSPose.x) < 1) &&
-      (Math.abs(this.dancers[i].positions[len - 1].y - threeJSPose.y) < 1) &&
-      (Math.abs(this.dancers[i].positions[len - 1].z - threeJSPose.z) < 1)) {
-        return this.dancers[i];
+      var j;
+      for (j = 0; j < len; j++) {
+        if ((Math.abs(this.dancers[i].positions[j].x - threeJSPose.x) < 1) &&
+        (Math.abs(this.dancers[i].positions[j].y - threeJSPose.y) < 1) &&
+        (Math.abs(this.dancers[i].positions[j].z - threeJSPose.z) < 1)) {
+          return this.dancers[i];
+        }
       }
     }
     return;
@@ -348,8 +346,8 @@ function animate() {
     for (i = 0; i < danceDesigner.dancerPos.length; i++) {
       var d = danceDesigner.dancerPos[i].Dancer;
       console.log(t);
-      console.log(danceDesigner.dancerPos[i]);
       console.log(danceDesigner.dancerPos[i][t]);
+      console.log(danceDesigner.dancers[d.name].potentialPose);
       if (danceDesigner.dancerPos[i][t] != null) {
         danceDesigner.dancers[d.name].position.x = danceDesigner.dancerPos[i][t].x;
         danceDesigner.dancers[d.name].position.y = danceDesigner.dancerPos[i][t].y;
@@ -392,45 +390,49 @@ function onButtonClick(event) {
   if (event.target.id === "setPosition") {
     for (i = 0; i < danceDesigner.s.dancers.length; i++) {
       var potentialPose = danceDesigner.s.dancers[i].potentialPose;
+      console.log(potentialPose);
       if (potentialPose) {
         danceDesigner.s.dancers[i].addPosition(potentialPose);
         danceDesigner.s.dancers[i].potentialPose = null;
       }
     }
-    danceDesigner.dancerPos = [];
-    var i;
-    // prepare for every single dancer, interpolate their path from a to b
-    for (i = 0; i < danceDesigner.s.dancers.length; i++) {
-      var d = danceDesigner.s.dancers[i];
-      var newDancerPosObj = {Dancer: d}
-      newDancerPosObj[0] =
-      {
-        x: d.positions[0].x,
-        y: d.positions[0].y,
-        z: d.positions[0].z,
-      };
-      var j;
-      for (j = 0; j < d.positions.length - 1; j++) {
-        var firstPosX = d.positions[j].x;
-        var firstPosY = d.positions[j].y;
-        var firstPosZ = d.positions[j].z;
-        var firstTime = d.positions[j].time;
-        var secondPosX = d.positions[j+1].x;
-        var secondPosY = d.positions[j+1].y;
-        var secondPosZ = d.positions[j+1].z;
-        var secondTime = d.positions[j+1].time;
-        var k;
-        for (k = firstTime + 1; k <= secondTime; k++) {
-          newDancerPosObj[k] =
-          {
-            x: ((secondPosX - firstPosX) * (k - firstTime) / (secondTime - firstTime)) + firstPosX,
-            y: ((secondPosY - firstPosY) * (k - firstTime) / (secondTime - firstTime)) + firstPosY,
-            z: ((secondPosZ - firstPosZ) * (k - firstTime) / (secondTime - firstTime)) + firstPosZ,
-          };
-        }
-      }
-      danceDesigner.dancerPos.push(newDancerPosObj);
-    }
+    console.log(danceDesigner.s.dancers);
+    // danceDesigner.dancerPos = [];
+    // var i;
+    // // prepare for every single dancer, interpolate their path from a to b
+    // for (i = 0; i < danceDesigner.s.dancers.length; i++) {
+    //   var d = danceDesigner.s.dancers[i];
+    //   var newDancerPosObj = {Dancer: d}
+    //   newDancerPosObj[0] =
+    //   {
+    //     x: d.positions[0].x,
+    //     y: d.positions[0].y,
+    //     z: d.positions[0].z,
+    //   };
+    //   var j;
+    //   for (j = 0; j < d.positions.length - 1; j++) {
+    //     var firstPosX = d.positions[j].x;
+    //     var firstPosY = d.positions[j].y;
+    //     var firstPosZ = d.positions[j].z;
+    //     var firstTime = d.positions[j].time;
+    //     var secondPosX = d.positions[j+1].x;
+    //     var secondPosY = d.positions[j+1].y;
+    //     var secondPosZ = d.positions[j+1].z;
+    //     var secondTime = d.positions[j+1].time;
+    //     var k;
+    //     for (k = firstTime + 1; k <= secondTime; k++) {
+    //       newDancerPosObj[k] =
+    //       {
+    //         x: ((secondPosX - firstPosX) * (k - firstTime) / (secondTime - firstTime)) + firstPosX,
+    //         y: ((secondPosY - firstPosY) * (k - firstTime) / (secondTime - firstTime)) + firstPosY,
+    //         z: ((secondPosZ - firstPosZ) * (k - firstTime) / (secondTime - firstTime)) + firstPosZ,
+    //       };
+    //     }
+    //   }
+    //   danceDesigner.dancerPos.push(newDancerPosObj);
+      // console.log(danceDesigner.dancerPos);
+
+    // }
   } else if (event.target.id === "getPosition") {
     if (gotoKeyFrame > danceDesigner.maxT / 50) {
       alert("Invalid Keyframe");
