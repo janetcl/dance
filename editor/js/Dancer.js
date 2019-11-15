@@ -67,12 +67,6 @@ class Dancer {
     return;
   }
 
-  setPosition(pos) {
-    this.mesh.position.x = pos.x;
-    this.mesh.position.y = pos.y;
-    this.mesh.position.z = pos.z;
-  }
-
 }
 
 class Stage {
@@ -136,7 +130,7 @@ var danceDesigner = {
   controls: null, loader: null, container: null, light: null,
   plane: null, selection: null, offset: new THREE.Vector3(),
   raycaster: new THREE.Raycaster(), dancerPos: [], s: null,
-  dancersArr: [], dancers: {}, maxT: null,
+  dancersArr: [], dancers: {}, maxT: null, stagePlane: null,
   init: function() {
     this.scene = new THREE.Scene();
     var width = window.innerWidth;
@@ -163,9 +157,7 @@ var danceDesigner = {
     var janet = new Dancer("Janet");
     janet.updateColor(0x293fff);
     var j1 = new Position(-2, 0, -5, 0);
-    // var j2 = new Position(2, 0, -5, 250);
     janet.addPosition(j1);
-    // janet.addPosition(j2);
     var geometry = new THREE.BoxGeometry(1, 2, 1);
     var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: this.loader.load('files/janet.jpg')});
     var janetMesh = new THREE.Mesh(geometry, material);
@@ -177,11 +169,7 @@ var danceDesigner = {
     var phillip = new Dancer("Phillip");
     phillip.updateColor(0xf8f833);
     var p1 = new Position(2, 0, -3, 0);
-    // var p2 = new Position(-2, 0, -3, 150);
-    // var p3 = new Position(-2, 0, -10, 250);
     phillip.addPosition(p1);
-    // phillip.addPosition(p2);
-    // phillip.addPosition(p3);
     var geometry = new THREE.BoxGeometry(1, 2, 1);
     var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: this.loader.load('files/yoon.jpg')});
     var phillipMesh = new THREE.Mesh(geometry, material);
@@ -227,8 +215,15 @@ var danceDesigner = {
     this.light.intensity = 1;
     this.scene.add(this.light);
 
+    var light = new THREE.PointLight(0xFFFFFF);
+    light.position.x = 0;
+    light.position.y = 20;
+    light.position.z = -10;
+    light.intensity = 2;
+    this.scene.add(light);
+
     // Add the stage
-    var geometry = new THREE.PlaneGeometry( 30, 20, 5, 2 );
+    var geometry = new THREE.PlaneGeometry( 30, 20, 10, 5 );
     var material = new THREE.MeshBasicMaterial({
       color: 0xFF8844,
       map: this.loader.load('files/stage.jpg'),
@@ -239,6 +234,11 @@ var danceDesigner = {
     floor.position.z = -10;
     floor.position.y = -1;
     this.scene.add( floor );
+
+    var geo = new THREE.WireframeGeometry( floor.geometry );
+    var mat = new THREE.LineBasicMaterial( { color: 0xffffff, linewidth: 2 } );
+    var wireframe = new THREE.LineSegments( geo, mat );
+    floor.add( wireframe );
 
     // Set the camera and orbit controls
     this.camera.position.z = 8;
@@ -255,6 +255,9 @@ var danceDesigner = {
     this.plane.position.z = -10;
     this.plane.position.y = -1;
     this.scene.add(this.plane);
+
+    var stageNormalVector = new THREE.Vector3(0, 1, 0);
+    this.stagePlane = new THREE.Plane(stageNormalVector);
   },
   onDocumentMouseDown: function (event) {
     // Get mouse position
@@ -292,8 +295,11 @@ var danceDesigner = {
       // Check the position where the plane is intersected
       var intersects = danceDesigner.raycaster.intersectObject(danceDesigner.plane);
       // Reposition the object based on the intersection point with the plane
-      danceDesigner.selection.position.copy(intersects[0].point.sub(danceDesigner.offset));
-      newPosThreeVector = intersects[0].point.sub(danceDesigner.offset);
+      newPosThreeVector = danceDesigner.stagePlane.projectPoint(
+        intersects[0].point.sub(danceDesigner.offset),
+        danceDesigner.selection.position
+      );
+      console.log(newPosThreeVector);
       // Find the dancer based on the initial pose
       if (danceDesigner.movingDancer) {
         if (newPosThreeVector) {
@@ -368,21 +374,21 @@ function render(lightAngle, t) {
 }
 // Update controls and stats
 function update() {
-  document.getElementById("Time").innerHTML = "Time: " + t;
+  document.getElementById("Time").innerHTML = "Current Time: " + t;
   document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes;
   gotoKeyFrame = document.getElementById("gotoKeyFrame").value;
   document.getElementById("currentKeyFrame").innerHTML = "Current Keyframe: " + ((t / 50) | 0);
   danceDesigner.controls.update();
 }
 
-// Play the sequence only once the user has pressed play.
+// Set button controls and events for each button.
 var buttons = document.getElementsByTagName("button");
 for (let i = 0; i < buttons.length; i++) {
   buttons[i].addEventListener("click", onButtonClick, false);
 };
 var keyframes = 0;
 var gotoKeyFrame = document.getElementById("gotoKeyFrame").value;
-document.getElementById("Time").innerHTML = "Time: " + t;
+document.getElementById("Time").innerHTML = "Current Time: " + t;
 document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes;
 document.getElementById("currentKeyFrame").innerHTML = "Current Keyframe: " + ((t / 50) | 0);
 var newPosThreeVector = null;
@@ -425,7 +431,7 @@ function onButtonClick(event) {
     play = false;
     danceDesigner.dancerPos = [];
     var i;
-    // prepare for every single dancer, interpolate their path from a to b
+    // Prepare for every single dancer, interpolate their path from a to b
     for (i = 0; i < danceDesigner.s.dancers.length; i++) {
       var d = danceDesigner.s.dancers[i];
       var newDancerPosObj = {Dancer: d}
