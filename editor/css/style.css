@@ -4,6 +4,7 @@ body {
   font-family: "Courier New", Courier, monospace;
   font-size: 18px;
   color: white;
+  background-color: #4a7e65;
 }
 
 .top {
@@ -33,6 +34,14 @@ body {
 
 .ui {
   position: absolute;
+}
+
+.mainRenderer {
+  top: 0;
+}
+
+.timeline {
+  bottom: 0;
 }
 
 button{

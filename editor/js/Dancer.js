@@ -126,27 +126,42 @@ class Stage {
 }
 
 var danceDesigner = {
-  scene: null, camera: null, renderer: null, movingDancer: null,
+  scene: null, camera: null, renderer: null, rendererWidth: null,
+  rendererHeight: null, movingDancer: null,
   controls: null, loader: null, container: null, light: null,
   plane: null, selection: null, offset: new THREE.Vector3(),
   raycaster: new THREE.Raycaster(), dancerPos: [], s: null,
   dancersArr: [], dancers: {}, maxT: null, stagePlane: null,
+  xMax: null, xMin: null, zMax: null, zMin: null,
+  camera1: null, renderer1: null,
   init: function() {
     this.scene = new THREE.Scene();
-    var width = window.innerWidth;
-    var height = window.innerHeight;
+    this.rendererWidth = window.innerWidth * 8 / 10;
+    this.rendererHeight = window.innerHeight * 8 / 10;
     var viewAngle = 45;
     var nearClipping = 0.1;
     var farClipping = 9999;
-    this.camera = new THREE.PerspectiveCamera( viewAngle, width / height, nearClipping, farClipping );
-    this.renderer = new THREE.WebGLRenderer();
-    this.renderer.setSize( width, height );
+    this.camera = new THREE.PerspectiveCamera( viewAngle, this.rendererWidth / this.rendererHeight, nearClipping, farClipping );
+    this.renderer = new THREE.WebGLRenderer({canvas: document.getElementById("renderer")});
+    this.renderer.setSize( this.rendererWidth, this.rendererHeight );
     document.body.appendChild( this.renderer.domElement );
 
+    // Create small renderer for timeline
+    var width1 = window.innerWidth / 6;
+    var height1 = window.innerHeight / 6;
+    var viewAngle1 = 45;
+    this.camera1 = new THREE.PerspectiveCamera( viewAngle1, width1 / height1, nearClipping, farClipping );
+    this.renderer1 = new THREE.WebGLRenderer({canvas: document.getElementById("renderer1")});
+    this.renderer1.setSize( width1, height1 );
+    document.body.appendChild( this.renderer1.domElement );
+    this.camera1.position.z = -10;
+    this.camera1.position.y = 30;
+    this.camera1.lookAt(new THREE.Vector3(0, 0, -10));
+
     // Prepare container
-    this.container = document.createElement('div');
-    document.body.appendChild(this.container);
-    this.container.appendChild(this.renderer.domElement);
+    // this.container = document.createElement('div');
+    // document.body.appendChild(this.container);
+    // this.container.appendChild(this.renderer.domElement);
 
     // Events
     document.addEventListener('mousedown', this.onDocumentMouseDown, false);
@@ -235,6 +250,11 @@ var danceDesigner = {
     floor.position.y = -1;
     this.scene.add( floor );
 
+    this.xMax = 17.5;
+    this.xMin = -17.5;
+    this.zMax = 0;
+    this.zMin = -20;
+
     var geo = new THREE.WireframeGeometry( floor.geometry );
     var mat = new THREE.LineBasicMaterial( { color: 0xffffff, linewidth: 2 } );
     var wireframe = new THREE.LineSegments( geo, mat );
@@ -261,8 +281,8 @@ var danceDesigner = {
   },
   onDocumentMouseDown: function (event) {
     // Get mouse position
-    var mouseX = (event.clientX / window.innerWidth) * 2 - 1;
-    var mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+    var mouseX = (event.clientX / danceDesigner.rendererWidth) * 2 - 1;
+    var mouseY = -(event.clientY / danceDesigner.rendererHeight) * 2 + 1;
     // Get 3D vector from 3D mouse position using 'unproject' function
     var vector = new THREE.Vector3(mouseX, mouseY, 1);
     vector.unproject(danceDesigner.camera);
@@ -284,8 +304,8 @@ var danceDesigner = {
   onDocumentMouseMove: function (event) {
     event.preventDefault();
     // Get mouse position
-    var mouseX = (event.clientX / window.innerWidth) * 2 - 1;
-    var mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
+    var mouseX = (event.clientX / danceDesigner.rendererWidth) * 2 - 1;
+    var mouseY = -(event.clientY / danceDesigner.rendererHeight) * 2 + 1;
     // Get 3D vector from 3D mouse position using 'unproject' function
     var vector = new THREE.Vector3(mouseX, mouseY, 1);
     vector.unproject(danceDesigner.camera);
@@ -299,10 +319,24 @@ var danceDesigner = {
         intersects[0].point.sub(danceDesigner.offset),
         danceDesigner.selection.position
       );
-      console.log(newPosThreeVector);
       // Find the dancer based on the initial pose
       if (danceDesigner.movingDancer) {
         if (newPosThreeVector) {
+          // Clamp the position to within the boundaries of the stage
+          if (danceDesigner.selection.position.x > danceDesigner.xMax) {
+            newPosThreeVector.x = danceDesigner.xMax;
+            danceDesigner.selection.position.x = danceDesigner.xMax;
+          } else if (danceDesigner.selection.position.x < danceDesigner.xMin) {
+            newPosThreeVector.x = danceDesigner.xMin;
+            danceDesigner.selection.position.x = danceDesigner.xMin;
+          }
+          if (danceDesigner.selection.position.z > danceDesigner.zMax) {
+            newPosThreeVector.z = danceDesigner.zMax;
+            danceDesigner.selection.position.z = danceDesigner.zMax;
+          } else if (danceDesigner.selection.position.z < danceDesigner.zMin) {
+            newPosThreeVector.z = danceDesigner.zMin;
+            danceDesigner.selection.position.z = danceDesigner.zMin;
+          }
           var newPos = new Position(newPosThreeVector.x, newPosThreeVector.y, newPosThreeVector.z, t);
           danceDesigner.movingDancer.addPotentialPos(newPos);
         }
@@ -367,9 +401,10 @@ function animate() {
   update();
 }
 // Render the scene
-function render(lightAngle, t) {
+function render() {
   if (danceDesigner.renderer) {
     danceDesigner.renderer.render(danceDesigner.scene, danceDesigner.camera);
+    danceDesigner.renderer1.render(danceDesigner.scene, danceDesigner.camera1);
   }
 }
 // Update controls and stats

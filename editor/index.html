@@ -16,7 +16,15 @@
      <input style="margin-left:130px; width:40px; margin-top:15px;" class="ui" type="number" min="0" step="1" id="gotoKeyFrame" value="0">
      <button style="margin-left:120px; margin-top:35px;" id="getPosition" class="ui">Get position</button>
      <button style="margin-left:180px; margin-top:35px;" id="setPosition" class="ui">Set position</button>
+     <div class="mainRenderer">
+       <canvas id="renderer">
+       </canvas>
+     </div>
      <div class="bottomBar">
+       <div class="timeline">
+            <canvas id="renderer1">
+            </canvas>
+        </div>
        <button style="margin-bottom:10px; margin-left:10px;" id="play" class="ui">Play</button>
        <button style="margin-bottom:10px; margin-left:60px;" id="addKeyFrame" class="ui">Add Keyframe</button>
        <button style="margin-bottom:10px; margin-left:130px;" id="clear" class="ui">Clear Sequence</button>
