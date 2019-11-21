@@ -125,6 +125,7 @@ class Stage {
 
 }
 
+
 var danceDesigner = {
   scene: null, camera: null, renderer: null, rendererWidth: null,
   rendererHeight: null, movingDancer: null,
@@ -133,7 +134,8 @@ var danceDesigner = {
   raycaster: new THREE.Raycaster(), dancerPos: [], s: null,
   dancersArr: [], dancers: {}, maxT: null, stagePlane: null,
   xMax: null, xMin: null, zMax: null, zMin: null,
-  camera1: null, renderer1: null,
+  camera1: null, renderer1: null, camera2: null, renderer2: null,
+  scene2: null, renderers: [],
   init: function() {
     this.scene = new THREE.Scene();
     this.rendererWidth = window.innerWidth * 8 / 10;
@@ -158,6 +160,20 @@ var danceDesigner = {
     this.camera1.position.y = 30;
     this.camera1.lookAt(new THREE.Vector3(0, 0, -10));
 
+    // Create small renderer for timeline
+    var width2 = window.innerWidth / 6;
+    var height2 = window.innerHeight / 6;
+    var viewAngle2 = 45;
+    this.camera2 = new THREE.PerspectiveCamera( viewAngle2, width2 / height2, nearClipping, farClipping );
+    this.renderer2 = new THREE.WebGLRenderer();
+    this.renderer2.setSize( width2, height2 );
+    document.body.appendChild( this.renderer2.domElement );
+    this.camera2.position.z = -10;
+    this.camera2.position.y = 30;
+    this.camera2.lookAt(new THREE.Vector3(0, 0, -10));
+
+    this.renderers.push({renderer: this.renderer2, scene: this.scene.clone(), time: 0});
+
     // Prepare container
     // this.container = document.createElement('div');
     // document.body.appendChild(this.container);
@@ -174,6 +190,7 @@ var danceDesigner = {
     var j1 = new Position(-2, 0, -5, 0);
     janet.addPosition(j1);
     var geometry = new THREE.BoxGeometry(1, 2, 1);
+    geometry.name = "Janet";
     var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: this.loader.load('files/janet.jpg')});
     var janetMesh = new THREE.Mesh(geometry, material);
     janetMesh.position.x = j1.x;
@@ -186,6 +203,7 @@ var danceDesigner = {
     var p1 = new Position(2, 0, -3, 0);
     phillip.addPosition(p1);
     var geometry = new THREE.BoxGeometry(1, 2, 1);
+    geometry.name = "Phillip";
     var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: this.loader.load('files/yoon.jpg')});
     var phillipMesh = new THREE.Mesh(geometry, material);
     phillipMesh.position.x = p1.x;
@@ -385,9 +403,6 @@ function animate() {
   } else if (getPosition) {
     for (i = 0; i < danceDesigner.dancerPos.length; i++) {
       var d = danceDesigner.dancerPos[i].Dancer;
-      console.log(t);
-      console.log(danceDesigner.dancerPos[i][t]);
-      console.log(danceDesigner.dancers[d.name].potentialPose);
       if (danceDesigner.dancerPos[i][t] != null) {
         danceDesigner.dancers[d.name].position.x = danceDesigner.dancerPos[i][t].x;
         danceDesigner.dancers[d.name].position.y = danceDesigner.dancerPos[i][t].y;
@@ -400,11 +415,56 @@ function animate() {
   render();
   update();
 }
+
+// Create element function
+function create(tagName, props) {
+  return Object.assign(document.createElement(tagName), (props || {}));
+}
+
+// Append child function
+function ac(p, c) {
+  if (c) p.appendChild(c);
+  return p;
+}
+
 // Render the scene
 function render() {
   if (danceDesigner.renderer) {
     danceDesigner.renderer.render(danceDesigner.scene, danceDesigner.camera);
     danceDesigner.renderer1.render(danceDesigner.scene, danceDesigner.camera1);
+
+    for (let i = 0; i < danceDesigner.renderers.length; i++) {
+      var renderer = danceDesigner.renderers[i].renderer;
+      var scene = danceDesigner.renderers[i].scene;
+      var t = danceDesigner.renderers[i].time;
+
+      for (let i = 0; i < scene.children.length; i ++) {
+        if (scene.children[i].type == "Mesh" && scene.children[i].geometry != "PlaneGeometry" && scene.children[i].geometry != "PlaneBufferGeometry") {
+          console.log(scene.children[i].geometry);
+          for (let j = 0; j < danceDesigner.dancerPos.length; j++) {
+            var d = danceDesigner.dancerPos[i].Dancer;
+            if (d.name == scene.children[i].geometry.name) {
+              scene.children[i].position.x = danceDesigner.dancerPos[i][t].x;
+              scene.children[i].position.y = danceDesigner.dancerPos[i][t].y;
+              scene.children[i].position.z = danceDesigner.dancerPos[i][t].z;
+            }
+          }
+        }
+      }
+      // for (i = 0; i < danceDesigner.dancerPos.length; i++) {
+      //   var d = danceDesigner.dancerPos[i].Dancer;
+      //   console.log(t);
+      //   console.log(danceDesigner.dancerPos[i][t]);
+      //   console.log(danceDesigner.dancers[d.name].potentialPose);
+      //   if (danceDesigner.dancerPos[i][t] != null) {
+      //     danceDesigner.dancers[d.name].position.x = danceDesigner.dancerPos[i][t].x;
+      //     danceDesigner.dancers[d.name].position.y = danceDesigner.dancerPos[i][t].y;
+      //     danceDesigner.dancers[d.name].position.z = danceDesigner.dancerPos[i][t].z;
+      //   }
+      // }
+
+      renderer.render(scene, danceDesigner.camera1);
+    }
   }
 }
 // Update controls and stats
@@ -427,6 +487,8 @@ document.getElementById("Time").innerHTML = "Current Time: " + t;
 document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes;
 document.getElementById("currentKeyFrame").innerHTML = "Current Keyframe: " + ((t / 50) | 0);
 var newPosThreeVector = null;
+
+// Handle button clicking
 function onButtonClick(event) {
   if (event.target.id === "setPosition") {
     if (gotoKeyFrame > danceDesigner.maxT / 50) {
@@ -453,6 +515,31 @@ function onButtonClick(event) {
       danceDesigner.s.dancers[i].addPosition(newPos);
     }
     keyframes++;
+
+    // Create the new renderer for the timeline
+    var width = window.innerWidth / 6;
+    var height = window.innerHeight / 6;
+    var viewAngle = 45;
+    var nearClipping = 0.1;
+    var farClipping = 9999;
+    var camera = new THREE.PerspectiveCamera( viewAngle, width / height, nearClipping, farClipping );
+    var renderer = new THREE.WebGLRenderer();
+    renderer.setSize( width, height );
+    document.body.appendChild( renderer.domElement );
+    camera.position.z = -10;
+    camera.position.y = 30;
+    camera.lookAt(new THREE.Vector3(0, 0, -10));
+    var newScene = danceDesigner.scene.clone();
+
+    danceDesigner.renderers.push({renderer: renderer, scene: newScene, time: danceDesigner.maxT});
+
+    // Add this renderer to the HTML page
+    let timelineSection = document.getElementById("timelineSection");
+    // Create new canvas
+    let canvas = create("canvas", {class: "timelineCanvas"});
+    // Add child as a child to div, add the result to timelineSection
+    ac(mainWrapper, ac(canvas, renderer.domElement));
+
   } else if (event.target.id === "clear") {
     for (i = 0; i < danceDesigner.s.dancers.length; i++) {
       danceDesigner.s.dancers[i].positions = [];

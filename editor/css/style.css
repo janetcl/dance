@@ -32,6 +32,10 @@ body {
   right: 10px;
 }
 
+.timelineCanvas {
+  margin-right: 10px;
+}
+
 .ui {
   position: absolute;
 }
