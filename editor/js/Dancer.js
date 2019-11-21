@@ -148,7 +148,7 @@ var danceDesigner = {
     this.renderer.setSize( this.rendererWidth, this.rendererHeight );
     document.body.appendChild( this.renderer.domElement );
 
-    // Create small renderer for timeline
+    // Create small renderer for aerial view
     var width1 = window.innerWidth / 6;
     var height1 = window.innerHeight / 6;
     var viewAngle1 = 45;
@@ -159,20 +159,6 @@ var danceDesigner = {
     this.camera1.position.z = -10;
     this.camera1.position.y = 30;
     this.camera1.lookAt(new THREE.Vector3(0, 0, -10));
-
-    // Create small renderer for timeline
-    var width2 = window.innerWidth / 6;
-    var height2 = window.innerHeight / 6;
-    var viewAngle2 = 45;
-    this.camera2 = new THREE.PerspectiveCamera( viewAngle2, width2 / height2, nearClipping, farClipping );
-    this.renderer2 = new THREE.WebGLRenderer();
-    this.renderer2.setSize( width2, height2 );
-    document.body.appendChild( this.renderer2.domElement );
-    this.camera2.position.z = -10;
-    this.camera2.position.y = 30;
-    this.camera2.lookAt(new THREE.Vector3(0, 0, -10));
-
-    this.renderers.push({renderer: this.renderer2, scene: this.scene.clone(), time: 0});
 
     // Prepare container
     // this.container = document.createElement('div');
@@ -296,6 +282,23 @@ var danceDesigner = {
 
     var stageNormalVector = new THREE.Vector3(0, 1, 0);
     this.stagePlane = new THREE.Plane(stageNormalVector);
+
+    // Create small renderer for timeline
+    var width2 = window.innerWidth / 6;
+    var height2 = window.innerHeight / 6;
+    var viewAngle2 = 45;
+    this.camera2 = new THREE.PerspectiveCamera( viewAngle2, width2 / height2, nearClipping, farClipping );
+    this.renderer2 = new THREE.WebGLRenderer();
+    this.renderer2.setSize( width2, height2 );
+    document.body.appendChild( this.renderer2.domElement );
+    this.camera2.position.z = -10;
+    this.camera2.position.y = 30;
+    this.camera2.lookAt(new THREE.Vector3(0, 0, -10));
+
+    let timelineSection = document.getElementById("timelineSection");
+    // Create new canvas
+    let canvas = create("canvas", {class: "timelineCanvas"});
+    this.renderers.push({renderer: this.renderer2, scene: this.scene.clone(), time: 0});
   },
   onDocumentMouseDown: function (event) {
     // Get mouse position
@@ -434,24 +437,32 @@ function render() {
     danceDesigner.renderer1.render(danceDesigner.scene, danceDesigner.camera1);
 
     // Render the timeline renderers
-    for (let i = 0; i < danceDesigner.renderers.length; i++) {
-      var renderer = danceDesigner.renderers[i].renderer;
-      var scene = danceDesigner.renderers[i].scene;
-      var t = danceDesigner.renderers[i].time;
+    for (let a = 0; a < danceDesigner.renderers.length; a++) {
+      var thisRenderer = danceDesigner.renderers[a].renderer;
+      var scene = danceDesigner.renderers[a].scene;
+      var time = danceDesigner.renderers[a].time;
 
-      for (let i = 0; i < scene.children.length; i ++) {
-        if (scene.children[i].type == "Mesh" && scene.children[i].geometry.type != "PlaneGeometry" && scene.children[i].geometry.type != "PlaneBufferGeometry") {
-          for (let j = 0; j < danceDesigner.dancerPos.length; j++) {
-            var d = danceDesigner.dancerPos[i].Dancer;
-            if (d.name == scene.children[i].geometry.name) {
-              scene.children[i].position.x = danceDesigner.dancerPos[i][t].x;
-              scene.children[i].position.y = danceDesigner.dancerPos[i][t].y;
-              scene.children[i].position.z = danceDesigner.dancerPos[i][t].z;
+
+      if (time == t && play == false) {
+        thisRenderer.render(danceDesigner.scene, danceDesigner.camera1);
+      }
+      else {
+        for (let i = 0; i < scene.children.length; i ++) {
+          if (scene.children[i].type == "Mesh" && scene.children[i].geometry.type == "BoxGeometry") {
+            for (let j = 0; j < danceDesigner.dancerPos.length; j++) {
+              var d = danceDesigner.dancerPos[i].Dancer;
+              if (danceDesigner.dancerPos[i][time] != null) {
+                if (d.name == scene.children[i].geometry.name) {
+                  scene.children[i].position.x = danceDesigner.dancerPos[i][time].x;
+                  scene.children[i].position.y = danceDesigner.dancerPos[i][time].y;
+                  scene.children[i].position.z = danceDesigner.dancerPos[i][time].z;
+                }
+              }
             }
           }
         }
+        thisRenderer.render(scene, danceDesigner.camera1);
       }
-      renderer.render(scene, danceDesigner.camera1);
     }
 
   }
@@ -498,12 +509,48 @@ function onButtonClick(event) {
     }
     t = gotoKeyFrame * 50;
     getPosition = true;
+
   } else if (event.target.id === "addKeyFrame") {
     danceDesigner.maxT += 50;
+    t = danceDesigner.maxT;
     for (i = 0; i < danceDesigner.s.dancers.length; i++) {
       var dancerMesh = danceDesigner.dancers[danceDesigner.s.dancers[i].name];
       var newPos = new Position(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z, danceDesigner.maxT);
       danceDesigner.s.dancers[i].addPosition(newPos);
+    }
+
+    var i;
+    // Prepare for every single dancer, interpolate their path from a to b
+    for (i = 0; i < danceDesigner.s.dancers.length; i++) {
+      var d = danceDesigner.s.dancers[i];
+      var newDancerPosObj = {Dancer: d}
+      newDancerPosObj[0] =
+      {
+        x: d.positions[0].x,
+        y: d.positions[0].y,
+        z: d.positions[0].z,
+      };
+      var j;
+      for (j = 0; j < d.positions.length - 1; j++) {
+        var firstPosX = d.positions[j].x;
+        var firstPosY = d.positions[j].y;
+        var firstPosZ = d.positions[j].z;
+        var firstTime = d.positions[j].time;
+        var secondPosX = d.positions[j+1].x;
+        var secondPosY = d.positions[j+1].y;
+        var secondPosZ = d.positions[j+1].z;
+        var secondTime = d.positions[j+1].time;
+        var k;
+        for (k = firstTime + 1; k <= secondTime; k++) {
+          newDancerPosObj[k] =
+          {
+            x: ((secondPosX - firstPosX) * (k - firstTime) / (secondTime - firstTime)) + firstPosX,
+            y: ((secondPosY - firstPosY) * (k - firstTime) / (secondTime - firstTime)) + firstPosY,
+            z: ((secondPosZ - firstPosZ) * (k - firstTime) / (secondTime - firstTime)) + firstPosZ,
+          };
+        }
+      }
+      danceDesigner.dancerPos.push(newDancerPosObj);
     }
     keyframes++;
 
@@ -529,7 +576,7 @@ function onButtonClick(event) {
     // Create new canvas
     let canvas = create("canvas", {class: "timelineCanvas"});
     // Add child as a child to div, add the result to timelineSection
-    ac(mainWrapper, ac(canvas, renderer.domElement));
+    // ac(mainWrapper, ac(canvas, renderer.domElement));
 
   } else if (event.target.id === "clear") {
     for (i = 0; i < danceDesigner.s.dancers.length; i++) {
