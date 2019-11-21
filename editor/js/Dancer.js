@@ -433,14 +433,14 @@ function render() {
     danceDesigner.renderer.render(danceDesigner.scene, danceDesigner.camera);
     danceDesigner.renderer1.render(danceDesigner.scene, danceDesigner.camera1);
 
+    // Render the timeline renderers
     for (let i = 0; i < danceDesigner.renderers.length; i++) {
       var renderer = danceDesigner.renderers[i].renderer;
       var scene = danceDesigner.renderers[i].scene;
       var t = danceDesigner.renderers[i].time;
 
       for (let i = 0; i < scene.children.length; i ++) {
-        if (scene.children[i].type == "Mesh" && scene.children[i].geometry != "PlaneGeometry" && scene.children[i].geometry != "PlaneBufferGeometry") {
-          console.log(scene.children[i].geometry);
+        if (scene.children[i].type == "Mesh" && scene.children[i].geometry.type != "PlaneGeometry" && scene.children[i].geometry.type != "PlaneBufferGeometry") {
           for (let j = 0; j < danceDesigner.dancerPos.length; j++) {
             var d = danceDesigner.dancerPos[i].Dancer;
             if (d.name == scene.children[i].geometry.name) {
@@ -451,22 +451,13 @@ function render() {
           }
         }
       }
-      // for (i = 0; i < danceDesigner.dancerPos.length; i++) {
-      //   var d = danceDesigner.dancerPos[i].Dancer;
-      //   console.log(t);
-      //   console.log(danceDesigner.dancerPos[i][t]);
-      //   console.log(danceDesigner.dancers[d.name].potentialPose);
-      //   if (danceDesigner.dancerPos[i][t] != null) {
-      //     danceDesigner.dancers[d.name].position.x = danceDesigner.dancerPos[i][t].x;
-      //     danceDesigner.dancers[d.name].position.y = danceDesigner.dancerPos[i][t].y;
-      //     danceDesigner.dancers[d.name].position.z = danceDesigner.dancerPos[i][t].z;
-      //   }
-      // }
-
       renderer.render(scene, danceDesigner.camera1);
     }
+
   }
 }
+
+
 // Update controls and stats
 function update() {
   document.getElementById("Time").innerHTML = "Current Time: " + t;
