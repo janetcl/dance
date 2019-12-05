@@ -7,6 +7,16 @@ body {
   background-color: #4a7e65;
 }
 
+.Panel {
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
+
+	/* No support for these yet */
+	-o-user-select: none;
+	user-select: none;
+}
+
 .top {
   margin-top: 20px;
   font-family: "Courier New", Courier, monospace;
@@ -14,7 +24,7 @@ body {
 }
 
 .bottomBar {
-  margin-top: 660px;
+  margin-top: 590px;
   vertical-align: bottom;
 }
 
@@ -38,14 +48,21 @@ body {
 
 .ui {
   position: absolute;
+  width: 100%;
 }
 
 .mainRenderer {
   top: 0;
+  height: 80%;
 }
 
 .timeline {
   bottom: 0;
+}
+
+.timelineEditor {
+  bottom: 0;
+  /* background-color: #656565; */
 }
 
 button{

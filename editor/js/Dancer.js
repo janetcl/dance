@@ -160,11 +160,6 @@ var danceDesigner = {
     this.camera1.position.y = 30;
     this.camera1.lookAt(new THREE.Vector3(0, 0, -10));
 
-    // Prepare container
-    // this.container = document.createElement('div');
-    // document.body.appendChild(this.container);
-    // this.container.appendChild(this.renderer.domElement);
-
     // Events
     document.addEventListener('mousedown', this.onDocumentMouseDown, false);
     document.addEventListener('mousemove', this.onDocumentMouseMove, false);
@@ -188,6 +183,7 @@ var danceDesigner = {
     phillip.updateColor(0xf8f833);
     var p1 = new Position(2, 0, -3, 0);
     phillip.addPosition(p1);
+    var phillipMesh;
     var geometry = new THREE.BoxGeometry(1, 2, 1);
     geometry.name = "Phillip";
     var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: this.loader.load('files/yoon.jpg')});
@@ -295,9 +291,10 @@ var danceDesigner = {
     this.camera2.position.y = 30;
     this.camera2.lookAt(new THREE.Vector3(0, 0, -10));
 
-    let timelineSection = document.getElementById("timelineSection");
+    // let timelineSection = document.getElementById("timelineSection");
     // Create new canvas
     let canvas = create("canvas", {class: "timelineCanvas"});
+    document.getElementById('timelineSection').appendChild(canvas);
     this.renderers.push({renderer: this.renderer2, scene: this.scene.clone(), time: 0});
   },
   onDocumentMouseDown: function (event) {
@@ -343,6 +340,7 @@ var danceDesigner = {
       // Find the dancer based on the initial pose
       if (danceDesigner.movingDancer) {
         if (newPosThreeVector) {
+          // console.log("FIX THIS");
           // Clamp the position to within the boundaries of the stage
           if (danceDesigner.selection.position.x > danceDesigner.xMax) {
             newPosThreeVector.x = danceDesigner.xMax;
@@ -377,6 +375,9 @@ var danceDesigner = {
     danceDesigner.selection = null;
   }
 };
+
+
+
 var t = 0;
 var lightAngle = 0;
 var play = false;
@@ -422,6 +423,12 @@ function animate() {
 // Create element function
 function create(tagName, props) {
   return Object.assign(document.createElement(tagName), (props || {}));
+}
+
+function createElementOnDom (type, id) {
+  var element = document.createElement(type);
+  element.id = id;
+  return element;
 }
 
 // Append child function
@@ -478,6 +485,7 @@ function update() {
   danceDesigner.controls.update();
 }
 
+
 // Set button controls and events for each button.
 var buttons = document.getElementsByTagName("button");
 for (let i = 0; i < buttons.length; i++) {
@@ -489,6 +497,7 @@ document.getElementById("Time").innerHTML = "Current Time: " + t;
 document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes;
 document.getElementById("currentKeyFrame").innerHTML = "Current Keyframe: " + ((t / 50) | 0);
 var newPosThreeVector = null;
+
 
 // Handle button clicking
 function onButtonClick(event) {
@@ -511,8 +520,7 @@ function onButtonClick(event) {
     getPosition = true;
 
   } else if (event.target.id === "addKeyFrame") {
-    danceDesigner.maxT += 50;
-    t = danceDesigner.maxT;
+    danceDesigner.maxT = t;
     for (i = 0; i < danceDesigner.s.dancers.length; i++) {
       var dancerMesh = danceDesigner.dancers[danceDesigner.s.dancers[i].name];
       var newPos = new Position(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z, danceDesigner.maxT);
@@ -569,12 +577,19 @@ function onButtonClick(event) {
     camera.lookAt(new THREE.Vector3(0, 0, -10));
     var newScene = danceDesigner.scene.clone();
 
-    danceDesigner.renderers.push({renderer: renderer, scene: newScene, time: danceDesigner.maxT});
+    danceDesigner.renderers.push({renderer: renderer, scene: newScene, time: t});
 
-    // Add this renderer to the HTML page
-    let timelineSection = document.getElementById("timelineSection");
     // Create new canvas
-    let canvas = create("canvas", {class: "timelineCanvas"});
+    var canvasID = t.toString();
+    console.log('T TO STRING: ', canvasID);
+    var canvas = createElementOnDom('canvas', canvasID);
+    canvas.id = canvasID;
+    document.getElementById('timelineSection').appendChild(canvas);
+
+    document.getElementById(canvasID).addEventListener('click', function() {
+      t = parseFloat(canvas.id);
+      console.log(canvas.id);
+    }, false);
     // Add child as a child to div, add the result to timelineSection
     // ac(mainWrapper, ac(canvas, renderer.domElement));
 
@@ -593,6 +608,7 @@ function onButtonClick(event) {
     var i;
     // Prepare for every single dancer, interpolate their path from a to b
     for (i = 0; i < danceDesigner.s.dancers.length; i++) {
+      // TimelineEditor.updateTimeMark();
       var d = danceDesigner.s.dancers[i];
       var newDancerPosObj = {Dancer: d}
       newDancerPosObj[0] =
@@ -629,6 +645,7 @@ function onButtonClick(event) {
   }
 }
 
+
 // Initialize lesson on page load
 function initializeLesson() {
   danceDesigner.init();
@@ -639,3 +656,177 @@ if (window.addEventListener)
 else if (window.attachEvent)
   window.attachEvent('onload', initializeLesson);
 else window.onload = initializeLesson;
+
+
+var TimelineEditor = function () {
+
+  var container = new UI.Panel();
+  container.setId( 'timeline' );
+
+  var keysDown = {};
+	document.addEventListener( 'keydown', function ( event ) { keysDown[ event.keyCode ] = true; } );
+	document.addEventListener( 'keyup',   function ( event ) { keysDown[ event.keyCode ] = false; } );
+
+  var scale = 5;
+	var prevScale = scale;
+
+  var timeline = new UI.Panel();
+  timeline.setPosition( 'absolute' );
+  timeline.setTop( '500px' );
+  timeline.setBottom( '0px' );
+  timeline.setWidth( '100%' );
+  timeline.setOverflow( 'auto' );
+  container.add( timeline );
+
+  var canvas = document.createElement( 'canvas' );
+  canvas.height = 32;
+  canvas.style.width = '100%';
+  canvas.style.background = 'rgba( 255, 255, 255, 0.3 )';
+	canvas.style.position = 'absolute';
+
+  canvas.addEventListener( 'mousedown', function ( event ) {
+
+		event.preventDefault();
+
+		function onMouseMove( event ) {
+
+      console.log((event.offsetX + scroller.scrollLeft) / scale);
+      t = ((event.offsetX + scroller.scrollLeft) / scale);
+      updateTimeMark();
+
+		}
+
+		function onMouseUp( event ) {
+
+			onMouseMove( event );
+
+			document.removeEventListener( 'mousemove', onMouseMove );
+			document.removeEventListener( 'mouseup', onMouseUp );
+
+		}
+
+		document.addEventListener( 'mousemove', onMouseMove, false );
+		document.addEventListener( 'mouseup', onMouseUp, false );
+
+	}, false );
+  timeline.dom.appendChild( canvas );
+
+  function updateMarks() {
+
+    canvas.width = scroller.clientWidth;
+
+    var context = canvas.getContext( '2d', { alpha: false } );
+
+    context.fillStyle = '#555';
+    context.fillRect( 0, 0, canvas.width, canvas.height );
+
+    context.strokeStyle = '#888';
+    context.beginPath();
+
+    context.translate( - scroller.scrollLeft, 0 );
+
+    var duration = 500;
+    var width = duration * scale;
+    var scale4 = scale / 4;
+
+    for ( var i = 0.5; i <= width; i += scale ) {
+
+      context.moveTo( i + ( scale4 * 0 ), 18 ); context.lineTo( i + ( scale4 * 0 ), 26 );
+
+      if ( scale > 16 ) context.moveTo( i + ( scale4 * 1 ), 22 ), context.lineTo( i + ( scale4 * 1 ), 26 );
+      if ( scale >  8 ) context.moveTo( i + ( scale4 * 2 ), 22 ), context.lineTo( i + ( scale4 * 2 ), 26 );
+      if ( scale > 16 ) context.moveTo( i + ( scale4 * 3 ), 22 ), context.lineTo( i + ( scale4 * 3 ), 26 );
+
+    }
+
+    context.stroke();
+
+    context.font = '10px Arial';
+    context.fillStyle = '#888'
+    context.textAlign = 'center';
+
+    var step = Math.max( 1, Math.floor( 64 / scale ) );
+
+    for ( var i = 0; i < duration; i += step ) {
+
+      var minute = Math.floor( i / 60 );
+      var second = Math.floor( i % 60 );
+
+      var text = ( minute > 0 ? minute + ':' : '' ) + ( '0' + second ).slice( - 2 );
+
+      context.fillText( text, i * scale, 13 );
+
+    }
+
+  }
+
+  var scroller = document.createElement( 'div' );
+  scroller.id = 'timelineSection';
+	scroller.style.position = 'absolute';
+	scroller.style.top = '32px';
+	scroller.style.bottom = '0px';
+	scroller.style.width = '100%';
+	scroller.style.overflow = 'auto';
+  scroller.style.background = 'rgba( 255, 255, 255, 0.5 )';
+	scroller.addEventListener( 'scroll', function ( event ) {
+
+    updateMarks();
+    updateTimeMark();
+
+	}, false );
+	timeline.dom.appendChild( scroller );
+
+  var loopMark = document.createElement( 'div' );
+	loopMark.style.position = 'absolute';
+	loopMark.style.top = 0;
+	loopMark.style.height = 100 + '%';
+	loopMark.style.width = 0;
+	loopMark.style.background = 'rgba( 255, 255, 255, 0.1 )';
+	loopMark.style.pointerEvents = 'none';
+	loopMark.style.display = 'none';
+	timeline.dom.appendChild( loopMark );
+
+	var timeMark = document.createElement( 'div' );
+	timeMark.style.position = 'absolute';
+	timeMark.style.top = '0px';
+	timeMark.style.left = '-8px';
+	timeMark.style.width = '16px';
+	timeMark.style.height = '100%';
+	timeMark.style.background = 'linear-gradient(90deg, transparent 8px, #f00 8px, #f00 9px, transparent 9px) 0% 0% / 16px 16px repeat-y';
+	timeMark.style.pointerEvents = 'none';
+	timeline.dom.appendChild( timeMark );
+
+
+  function updateTimeMark() {
+
+    // var mouseX = (event.clientX / danceDesigner.rendererWidth) * 2 - 1;
+    // var mouseY = -(event.clientY / danceDesigner.rendererHeight) * 2 + 1;
+  //  timeMark.style.left = (event.offsetX + scroller.scrollLeft) / scale) + 'px';
+		timeMark.style.left = ( t * scale ) - scroller.scrollLeft - 8 + 'px';
+    console.log('timeMark style: ', timeMark.style.left);
+
+		//var loop = player.getLoop();
+
+		// if ( Array.isArray( loop ) ) {
+    //
+		// 	var loopStart = loop[ 0 ] * scale;
+		// 	var loopEnd = loop[ 1 ] * scale;
+    //
+		// 	loopMark.style.display = '';
+		// 	loopMark.style.left = ( loopStart - scroller.scrollLeft ) + 'px';
+		// 	loopMark.style.width = ( loopEnd - loopStart ) + 'px';
+    //
+		// } else {
+
+			loopMark.style.display = 'none';
+
+		//}
+
+	}
+
+
+  return container;
+};
+
+var timeline = new TimelineEditor();
+document.getElementById( 'timelineEditor' ).appendChild( timeline.dom );
