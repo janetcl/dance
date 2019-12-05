@@ -376,287 +376,9 @@ var danceDesigner = {
   }
 };
 
-
-
 var t = 0;
 var lightAngle = 0;
 var play = false;
-var getPosition = false;
-function animate() {
-  if (play) {
-    if (danceDesigner.maxT === 0) {
-      play = false;
-    }
-    var i;
-    for (i = 0; i < danceDesigner.dancerPos.length; i++) {
-      var d = danceDesigner.dancerPos[i].Dancer;
-      if (danceDesigner.dancerPos[i][t] != null) {
-        danceDesigner.dancers[d.name].position.x = danceDesigner.dancerPos[i][t].x;
-        danceDesigner.dancers[d.name].position.y = danceDesigner.dancerPos[i][t].y;
-        danceDesigner.dancers[d.name].position.z = danceDesigner.dancerPos[i][t].z;
-      }
-    }
-    t += 1;
-    if (t === danceDesigner.maxT) {
-      play = false;
-    }
-    lightAngle += 5;
-    if (lightAngle > 360) { lightAngle = 0;};
-    danceDesigner.light.position.x = 5 * Math.cos(lightAngle * Math.PI / 180);
-    danceDesigner.light.position.z = 5 * Math.sin(lightAngle * Math.PI / 180);
-  } else if (getPosition) {
-    for (i = 0; i < danceDesigner.dancerPos.length; i++) {
-      var d = danceDesigner.dancerPos[i].Dancer;
-      if (danceDesigner.dancerPos[i][t] != null) {
-        danceDesigner.dancers[d.name].position.x = danceDesigner.dancerPos[i][t].x;
-        danceDesigner.dancers[d.name].position.y = danceDesigner.dancerPos[i][t].y;
-        danceDesigner.dancers[d.name].position.z = danceDesigner.dancerPos[i][t].z;
-      }
-    }
-    getPosition = false;
-  }
-  requestAnimationFrame( animate );
-  render();
-  update();
-}
-
-// Create element function
-function create(tagName, props) {
-  return Object.assign(document.createElement(tagName), (props || {}));
-}
-
-function createElementOnDom (type, id) {
-  var element = document.createElement(type);
-  element.id = id;
-  return element;
-}
-
-// Append child function
-function ac(p, c) {
-  if (c) p.appendChild(c);
-  return p;
-}
-
-// Render the scene
-function render() {
-  if (danceDesigner.renderer) {
-    danceDesigner.renderer.render(danceDesigner.scene, danceDesigner.camera);
-    danceDesigner.renderer1.render(danceDesigner.scene, danceDesigner.camera1);
-
-    // Render the timeline renderers
-    for (let a = 0; a < danceDesigner.renderers.length; a++) {
-      var thisRenderer = danceDesigner.renderers[a].renderer;
-      var scene = danceDesigner.renderers[a].scene;
-      var time = danceDesigner.renderers[a].time;
-
-
-      if (time == t && play == false) {
-        thisRenderer.render(danceDesigner.scene, danceDesigner.camera1);
-      }
-      else {
-        for (let i = 0; i < scene.children.length; i ++) {
-          if (scene.children[i].type == "Mesh" && scene.children[i].geometry.type == "BoxGeometry") {
-            for (let j = 0; j < danceDesigner.dancerPos.length; j++) {
-              var d = danceDesigner.dancerPos[i].Dancer;
-              if (danceDesigner.dancerPos[i][time] != null) {
-                if (d.name == scene.children[i].geometry.name) {
-                  scene.children[i].position.x = danceDesigner.dancerPos[i][time].x;
-                  scene.children[i].position.y = danceDesigner.dancerPos[i][time].y;
-                  scene.children[i].position.z = danceDesigner.dancerPos[i][time].z;
-                }
-              }
-            }
-          }
-        }
-        thisRenderer.render(scene, danceDesigner.camera1);
-      }
-    }
-
-  }
-}
-
-
-// Update controls and stats
-function update() {
-  document.getElementById("Time").innerHTML = "Current Time: " + t;
-  document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes;
-  gotoKeyFrame = document.getElementById("gotoKeyFrame").value;
-  document.getElementById("currentKeyFrame").innerHTML = "Current Keyframe: " + ((t / 50) | 0);
-  danceDesigner.controls.update();
-}
-
-
-// Set button controls and events for each button.
-var buttons = document.getElementsByTagName("button");
-for (let i = 0; i < buttons.length; i++) {
-  buttons[i].addEventListener("click", onButtonClick, false);
-};
-var keyframes = 0;
-var gotoKeyFrame = document.getElementById("gotoKeyFrame").value;
-document.getElementById("Time").innerHTML = "Current Time: " + t;
-document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes;
-document.getElementById("currentKeyFrame").innerHTML = "Current Keyframe: " + ((t / 50) | 0);
-var newPosThreeVector = null;
-
-
-// Handle button clicking
-function onButtonClick(event) {
-  if (event.target.id === "setPosition") {
-    if (gotoKeyFrame > danceDesigner.maxT / 50) {
-      alert("Invalid Keyframe");
-    }
-    for (i = 0; i < danceDesigner.s.dancers.length; i++) {
-      var potentialPose = danceDesigner.s.dancers[i].potentialPose;
-      if (potentialPose) {
-        danceDesigner.s.dancers[i].addPosition(potentialPose);
-        danceDesigner.s.dancers[i].potentialPose = null;
-      }
-    }
-  } else if (event.target.id === "getPosition") {
-    if (gotoKeyFrame > danceDesigner.maxT / 50) {
-      alert("Invalid Keyframe");
-    }
-    t = gotoKeyFrame * 50;
-    getPosition = true;
-
-  } else if (event.target.id === "addKeyFrame") {
-    danceDesigner.maxT = t;
-    for (i = 0; i < danceDesigner.s.dancers.length; i++) {
-      var dancerMesh = danceDesigner.dancers[danceDesigner.s.dancers[i].name];
-      var newPos = new Position(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z, danceDesigner.maxT);
-      danceDesigner.s.dancers[i].addPosition(newPos);
-    }
-
-    var i;
-    // Prepare for every single dancer, interpolate their path from a to b
-    for (i = 0; i < danceDesigner.s.dancers.length; i++) {
-      var d = danceDesigner.s.dancers[i];
-      var newDancerPosObj = {Dancer: d}
-      newDancerPosObj[0] =
-      {
-        x: d.positions[0].x,
-        y: d.positions[0].y,
-        z: d.positions[0].z,
-      };
-      var j;
-      for (j = 0; j < d.positions.length - 1; j++) {
-        var firstPosX = d.positions[j].x;
-        var firstPosY = d.positions[j].y;
-        var firstPosZ = d.positions[j].z;
-        var firstTime = d.positions[j].time;
-        var secondPosX = d.positions[j+1].x;
-        var secondPosY = d.positions[j+1].y;
-        var secondPosZ = d.positions[j+1].z;
-        var secondTime = d.positions[j+1].time;
-        var k;
-        for (k = firstTime + 1; k <= secondTime; k++) {
-          newDancerPosObj[k] =
-          {
-            x: ((secondPosX - firstPosX) * (k - firstTime) / (secondTime - firstTime)) + firstPosX,
-            y: ((secondPosY - firstPosY) * (k - firstTime) / (secondTime - firstTime)) + firstPosY,
-            z: ((secondPosZ - firstPosZ) * (k - firstTime) / (secondTime - firstTime)) + firstPosZ,
-          };
-        }
-      }
-      danceDesigner.dancerPos.push(newDancerPosObj);
-    }
-    keyframes++;
-
-    // Create the new renderer for the timeline
-    var width = window.innerWidth / 6;
-    var height = window.innerHeight / 6;
-    var viewAngle = 45;
-    var nearClipping = 0.1;
-    var farClipping = 9999;
-    var camera = new THREE.PerspectiveCamera( viewAngle, width / height, nearClipping, farClipping );
-    var renderer = new THREE.WebGLRenderer();
-    renderer.setSize( width, height );
-    document.body.appendChild( renderer.domElement );
-    camera.position.z = -10;
-    camera.position.y = 30;
-    camera.lookAt(new THREE.Vector3(0, 0, -10));
-    var newScene = danceDesigner.scene.clone();
-
-    danceDesigner.renderers.push({renderer: renderer, scene: newScene, time: t});
-
-    // Create new canvas
-    var canvasID = t.toString();
-    console.log('T TO STRING: ', canvasID);
-    var canvas = createElementOnDom('canvas', canvasID);
-    canvas.id = canvasID;
-    document.getElementById('timelineSection').appendChild(canvas);
-
-    document.getElementById(canvasID).addEventListener('click', function() {
-      t = parseFloat(canvas.id);
-      console.log(canvas.id);
-    }, false);
-    // Add child as a child to div, add the result to timelineSection
-    // ac(mainWrapper, ac(canvas, renderer.domElement));
-
-  } else if (event.target.id === "clear") {
-    for (i = 0; i < danceDesigner.s.dancers.length; i++) {
-      danceDesigner.s.dancers[i].positions = [];
-      var dancerMesh = danceDesigner.dancers[danceDesigner.s.dancers[i].name];
-      var newPos = new Position(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z, 0);
-      danceDesigner.s.dancers[i].addPosition(newPos);
-    }
-    danceDesigner.maxT = 0;
-    keyframes = 0;
-  } else if (event.target.id === "play") {
-    play = false;
-    danceDesigner.dancerPos = [];
-    var i;
-    // Prepare for every single dancer, interpolate their path from a to b
-    for (i = 0; i < danceDesigner.s.dancers.length; i++) {
-      // TimelineEditor.updateTimeMark();
-      var d = danceDesigner.s.dancers[i];
-      var newDancerPosObj = {Dancer: d}
-      newDancerPosObj[0] =
-      {
-        x: d.positions[0].x,
-        y: d.positions[0].y,
-        z: d.positions[0].z,
-      };
-      var j;
-      for (j = 0; j < d.positions.length - 1; j++) {
-        var firstPosX = d.positions[j].x;
-        var firstPosY = d.positions[j].y;
-        var firstPosZ = d.positions[j].z;
-        var firstTime = d.positions[j].time;
-        var secondPosX = d.positions[j+1].x;
-        var secondPosY = d.positions[j+1].y;
-        var secondPosZ = d.positions[j+1].z;
-        var secondTime = d.positions[j+1].time;
-        var k;
-        for (k = firstTime + 1; k <= secondTime; k++) {
-          newDancerPosObj[k] =
-          {
-            x: ((secondPosX - firstPosX) * (k - firstTime) / (secondTime - firstTime)) + firstPosX,
-            y: ((secondPosY - firstPosY) * (k - firstTime) / (secondTime - firstTime)) + firstPosY,
-            z: ((secondPosZ - firstPosZ) * (k - firstTime) / (secondTime - firstTime)) + firstPosZ,
-          };
-        }
-      }
-      danceDesigner.dancerPos.push(newDancerPosObj);
-    }
-    t = 0;
-    lightAngle = 0;
-    play = true;
-  }
-}
-
-
-// Initialize lesson on page load
-function initializeLesson() {
-  danceDesigner.init();
-  animate(0, 0);
-}
-if (window.addEventListener)
-  window.addEventListener('load', initializeLesson, false);
-else if (window.attachEvent)
-  window.attachEvent('onload', initializeLesson);
-else window.onload = initializeLesson;
-
 
 var TimelineEditor = function () {
 
@@ -691,6 +413,8 @@ var TimelineEditor = function () {
 		function onMouseMove( event ) {
 
       console.log((event.offsetX + scroller.scrollLeft) / scale);
+      console.log('OFFSETX: ', event.offsetX);
+      console.log('SCROLLEFT: ', scroller.scrollLeft);
       t = ((event.offsetX + scroller.scrollLeft) / scale);
       updateTimeMark();
 
@@ -699,7 +423,7 @@ var TimelineEditor = function () {
 		function onMouseUp( event ) {
 
 			onMouseMove( event );
-
+      t = ((event.offsetX + scroller.scrollLeft) / scale);
 			document.removeEventListener( 'mousemove', onMouseMove );
 			document.removeEventListener( 'mouseup', onMouseUp );
 
@@ -817,16 +541,318 @@ var TimelineEditor = function () {
 		// 	loopMark.style.width = ( loopEnd - loopStart ) + 'px';
     //
 		// } else {
-
 			loopMark.style.display = 'none';
-
 		//}
 
 	}
 
+  // if (play) {
+  //   console.log("play is true");
+  //   updateTimeMark();
+  // }
+  // document.getElementById( 'play' ).addEventListener("click", function() {
+  //   updateTimeMark();
+  // }, false);
 
-  return container;
+  return {
+    container: container,
+    updateTimeMark: updateTimeMark,
+  };
+
 };
 
 var timeline = new TimelineEditor();
-document.getElementById( 'timelineEditor' ).appendChild( timeline.dom );
+document.getElementById( 'timelineEditor' ).appendChild( timeline.container.dom );
+
+
+function animate() {
+  if (play) {
+    if (danceDesigner.maxT === 0) {
+      play = false;
+    }
+    if (t > danceDesigner.maxT) {
+      play = false;
+    }
+    timeline.updateTimeMark();
+    var i;
+    for (i = 0; i < danceDesigner.dancerPos.length; i++) {
+      var d = danceDesigner.dancerPos[i].Dancer;
+      if (danceDesigner.dancerPos[i][t] != null) {
+        danceDesigner.dancers[d.name].position.x = danceDesigner.dancerPos[i][t].x;
+        danceDesigner.dancers[d.name].position.y = danceDesigner.dancerPos[i][t].y;
+        danceDesigner.dancers[d.name].position.z = danceDesigner.dancerPos[i][t].z;
+      }
+    }
+    t += 1;
+    if (t === danceDesigner.maxT) {
+      play = false;
+    }
+    lightAngle += 5;
+    if (lightAngle > 360) { lightAngle = 0;};
+    danceDesigner.light.position.x = 5 * Math.cos(lightAngle * Math.PI / 180);
+    danceDesigner.light.position.z = 5 * Math.sin(lightAngle * Math.PI / 180);
+  } else {
+    for (i = 0; i < danceDesigner.dancerPos.length; i++) {
+      var d = danceDesigner.dancerPos[i].Dancer;
+      if (danceDesigner.dancerPos[i][t] != null) {
+        danceDesigner.dancers[d.name].position.x = danceDesigner.dancerPos[i][t].x;
+        danceDesigner.dancers[d.name].position.y = danceDesigner.dancerPos[i][t].y;
+        danceDesigner.dancers[d.name].position.z = danceDesigner.dancerPos[i][t].z;
+      }
+    }
+  }
+  requestAnimationFrame( animate );
+  render();
+  update();
+}
+
+// Create element function
+function create(tagName, props) {
+  return Object.assign(document.createElement(tagName), (props || {}));
+}
+
+function createElementOnDom (type, id) {
+  var element = document.createElement(type);
+  element.id = id;
+  return element;
+}
+
+// Append child function
+function ac(p, c) {
+  if (c) p.appendChild(c);
+  return p;
+}
+
+// Render the scene
+function render() {
+  if (danceDesigner.renderer) {
+    danceDesigner.renderer.render(danceDesigner.scene, danceDesigner.camera);
+    danceDesigner.renderer1.render(danceDesigner.scene, danceDesigner.camera1);
+
+    // Render the timeline renderers
+    for (let a = 0; a < danceDesigner.renderers.length; a++) {
+      var thisRenderer = danceDesigner.renderers[a].renderer;
+      var scene = danceDesigner.renderers[a].scene;
+      var time = danceDesigner.renderers[a].time;
+
+
+      if (time == t && play == false) {
+        thisRenderer.render(danceDesigner.scene, danceDesigner.camera1);
+      }
+      else {
+        for (let i = 0; i < scene.children.length; i ++) {
+          if (scene.children[i].type == "Mesh" && scene.children[i].geometry.type == "BoxGeometry") {
+            for (let j = 0; j < danceDesigner.dancerPos.length; j++) {
+              var d = danceDesigner.dancerPos[i].Dancer;
+              if (danceDesigner.dancerPos[i][time] != null) {
+                if (d.name == scene.children[i].geometry.name) {
+                  scene.children[i].position.x = danceDesigner.dancerPos[i][time].x;
+                  scene.children[i].position.y = danceDesigner.dancerPos[i][time].y;
+                  scene.children[i].position.z = danceDesigner.dancerPos[i][time].z;
+                }
+              }
+            }
+          }
+        }
+        thisRenderer.render(scene, danceDesigner.camera1);
+      }
+    }
+
+  }
+}
+
+
+// Update controls and stats
+function update() {
+  document.getElementById("Time").innerHTML = "Current Time: " + t;
+  document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes;
+  gotoKeyFrame = document.getElementById("gotoKeyFrame").value;
+  document.getElementById("currentKeyFrame").innerHTML = "Current Keyframe: " + ((t / 50) | 0);
+  danceDesigner.controls.update();
+}
+
+
+// Set button controls and events for each button.
+var buttons = document.getElementsByTagName("button");
+for (let i = 0; i < buttons.length; i++) {
+  buttons[i].addEventListener("click", onButtonClick, false);
+};
+var keyframes = 0;
+var gotoKeyFrame = document.getElementById("gotoKeyFrame").value;
+document.getElementById("Time").innerHTML = "Current Time: " + t;
+document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes;
+document.getElementById("currentKeyFrame").innerHTML = "Current Keyframe: " + ((t / 50) | 0);
+var newPosThreeVector = null;
+
+
+// Handle button clicking
+function onButtonClick(event) {
+  if (event.target.id === "setPosition") {
+    if (gotoKeyFrame > danceDesigner.maxT / 50) {
+      alert("Invalid Keyframe");
+    }
+    for (i = 0; i < danceDesigner.s.dancers.length; i++) {
+      var potentialPose = danceDesigner.s.dancers[i].potentialPose;
+      if (potentialPose) {
+        danceDesigner.s.dancers[i].addPosition(potentialPose);
+        danceDesigner.s.dancers[i].potentialPose = null;
+      }
+    }
+  } else if (event.target.id === "getPosition") {
+    if (gotoKeyFrame > danceDesigner.maxT / 50) {
+      alert("Invalid Keyframe");
+    }
+    t = gotoKeyFrame * 50;
+  } else if (event.target.id === "addKeyFrame") {
+    if (t > danceDesigner.maxT) {
+      danceDesigner.maxT = t;
+    }
+
+    for (i = 0; i < danceDesigner.s.dancers.length; i++) {
+      var dancerMesh = danceDesigner.dancers[danceDesigner.s.dancers[i].name];
+      var newPos = new Position(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z, danceDesigner.maxT);
+      danceDesigner.s.dancers[i].addPosition(newPos);
+    }
+
+    var i;
+    // Prepare for every single dancer, interpolate their path from a to b
+    for (i = 0; i < danceDesigner.s.dancers.length; i++) {
+      var d = danceDesigner.s.dancers[i];
+      var newDancerPosObj = {Dancer: d}
+      newDancerPosObj[0] =
+      {
+        x: d.positions[0].x,
+        y: d.positions[0].y,
+        z: d.positions[0].z,
+      };
+      var j;
+      for (j = 0; j < d.positions.length - 1; j++) {
+        var firstPosX = d.positions[j].x;
+        var firstPosY = d.positions[j].y;
+        var firstPosZ = d.positions[j].z;
+        var firstTime = d.positions[j].time;
+        var secondPosX = d.positions[j+1].x;
+        var secondPosY = d.positions[j+1].y;
+        var secondPosZ = d.positions[j+1].z;
+        var secondTime = d.positions[j+1].time;
+        var k;
+        for (k = firstTime + 1; k <= secondTime; k++) {
+          newDancerPosObj[k] =
+          {
+            x: ((secondPosX - firstPosX) * (k - firstTime) / (secondTime - firstTime)) + firstPosX,
+            y: ((secondPosY - firstPosY) * (k - firstTime) / (secondTime - firstTime)) + firstPosY,
+            z: ((secondPosZ - firstPosZ) * (k - firstTime) / (secondTime - firstTime)) + firstPosZ,
+          };
+        }
+      }
+      danceDesigner.dancerPos.push(newDancerPosObj);
+    }
+    keyframes++;
+
+    var addNewCanvas = true;
+
+    for (let a = 0; a < danceDesigner.renderers.length; a++) {
+      var thisRenderer = danceDesigner.renderers[a].renderer;
+      var scene = danceDesigner.renderers[a].scene;
+      var time = danceDesigner.renderers[a].time;
+      if (t == time) {
+        addNewCanvas = false;
+      }
+    }
+
+    if (addNewCanvas) {
+      // Create the new renderer for the timeline
+      var width = window.innerWidth / 6;
+      var height = window.innerHeight / 6;
+      var viewAngle = 45;
+      var nearClipping = 0.1;
+      var farClipping = 9999;
+      var camera = new THREE.PerspectiveCamera( viewAngle, width / height, nearClipping, farClipping );
+      var renderer = new THREE.WebGLRenderer();
+      renderer.setSize( width, height );
+      document.body.appendChild( renderer.domElement );
+      camera.position.z = -10;
+      camera.position.y = 30;
+      camera.lookAt(new THREE.Vector3(0, 0, -10));
+      var newScene = danceDesigner.scene.clone();
+
+      danceDesigner.renderers.push({renderer: renderer, scene: newScene, time: t});
+
+      // Create new canvas
+      var canvasID = t.toString();
+      console.log('T TO STRING: ', canvasID);
+      var canvas = createElementOnDom('canvas', canvasID);
+      canvas.id = canvasID;
+      document.getElementById('timelineSection').appendChild(canvas);
+
+      document.getElementById(canvasID).addEventListener('click', function() {
+        t = parseFloat(canvas.id);
+        console.log(canvas.id);
+      }, false);
+      // Add child as a child to div, add the result to timelineSection
+      // ac(mainWrapper, ac(canvas, renderer.domElement));
+    }
+
+  } else if (event.target.id === "clear") {
+    for (i = 0; i < danceDesigner.s.dancers.length; i++) {
+      danceDesigner.s.dancers[i].positions = [];
+      var dancerMesh = danceDesigner.dancers[danceDesigner.s.dancers[i].name];
+      var newPos = new Position(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z, 0);
+      danceDesigner.s.dancers[i].addPosition(newPos);
+    }
+    danceDesigner.maxT = 0;
+    keyframes = 0;
+  } else if (event.target.id === "play") {
+    play = false;
+    danceDesigner.dancerPos = [];
+    var i;
+    // Prepare for every single dancer, interpolate their path from a to b
+    for (i = 0; i < danceDesigner.s.dancers.length; i++) {
+      // TimelineEditor.updateTimeMark();
+      var d = danceDesigner.s.dancers[i];
+      var newDancerPosObj = {Dancer: d}
+      newDancerPosObj[0] =
+      {
+        x: d.positions[0].x,
+        y: d.positions[0].y,
+        z: d.positions[0].z,
+      };
+      var j;
+      for (j = 0; j < d.positions.length - 1; j++) {
+        var firstPosX = d.positions[j].x;
+        var firstPosY = d.positions[j].y;
+        var firstPosZ = d.positions[j].z;
+        var firstTime = d.positions[j].time;
+        var secondPosX = d.positions[j+1].x;
+        var secondPosY = d.positions[j+1].y;
+        var secondPosZ = d.positions[j+1].z;
+        var secondTime = d.positions[j+1].time;
+        var k;
+        for (k = firstTime + 1; k <= secondTime; k++) {
+          newDancerPosObj[k] =
+          {
+            x: ((secondPosX - firstPosX) * (k - firstTime) / (secondTime - firstTime)) + firstPosX,
+            y: ((secondPosY - firstPosY) * (k - firstTime) / (secondTime - firstTime)) + firstPosY,
+            z: ((secondPosZ - firstPosZ) * (k - firstTime) / (secondTime - firstTime)) + firstPosZ,
+          };
+        }
+      }
+      danceDesigner.dancerPos.push(newDancerPosObj);
+    }
+    t = 0;
+    lightAngle = 0;
+    play = true;
+  }
+}
+
+
+// Initialize lesson on page load
+function initializeLesson() {
+  danceDesigner.init();
+  animate(0, 0);
+}
+if (window.addEventListener)
+  window.addEventListener('load', initializeLesson, false);
+else if (window.attachEvent)
+  window.attachEvent('onload', initializeLesson);
+else window.onload = initializeLesson;
