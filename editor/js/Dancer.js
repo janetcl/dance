@@ -311,6 +311,10 @@ var danceDesigner = {
   },
   onDocumentMouseDown: function (event) {
     // Get mouse position
+    if (event.clientX > (window.innerWidth * 8 / 10) || event.clientY > (window.innerHeight * 8 / 10)) {
+      console.log("outside of window");
+      return;
+    }
     var mouseX = (event.clientX / danceDesigner.rendererWidth) * 2 - 1;
     var mouseY = -(event.clientY / danceDesigner.rendererHeight) * 2 + 1;
     // Get 3D vector from 3D mouse position using 'unproject' function
@@ -320,7 +324,6 @@ var danceDesigner = {
     danceDesigner.raycaster.set( danceDesigner.camera.position, vector.sub( danceDesigner.camera.position ).normalize() );
     // Find all intersected objects
     var intersects = danceDesigner.raycaster.intersectObjects(danceDesigner.dancersArr);
-    console.log("dancersArr: ", danceDesigner.dancersArr);
     console.log("intersects: ", intersects);
     if (intersects.length > 0) {
       // Disable the controls
@@ -331,6 +334,9 @@ var danceDesigner = {
 
       for (var i = 0; i < danceDesigner.dancerPos.length; i++) {
         var tempT = Math.round(t);
+        if (tempT > danceDesigner.maxT) {
+          tempT = danceDesigner.maxT;
+        }
         if ((Math.abs(danceDesigner.dancerPos[i][tempT].x - intersects[0].object.position.x) < 1) &&
         (Math.abs(danceDesigner.dancerPos[i][tempT].y - intersects[0].object.position.y) < 1) &&
         (Math.abs(danceDesigner.dancerPos[i][tempT].z - intersects[0].object.position.z) < 1)) {
@@ -348,6 +354,10 @@ var danceDesigner = {
   },
   onDocumentMouseMove: function (event) {
     event.preventDefault();
+    if (event.clientX > (window.innerWidth * 8 / 10) || event.clientY > (window.innerHeight * 8 / 10)) {
+      console.log("outside of window");
+      return;
+    }
     // Get mouse position
     var mouseX = (event.clientX / danceDesigner.rendererWidth) * 2 - 1;
     var mouseY = -(event.clientY / danceDesigner.rendererHeight) * 2 + 1;
@@ -370,7 +380,7 @@ var danceDesigner = {
       if (danceDesigner.movingDancer) {
         // console.log("moving dancer: ", danceDesigner.movingDancer);
         if (newPosThreeVector) {
-          // console.log("FIX THIS");
+          console.log("FIX THIS");
           // Clamp the position to within the boundaries of the stage
           if (danceDesigner.selection.position.x > danceDesigner.xMax) {
             newPosThreeVector.x = danceDesigner.xMax;
@@ -425,7 +435,7 @@ var TimelineEditor = function () {
 
   var timeline = new UI.Panel();
   timeline.setPosition( 'absolute' );
-  timeline.setTop( '550px' );
+  timeline.setTop( '80%' );
   timeline.setBottom( '0px' );
   timeline.setWidth( '100%' );
   timeline.setOverflow( 'auto' );
@@ -733,6 +743,58 @@ document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes
 document.getElementById("currentKeyFrame").innerHTML = "Current Keyframe: " + ((t / 50) | 0);
 var newPosThreeVector = null;
 
+function addNewKeyFrame(t) {
+  if (t > danceDesigner.maxT) {
+    danceDesigner.maxT = t;
+  }
+
+  t = Math.round(t);
+
+  for (i = 0; i < danceDesigner.s.dancers.length; i++) {
+    var dancerMesh = danceDesigner.dancers[danceDesigner.s.dancers[i].name];
+    var newPos = new Position(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z, t);
+    danceDesigner.s.dancers[i].addPosition(newPos);
+  }
+
+  var i;
+  danceDesigner.dancerPos = [];
+  // Prepare for every single dancer, interpolate their path from a to b
+  for (i = 0; i < danceDesigner.s.dancers.length; i++) {
+    var d = danceDesigner.s.dancers[i];
+    var newDancerPosObj = {Dancer: d}
+    newDancerPosObj[0] =
+    {
+      x: d.positions[0].x,
+      y: d.positions[0].y,
+      z: d.positions[0].z,
+    };
+    var j;
+    for (j = 0; j < d.positions.length - 1; j++) {
+      var firstPosX = d.positions[j].x;
+      var firstPosY = d.positions[j].y;
+      var firstPosZ = d.positions[j].z;
+      var firstTime = d.positions[j].time;
+      var secondPosX = d.positions[j+1].x;
+      var secondPosY = d.positions[j+1].y;
+      var secondPosZ = d.positions[j+1].z;
+      var secondTime = d.positions[j+1].time;
+      var k;
+      for (k = firstTime + 1; k <= secondTime; k++) {
+        newDancerPosObj[k] =
+        {
+          x: ((secondPosX - firstPosX) * (k - firstTime) / (secondTime - firstTime)) + firstPosX,
+          y: ((secondPosY - firstPosY) * (k - firstTime) / (secondTime - firstTime)) + firstPosY,
+          z: ((secondPosZ - firstPosZ) * (k - firstTime) / (secondTime - firstTime)) + firstPosZ,
+        };
+      }
+    }
+    danceDesigner.dancerPos.push(newDancerPosObj);
+  }
+  console.log(danceDesigner.dancerPos);
+  keyframes++;
+
+  timeline.addTimeMark(t);
+}
 
 // Handle button clicking
 function onButtonClick(event) {
