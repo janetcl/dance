@@ -152,13 +152,18 @@ var danceDesigner = {
     var width1 = window.innerWidth / 6;
     var height1 = window.innerHeight / 6;
     var viewAngle1 = 45;
-    this.camera1 = new THREE.PerspectiveCamera( viewAngle1, width1 / height1, nearClipping, farClipping );
-    this.renderer1 = new THREE.WebGLRenderer({canvas: document.getElementById("renderer1")});
-    this.renderer1.setSize( width1, height1 );
-    document.body.appendChild( this.renderer1.domElement );
-    this.camera1.position.z = -10;
-    this.camera1.position.y = 30;
-    this.camera1.lookAt(new THREE.Vector3(0, 0, -10));
+    // this.camera1 = new THREE.PerspectiveCamera( viewAngle1, width1 / height1, nearClipping, farClipping );
+    // this.renderer1 = new THREE.WebGLRenderer({canvas: document.getElementById("0")});
+    // document.getElementById("0").addEventListener('click', function() {
+    //   t = 0;
+    //   timeline.updateTimeMark();
+    //   console.log(0);
+    // }, false);
+    // this.renderer1.setSize( width1, height1 );
+    // document.body.appendChild( this.renderer1.domElement );
+    // this.camera1.position.z = -10;
+    // this.camera1.position.y = 30;
+    // this.camera1.lookAt(new THREE.Vector3(0, 0, -10));
 
     // Events
     document.addEventListener('mousedown', this.onDocumentMouseDown, false);
@@ -199,7 +204,7 @@ var danceDesigner = {
     this.maxT = 0;
     this.dancers = {[janet.name]: janetMesh, [phillip.name]: phillipMesh};
     this.dancersArr = [janetMesh, phillipMesh];
-    this.s.play();
+    // this.s.play();
 
     var spotLight = new THREE.SpotLight( {color: 0xffffff, intensity: 0.1});
     spotLight.position.set( -1, 60, 20 );
@@ -280,22 +285,22 @@ var danceDesigner = {
     this.stagePlane = new THREE.Plane(stageNormalVector);
 
     // Create small renderer for timeline
-    var width2 = window.innerWidth / 6;
-    var height2 = window.innerHeight / 6;
-    var viewAngle2 = 45;
-    this.camera2 = new THREE.PerspectiveCamera( viewAngle2, width2 / height2, nearClipping, farClipping );
-    this.renderer2 = new THREE.WebGLRenderer();
-    this.renderer2.setSize( width2, height2 );
-    document.body.appendChild( this.renderer2.domElement );
-    this.camera2.position.z = -10;
-    this.camera2.position.y = 30;
-    this.camera2.lookAt(new THREE.Vector3(0, 0, -10));
+    // var width2 = window.innerWidth / 6;
+    // var height2 = window.innerHeight / 6;
+    // var viewAngle2 = 45;
+    // this.camera2 = new THREE.PerspectiveCamera( viewAngle2, width2 / height2, nearClipping, farClipping );
+    // this.renderer2 = new THREE.WebGLRenderer();
+    // this.renderer2.setSize( width2, height2 );
+    // document.body.appendChild( this.renderer2.domElement );
+    // this.camera2.position.z = -10;
+    // this.camera2.position.y = 30;
+    // this.camera2.lookAt(new THREE.Vector3(0, 0, -10));
 
     // let timelineSection = document.getElementById("timelineSection");
     // Create new canvas
-    let canvas = create("canvas", {class: "timelineCanvas"});
-    document.getElementById('timelineSection').appendChild(canvas);
-    this.renderers.push({renderer: this.renderer2, scene: this.scene.clone(), time: 0});
+    // let canvas = create("canvas", {class: "timelineCanvas"});
+    // document.getElementById('timelineSection').appendChild(canvas);
+    // this.renderers.push({renderer: this.renderer2, scene: this.scene.clone(), time: 0});
   },
   onDocumentMouseDown: function (event) {
     // Get mouse position
@@ -308,6 +313,8 @@ var danceDesigner = {
     danceDesigner.raycaster.set( danceDesigner.camera.position, vector.sub( danceDesigner.camera.position ).normalize() );
     // Find all intersected objects
     var intersects = danceDesigner.raycaster.intersectObjects(danceDesigner.dancersArr);
+    console.log("dancersArr: ", danceDesigner.dancersArr);
+    console.log(intersects);
     if (intersects.length > 0) {
       // Disable the controls
       danceDesigner.controls.enabled = false;
@@ -317,6 +324,7 @@ var danceDesigner = {
       // Calculate the offset
       var intersects = danceDesigner.raycaster.intersectObject(danceDesigner.plane);
       danceDesigner.offset.copy(intersects[0].point).sub(danceDesigner.plane.position);
+      console.log(intersects);
     }
   },
   onDocumentMouseMove: function (event) {
@@ -337,8 +345,10 @@ var danceDesigner = {
         intersects[0].point.sub(danceDesigner.offset),
         danceDesigner.selection.position
       );
+      console.log("newPosThreeVector", newPosThreeVector);
       // Find the dancer based on the initial pose
       if (danceDesigner.movingDancer) {
+        console.log("moving dancer: ", danceDesigner.movingDancer);
         if (newPosThreeVector) {
           // console.log("FIX THIS");
           // Clamp the position to within the boundaries of the stage
@@ -356,8 +366,9 @@ var danceDesigner = {
             newPosThreeVector.z = danceDesigner.zMin;
             danceDesigner.selection.position.z = danceDesigner.zMin;
           }
-          var newPos = new Position(newPosThreeVector.x, newPosThreeVector.y, newPosThreeVector.z, t);
+          var newPos = new Position(newPosThreeVector.x, newPosThreeVector.y, newPosThreeVector.z, Math.round(t));
           danceDesigner.movingDancer.addPotentialPos(newPos);
+          console.log("newPos: ", newPos);
         }
       }
     } else {
@@ -394,7 +405,7 @@ var TimelineEditor = function () {
 
   var timeline = new UI.Panel();
   timeline.setPosition( 'absolute' );
-  timeline.setTop( '500px' );
+  timeline.setTop( '550px' );
   timeline.setBottom( '0px' );
   timeline.setWidth( '100%' );
   timeline.setOverflow( 'auto' );
@@ -412,9 +423,6 @@ var TimelineEditor = function () {
 
 		function onMouseMove( event ) {
 
-      console.log((event.offsetX + scroller.scrollLeft) / scale);
-      console.log('OFFSETX: ', event.offsetX);
-      console.log('SCROLLEFT: ', scroller.scrollLeft);
       t = ((event.offsetX + scroller.scrollLeft) / scale);
       updateTimeMark();
 
@@ -423,11 +431,13 @@ var TimelineEditor = function () {
 		function onMouseUp( event ) {
 
 			onMouseMove( event );
-      t = ((event.offsetX + scroller.scrollLeft) / scale);
 			document.removeEventListener( 'mousemove', onMouseMove );
 			document.removeEventListener( 'mouseup', onMouseUp );
 
 		}
+
+    t = ((event.offsetX + scroller.scrollLeft) / scale);
+    updateTimeMark();
 
 		document.addEventListener( 'mousemove', onMouseMove, false );
 		document.addEventListener( 'mouseup', onMouseUp, false );
@@ -520,14 +530,9 @@ var TimelineEditor = function () {
 	timeMark.style.pointerEvents = 'none';
 	timeline.dom.appendChild( timeMark );
 
-
   function updateTimeMark() {
 
-    // var mouseX = (event.clientX / danceDesigner.rendererWidth) * 2 - 1;
-    // var mouseY = -(event.clientY / danceDesigner.rendererHeight) * 2 + 1;
-  //  timeMark.style.left = (event.offsetX + scroller.scrollLeft) / scale) + 'px';
 		timeMark.style.left = ( t * scale ) - scroller.scrollLeft - 8 + 'px';
-    console.log('timeMark style: ', timeMark.style.left);
 
 		//var loop = player.getLoop();
 
@@ -546,17 +551,29 @@ var TimelineEditor = function () {
 
 	}
 
-  // if (play) {
-  //   console.log("play is true");
-  //   updateTimeMark();
-  // }
-  // document.getElementById( 'play' ).addEventListener("click", function() {
-  //   updateTimeMark();
-  // }, false);
+  var timeMarks = [];
+
+  function addTimeMark( t ) {
+
+    var newTimeMark = document.createElement( 'div' );
+    newTimeMark.style.position = 'absolute';
+    newTimeMark.style.top = '0px';
+    newTimeMark.style.left = '-8px';
+    newTimeMark.style.width = '23px';
+    newTimeMark.style.height = '100%';
+    newTimeMark.style.background = 'linear-gradient(90deg, transparent 8px, #7f93ff 12px, #7f93ff 13px, transparent 9px) 0% 0% / 16px 16px repeat-y';
+    newTimeMark.style.pointerEvents = 'none';
+
+    timeMarks.push({mark: newTimeMark, time: t});
+    newTimeMark.style.left = ( t * scale ) - scroller.scrollLeft - 8 + 'px';
+    timeline.dom.appendChild( newTimeMark );
+
+  }
 
   return {
     container: container,
     updateTimeMark: updateTimeMark,
+    addTimeMark: addTimeMark,
   };
 
 };
@@ -592,12 +609,16 @@ function animate() {
     danceDesigner.light.position.x = 5 * Math.cos(lightAngle * Math.PI / 180);
     danceDesigner.light.position.z = 5 * Math.sin(lightAngle * Math.PI / 180);
   } else {
+    var closestT = Math.round(t);
+    if (closestT > danceDesigner.maxT) {
+      closestT = danceDesigner.maxT - 1;
+    }
     for (i = 0; i < danceDesigner.dancerPos.length; i++) {
       var d = danceDesigner.dancerPos[i].Dancer;
-      if (danceDesigner.dancerPos[i][t] != null) {
-        danceDesigner.dancers[d.name].position.x = danceDesigner.dancerPos[i][t].x;
-        danceDesigner.dancers[d.name].position.y = danceDesigner.dancerPos[i][t].y;
-        danceDesigner.dancers[d.name].position.z = danceDesigner.dancerPos[i][t].z;
+      if (danceDesigner.dancerPos[i][closestT] != null) {
+        danceDesigner.dancers[d.name].position.x = danceDesigner.dancerPos[i][closestT].x;
+        danceDesigner.dancers[d.name].position.y = danceDesigner.dancerPos[i][closestT].y;
+        danceDesigner.dancers[d.name].position.z = danceDesigner.dancerPos[i][closestT].z;
       }
     }
   }
@@ -627,36 +648,36 @@ function ac(p, c) {
 function render() {
   if (danceDesigner.renderer) {
     danceDesigner.renderer.render(danceDesigner.scene, danceDesigner.camera);
-    danceDesigner.renderer1.render(danceDesigner.scene, danceDesigner.camera1);
+    // danceDesigner.renderer1.render(danceDesigner.scene, danceDesigner.camera1);
 
     // Render the timeline renderers
-    for (let a = 0; a < danceDesigner.renderers.length; a++) {
-      var thisRenderer = danceDesigner.renderers[a].renderer;
-      var scene = danceDesigner.renderers[a].scene;
-      var time = danceDesigner.renderers[a].time;
-
-
-      if (time == t && play == false) {
-        thisRenderer.render(danceDesigner.scene, danceDesigner.camera1);
-      }
-      else {
-        for (let i = 0; i < scene.children.length; i ++) {
-          if (scene.children[i].type == "Mesh" && scene.children[i].geometry.type == "BoxGeometry") {
-            for (let j = 0; j < danceDesigner.dancerPos.length; j++) {
-              var d = danceDesigner.dancerPos[i].Dancer;
-              if (danceDesigner.dancerPos[i][time] != null) {
-                if (d.name == scene.children[i].geometry.name) {
-                  scene.children[i].position.x = danceDesigner.dancerPos[i][time].x;
-                  scene.children[i].position.y = danceDesigner.dancerPos[i][time].y;
-                  scene.children[i].position.z = danceDesigner.dancerPos[i][time].z;
-                }
-              }
-            }
-          }
-        }
-        thisRenderer.render(scene, danceDesigner.camera1);
-      }
-    }
+    // for (let a = 0; a < danceDesigner.renderers.length; a++) {
+    //   var thisRenderer = danceDesigner.renderers[a].renderer;
+    //   var scene = danceDesigner.renderers[a].scene;
+    //   var time = danceDesigner.renderers[a].time;
+    //
+    //
+    //   if (time == t && play == false) {
+    //     thisRenderer.render(danceDesigner.scene, danceDesigner.camera1);
+    //   }
+    //   else {
+    //     for (let i = 0; i < scene.children.length; i ++) {
+    //       if (scene.children[i].type == "Mesh" && scene.children[i].geometry.type == "BoxGeometry") {
+    //         for (let j = 0; j < danceDesigner.dancerPos.length; j++) {
+    //           var d = danceDesigner.dancerPos[i].Dancer;
+    //           if (danceDesigner.dancerPos[i][time] != null) {
+    //             if (d.name == scene.children[i].geometry.name) {
+    //               scene.children[i].position.x = danceDesigner.dancerPos[i][time].x;
+    //               scene.children[i].position.y = danceDesigner.dancerPos[i][time].y;
+    //               scene.children[i].position.z = danceDesigner.dancerPos[i][time].z;
+    //             }
+    //           }
+    //         }
+    //       }
+    //     }
+    //     thisRenderer.render(scene, danceDesigner.camera1);
+    //   }
+    // }
 
   }
 }
@@ -695,26 +716,25 @@ function onButtonClick(event) {
       var potentialPose = danceDesigner.s.dancers[i].potentialPose;
       if (potentialPose) {
         danceDesigner.s.dancers[i].addPosition(potentialPose);
+        console.log("ADDED POSITION");
         danceDesigner.s.dancers[i].potentialPose = null;
       }
     }
-  } else if (event.target.id === "getPosition") {
-    if (gotoKeyFrame > danceDesigner.maxT / 50) {
-      alert("Invalid Keyframe");
-    }
-    t = gotoKeyFrame * 50;
   } else if (event.target.id === "addKeyFrame") {
     if (t > danceDesigner.maxT) {
       danceDesigner.maxT = t;
     }
 
+    t = Math.round(t);
+
     for (i = 0; i < danceDesigner.s.dancers.length; i++) {
       var dancerMesh = danceDesigner.dancers[danceDesigner.s.dancers[i].name];
-      var newPos = new Position(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z, danceDesigner.maxT);
+      var newPos = new Position(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z, t);
       danceDesigner.s.dancers[i].addPosition(newPos);
     }
 
     var i;
+    danceDesigner.dancerPos = [];
     // Prepare for every single dancer, interpolate their path from a to b
     for (i = 0; i < danceDesigner.s.dancers.length; i++) {
       var d = danceDesigner.s.dancers[i];
@@ -749,49 +769,52 @@ function onButtonClick(event) {
     }
     keyframes++;
 
-    var addNewCanvas = true;
+    timeline.addTimeMark(t);
 
-    for (let a = 0; a < danceDesigner.renderers.length; a++) {
-      var thisRenderer = danceDesigner.renderers[a].renderer;
-      var scene = danceDesigner.renderers[a].scene;
-      var time = danceDesigner.renderers[a].time;
-      if (t == time) {
-        addNewCanvas = false;
-      }
-    }
+    // var addNewCanvas = true;
 
-    if (addNewCanvas) {
-      // Create the new renderer for the timeline
-      var width = window.innerWidth / 6;
-      var height = window.innerHeight / 6;
-      var viewAngle = 45;
-      var nearClipping = 0.1;
-      var farClipping = 9999;
-      var camera = new THREE.PerspectiveCamera( viewAngle, width / height, nearClipping, farClipping );
-      var renderer = new THREE.WebGLRenderer();
-      renderer.setSize( width, height );
-      document.body.appendChild( renderer.domElement );
-      camera.position.z = -10;
-      camera.position.y = 30;
-      camera.lookAt(new THREE.Vector3(0, 0, -10));
-      var newScene = danceDesigner.scene.clone();
+    // for (let a = 0; a < danceDesigner.renderers.length; a++) {
+    //   var thisRenderer = danceDesigner.renderers[a].renderer;
+    //   var scene = danceDesigner.renderers[a].scene;
+    //   var time = danceDesigner.renderers[a].time;
+    //   if (t == time) {
+    //     addNewCanvas = false;
+    //   }
+    // }
 
-      danceDesigner.renderers.push({renderer: renderer, scene: newScene, time: t});
+    // if (addNewCanvas) {
+      // // Create the new renderer for the timeline
+      // var width = window.innerWidth / 6;
+      // var height = window.innerHeight / 6;
+      // var viewAngle = 45;
+      // var nearClipping = 0.1;
+      // var farClipping = 9999;
+      // var camera = new THREE.PerspectiveCamera( viewAngle, width / height, nearClipping, farClipping );
 
       // Create new canvas
-      var canvasID = t.toString();
-      console.log('T TO STRING: ', canvasID);
-      var canvas = createElementOnDom('canvas', canvasID);
-      canvas.id = canvasID;
-      document.getElementById('timelineSection').appendChild(canvas);
+      // var canvasID = t.toString();
+      // console.log('T TO STRING: ', canvasID);
+      // var canvas = createElementOnDom('canvas', canvasID);
+      // document.getElementById('timelineSection').appendChild(canvas);
+      //
+      // var renderer = new THREE.WebGLRenderer( {canvas: canvas});
+      // renderer.setSize( width, height );
+      // // document.body.appendChild( renderer.domElement );
+      // camera.position.z = -10;
+      // camera.position.y = 30;
+      // camera.lookAt(new THREE.Vector3(0, 0, -10));
+      // var newScene = danceDesigner.scene.clone();
 
-      document.getElementById(canvasID).addEventListener('click', function() {
-        t = parseFloat(canvas.id);
-        console.log(canvas.id);
-      }, false);
+      // danceDesigner.renderers.push({renderer: renderer, scene: newScene, time: t});
+
+      // document.getElementById(canvasID).addEventListener('click', function() {
+      //   t = parseFloat(canvasID);
+      //   timeline.updateTimeMark();
+      //   console.log(canvasID);
+      // }, false);
       // Add child as a child to div, add the result to timelineSection
       // ac(mainWrapper, ac(canvas, renderer.domElement));
-    }
+    // }
 
   } else if (event.target.id === "clear") {
     for (i = 0; i < danceDesigner.s.dancers.length; i++) {
@@ -839,7 +862,9 @@ function onButtonClick(event) {
       }
       danceDesigner.dancerPos.push(newDancerPosObj);
     }
-    t = 0;
+    if (t > danceDesigner.maxT) {
+      t = 0;
+    }
     lightAngle = 0;
     play = true;
   }

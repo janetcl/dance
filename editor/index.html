@@ -14,7 +14,6 @@
      <p style="" id="currentKeyFrame" class="ui currentKeyFrame"></p>
      <label style="margin-left:10px; margin-top: 10px; width: 60px;" for="gotoKeyFrame" class="ui">Go to Keyframe:</label>
      <input style="margin-left:130px; width:40px; margin-top:15px;" class="ui" type="number" min="0" step="1" id="gotoKeyFrame" value="0">
-     <button style="margin-left:120px; margin-top:35px; width: 60px;" id="getPosition" class="ui">Get position</button>
      <button style="margin-left:180px; margin-top:35px; width: 60px;" id="setPosition" class="ui">Set position</button>
      <div class="mainRenderer">
        <canvas id="renderer">
@@ -22,15 +21,15 @@
      </div>
      <div class="bottomBar" id="bottomBar">
        <div class="timeline">
-            <canvas id="renderer1">
-            </canvas>
+            <!-- <canvas id="0">
+            </canvas> -->
         </div>
-        <div id="timelineEditor">
-        </div>
-       <button style="margin-bottom:10px; margin-left:10px; width: 60px;" id="play" class="ui">Play</button>
-       <button style="margin-bottom:10px; margin-left:60px; width: 60px;" id="addKeyFrame" class="ui">Add Keyframe</button>
-       <button style="margin-bottom:10px; margin-left:130px; width: 60px;" id="clear" class="ui">Clear Sequence</button>
+        <button style="margin-bottom:10px; margin-left:10px; width: 60px;" id="play" class="ui">Play</button>
+        <button style="margin-bottom:10px; margin-left:60px; width: 60px;" id="addKeyFrame" class="ui">Add Keyframe</button>
+        <button style="margin-bottom:10px; margin-left:130px; width: 60px;" id="clear" class="ui">Clear Sequence</button>
      </div>
+   </div>
+   <div id="timelineEditor">
    </div>
    <div class="ui time">
      <p style="text-align:right;" id="Time" class="ui time"></p>
