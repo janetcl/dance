@@ -96,8 +96,15 @@ class Stage {
     var i;
     for (i = 0; i < this.dancers.length; i++) {
       var len = this.dancers[i].positions.length;
+      // TO DO: interpolate all of the positions to get it so that there are positions
+      // along all times! right now you only have 1 position per keyframe, but you need this
+      // to be continuous along the entire timeline - ie, have 1 position per unit of time.
+
+      // Reconsider how you are storing positions in general. Why interpolate through
+      // all of the positions / compute it individually upon playing?
       var j;
       for (j = 0; j < len; j++) {
+        console.log(this.dancers[i].positions[j]);
         if ((Math.abs(this.dancers[i].positions[j].x - threeJSPose.x) < 1) &&
         (Math.abs(this.dancers[i].positions[j].y - threeJSPose.y) < 1) &&
         (Math.abs(this.dancers[i].positions[j].z - threeJSPose.z) < 1)) {
@@ -314,17 +321,29 @@ var danceDesigner = {
     // Find all intersected objects
     var intersects = danceDesigner.raycaster.intersectObjects(danceDesigner.dancersArr);
     console.log("dancersArr: ", danceDesigner.dancersArr);
-    console.log(intersects);
+    console.log("intersects: ", intersects);
     if (intersects.length > 0) {
       // Disable the controls
       danceDesigner.controls.enabled = false;
       // Set the selection - first intersected object
       danceDesigner.selection = intersects[0].object;
-      danceDesigner.movingDancer = danceDesigner.s.getDancer(intersects[0].object.position);
+      console.log(intersects[0].object);
+
+      for (var i = 0; i < danceDesigner.dancerPos.length; i++) {
+        var tempT = Math.round(t);
+        if ((Math.abs(danceDesigner.dancerPos[i][tempT].x - intersects[0].object.position.x) < 1) &&
+        (Math.abs(danceDesigner.dancerPos[i][tempT].y - intersects[0].object.position.y) < 1) &&
+        (Math.abs(danceDesigner.dancerPos[i][tempT].z - intersects[0].object.position.z) < 1)) {
+          danceDesigner.movingDancer = danceDesigner.dancerPos[i].Dancer;
+        }
+      }
+
+      // danceDesigner.movingDancer = danceDesigner.s.getDancer(intersects[0].object.position);
+      console.log('movingDancer', danceDesigner.movingDancer);
       // Calculate the offset
       var intersects = danceDesigner.raycaster.intersectObject(danceDesigner.plane);
       danceDesigner.offset.copy(intersects[0].point).sub(danceDesigner.plane.position);
-      console.log(intersects);
+      console.log("intersects", intersects);
     }
   },
   onDocumentMouseMove: function (event) {
@@ -346,9 +365,10 @@ var danceDesigner = {
         danceDesigner.selection.position
       );
       console.log("newPosThreeVector", newPosThreeVector);
+      console.log("movingDancer", danceDesigner.movingDancer);
       // Find the dancer based on the initial pose
       if (danceDesigner.movingDancer) {
-        console.log("moving dancer: ", danceDesigner.movingDancer);
+        // console.log("moving dancer: ", danceDesigner.movingDancer);
         if (newPosThreeVector) {
           // console.log("FIX THIS");
           // Clamp the position to within the boundaries of the stage
@@ -570,10 +590,18 @@ var TimelineEditor = function () {
 
   }
 
+  function removeTimeMarks() {
+    for (var i = 0; i < timeMarks.length; i++) {
+      timeline.dom.removeChild( timeMarks[i].mark);
+    }
+    timeMarks = [];
+  }
+
   return {
     container: container,
     updateTimeMark: updateTimeMark,
     addTimeMark: addTimeMark,
+    removeTimeMarks: removeTimeMarks,
   };
 
 };
@@ -767,6 +795,7 @@ function onButtonClick(event) {
       }
       danceDesigner.dancerPos.push(newDancerPosObj);
     }
+    console.log(danceDesigner.dancerPos);
     keyframes++;
 
     timeline.addTimeMark(t);
@@ -822,6 +851,7 @@ function onButtonClick(event) {
       var dancerMesh = danceDesigner.dancers[danceDesigner.s.dancers[i].name];
       var newPos = new Position(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z, 0);
       danceDesigner.s.dancers[i].addPosition(newPos);
+      timeline.removeTimeMarks();
     }
     danceDesigner.maxT = 0;
     keyframes = 0;
