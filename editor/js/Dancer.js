@@ -67,12 +67,57 @@ class Dancer {
     return;
   }
 
+  // Update the position when there is only one keyframe at t = 0
+  updateOnlyPosition(newPos) {
+    this.positions[0] = newPos;
+  }
+
+  // Update the first position
+  updateFirstPosition(nextKeyFrameT, newPos) {
+    this.positions[0] = newPos;
+    this.positions[nextKeyFrameT]
+    for (var i = 1; i < nextKeyFrameT; i++) {
+      this.positions[i].x = ((this.positions[nextKeyFrameT].x - newPos.x) * i / (nextKeyFrameT)) + newPos.x;
+      this.positions[i].y = ((this.positions[nextKeyFrameT].y - newPos.y) * i / (nextKeyFrameT)) + newPos.y;
+      this.positions[i].z = ((this.positions[nextKeyFrameT].z - newPos.z) * i / (nextKeyFrameT)) + newPos.z;
+    }
+  }
+
+}
+
+var newDancerPosObj = {Dancer: d}
+newDancerPosObj[0] =
+{
+  x: d.positions[0].x,
+  y: d.positions[0].y,
+  z: d.positions[0].z,
+};
+var j;
+for (j = 0; j < d.positions.length - 1; j++) {
+  var firstPosX = d.positions[j].x;
+  var firstPosY = d.positions[j].y;
+  var firstPosZ = d.positions[j].z;
+  var firstTime = d.positions[j].time;
+  var secondPosX = d.positions[j+1].x;
+  var secondPosY = d.positions[j+1].y;
+  var secondPosZ = d.positions[j+1].z;
+  var secondTime = d.positions[j+1].time;
+  var k;
+  for (k = firstTime + 1; k <= secondTime; k++) {
+    newDancerPosObj[k] =
+    {
+      x: ((secondPosX - firstPosX) * (k - firstTime) / (secondTime - firstTime)) + firstPosX,
+      y: ((secondPosY - firstPosY) * (k - firstTime) / (secondTime - firstTime)) + firstPosY,
+      z: ((secondPosZ - firstPosZ) * (k - firstTime) / (secondTime - firstTime)) + firstPosZ,
+    };
+  }
 }
 
 class Stage {
 
   constructor() {
     this.dancers = [];
+    this.keyframes = [];
   }
 
   addDancer(dan) {
@@ -91,6 +136,109 @@ class Stage {
         return dancer !== dan;
     });
   }
+
+  addKeyFrame(t) {
+    this.keyframes.push(t);
+    this.keyframes.sort(function(a, b) {return a - b});
+  }
+
+Stage.keyframes:
+{[0, 10, 50]}
+ dancer.positions[0]
+ dancer.positions[10]
+ dancer.positions[50]
+
+addKeyFrame -
+  need to edit each of dancer.positions[]
+
+  if (stage.keyframes.contains(t)) {
+    var keyframeIndex = 0;
+    // Determine where the current time is in the keyframes[] array if it exists
+    for (var i = 0; i < stage.keyframes.length; i++) {
+      if (stage.keyframes[i] == t) {
+        keyframeIndex = i;
+      }
+    }
+    for (dancer in stage.dancers) {
+      if (i == 0) {
+        // Case when we are updating the initial position at t = 0
+        if (stage.keyframes.length == 1) {
+          dancer.updateOnlyPosition(newPos);
+        } else {
+          dancer.updateFirstPosition(stage.keyframes[1], newPos);
+        }
+      } else if (i == (stage.keyframes.length - 1)) {
+        // Case when we are updating the last position
+        dancer.updateLastPosition(stage.keyframes[i - 1], stage.keyframes[i], newPos);
+      } else {
+        // Case when we are updating a middle position
+        dancer.updateMiddlePosition(stage.keyframes[i - 1], stage.keyframes[i], stage.keyframes[i + 1], newPos);
+      }
+    }
+  } else {
+    // Adding a new keyframe
+    stage.addKeyFrame(t);
+    if (t > stage.keyframes[stage.keyframes.length - 1]) {
+      // Adding a new keyframe at the end of the routine
+      for (dancer in stage.dancers) {
+        dancer.addNewLastPosition(stage.keyframes[stage.keyframes.length - 2], t, newPos);
+      }
+    } else {
+      // Adding a new keyframe in the middle of the routine
+      var keyframeIndex = 0;
+      // Determine where the current time is in the keyframes[] array if it exists
+      for (var i = 0; i < stage.keyframes.length; i++) {
+        if (stage.keyframes[i] == t) {
+          keyframeIndex = i;
+        }
+      }
+      for (dancer in stage.dancers) {
+        dancer.addNewMiddlePosition(stage.keyframes[i - 1], stage.keyframes[i], stage.keyframes[i + 1], newPos);
+      }
+    }
+  }
+
+
+
+  for dancer in stage.getDancers() {
+
+    if (stage.keyframes.contains(t)) {
+      if (t == 0) {
+
+      } else if (t == danceDesigner.maxT) {
+
+      } else {
+        dancer.updatePosition(keyframes[t - 1], keyframes[t]);
+      }
+    } else {
+      if (t > danceDesigner.maxT) {
+        dancer.addLatePosition(t);
+      }
+
+      dancer.addMiddlePosition(prevKeyFrameT, t, nextKeyFrameT);
+    }
+  }
+
+if editing dancer.positions[0]:
+  -need to recompute dancer.positions[0 to 9]
+
+if editing dancer.positions[10]:
+  -need to recompute dancer.positions[1 to 49]
+
+if adding dancer.positions[5]:
+  -need to recompute dancer.positions[1 to 9]
+
+if adding dancer.positions[100]:
+  -need to add dancer.positions[51 to 100]
+
+dancers:
+for each dancer:
+positions:
+dancer.positions[0] = {position};
+dancer.positions[1] = {position};
+
+to play:
+  set the positions to each of the dancers to the corresponding dancer.positions[t]
 
   getDancer(threeJSPose) {
     var i;
@@ -324,38 +472,43 @@ var danceDesigner = {
     danceDesigner.raycaster.set( danceDesigner.camera.position, vector.sub( danceDesigner.camera.position ).normalize() );
     // Find all intersected objects
     var intersects = danceDesigner.raycaster.intersectObjects(danceDesigner.dancersArr);
-    console.log("intersects: ", intersects);
     if (intersects.length > 0) {
       // Disable the controls
       danceDesigner.controls.enabled = false;
       // Set the selection - first intersected object
       danceDesigner.selection = intersects[0].object;
-      console.log(intersects[0].object);
 
+      var found = false;
       for (var i = 0; i < danceDesigner.dancerPos.length; i++) {
         var tempT = Math.round(t);
         if (tempT > danceDesigner.maxT) {
-          tempT = danceDesigner.maxT;
+          tempT = Math.round(danceDesigner.maxT);
         }
+        console.log("t: ", t);
+        console.log("maxT: ", danceDesigner.maxT);
+        console.log("tempT: ", tempT);
+        console.log("NOTICE ME FIRST: ", danceDesigner.dancerPos[i]);
+        console.log("NOTICE THIS: ", danceDesigner.dancerPos[i][tempT]);
         if ((Math.abs(danceDesigner.dancerPos[i][tempT].x - intersects[0].object.position.x) < 1) &&
         (Math.abs(danceDesigner.dancerPos[i][tempT].y - intersects[0].object.position.y) < 1) &&
         (Math.abs(danceDesigner.dancerPos[i][tempT].z - intersects[0].object.position.z) < 1)) {
           danceDesigner.movingDancer = danceDesigner.dancerPos[i].Dancer;
+          found = true;
         }
       }
-
+      console.log("danceDesigner.selection", danceDesigner.selection);
       // danceDesigner.movingDancer = danceDesigner.s.getDancer(intersects[0].object.position);
-      console.log('movingDancer', danceDesigner.movingDancer);
+      //console.log('movingDancer', danceDesigner.movingDancer);
       // Calculate the offset
       var intersects = danceDesigner.raycaster.intersectObject(danceDesigner.plane);
       danceDesigner.offset.copy(intersects[0].point).sub(danceDesigner.plane.position);
-      console.log("intersects", intersects);
+    //  console.log("intersects", intersects);
     }
   },
   onDocumentMouseMove: function (event) {
     event.preventDefault();
     if (event.clientX > (window.innerWidth * 8 / 10) || event.clientY > (window.innerHeight * 8 / 10)) {
-      console.log("outside of window");
+      //console.log("outside of window");
       return;
     }
     // Get mouse position
@@ -374,13 +527,10 @@ var danceDesigner = {
         intersects[0].point.sub(danceDesigner.offset),
         danceDesigner.selection.position
       );
-      console.log("newPosThreeVector", newPosThreeVector);
-      console.log("movingDancer", danceDesigner.movingDancer);
       // Find the dancer based on the initial pose
       if (danceDesigner.movingDancer) {
-        // console.log("moving dancer: ", danceDesigner.movingDancer);
         if (newPosThreeVector) {
-          console.log("FIX THIS");
+          //console.log("FIX THIS");
           // Clamp the position to within the boundaries of the stage
           if (danceDesigner.selection.position.x > danceDesigner.xMax) {
             newPosThreeVector.x = danceDesigner.xMax;
@@ -398,7 +548,7 @@ var danceDesigner = {
           }
           var newPos = new Position(newPosThreeVector.x, newPosThreeVector.y, newPosThreeVector.z, Math.round(t));
           danceDesigner.movingDancer.addPotentialPos(newPos);
-          console.log("newPos: ", newPos);
+          console.log("added new pos");
         }
       }
     } else {
@@ -412,6 +562,14 @@ var danceDesigner = {
   },
   onDocumentMouseUp: function (event) {
     // Enable the controls
+    if (event.clientX > (window.innerWidth * 8 / 10) || event.clientY > (window.innerHeight * 8 / 10)) {
+      //console.log("outside of window");
+      return;
+    }
+    if (danceDesigner.selection) {
+      addNewKeyFrame(t);
+    }
+    danceDesigner.movingDancer = null;
     danceDesigner.controls.enabled = true;
     danceDesigner.selection = null;
   }
@@ -726,7 +884,6 @@ function update() {
   document.getElementById("Time").innerHTML = "Current Time: " + t;
   document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes;
   gotoKeyFrame = document.getElementById("gotoKeyFrame").value;
-  document.getElementById("currentKeyFrame").innerHTML = "Current Keyframe: " + ((t / 50) | 0);
   danceDesigner.controls.update();
 }
 
@@ -740,7 +897,6 @@ var keyframes = 0;
 var gotoKeyFrame = document.getElementById("gotoKeyFrame").value;
 document.getElementById("Time").innerHTML = "Current Time: " + t;
 document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes;
-document.getElementById("currentKeyFrame").innerHTML = "Current Keyframe: " + ((t / 50) | 0);
 var newPosThreeVector = null;
 
 function addNewKeyFrame(t) {
