@@ -50,74 +50,88 @@ class Dancer {
   }
 
   // Removes the position at time t from the dancer's positions
-  removePosition(t) {
-    this.positions = this.positions.filter(function(position, index, arr){
-        return position.time !== t;
-    });
-  }
+  // removePosition(t) {
+  //   this.positions = this.positions.filter(function(position, index, arr){
+  //       return position.time !== t;
+  //   });
+  // }
 
   // Returns the position at time t if it exists
   getPosition(t) {
-    var i;
-    for (i = 0; i < this.positions.length; i++) {
-      if (this.positions[i].time === t) {
-        return this.positions[i];
-      }
-    }
-    return;
+    return this.positions[t];
+    // var i;
+    // for (i = 0; i < this.positions.length; i++) {
+    //   if (this.positions[i].time === t) {
+    //     return this.positions[i];
+    //   }
+    // }
+    // return;
   }
 
   // Update the position when there is only one keyframe at t = 0
   updateOnlyPosition(newPos) {
     this.positions[0] = newPos;
+    return;
   }
 
   // Update the first position
   updateFirstPosition(nextKeyFrameT, newPos) {
     this.positions[0] = newPos;
-    this.positions[nextKeyFrameT]
     for (var i = 1; i < nextKeyFrameT; i++) {
       this.positions[i].x = ((this.positions[nextKeyFrameT].x - newPos.x) * i / (nextKeyFrameT)) + newPos.x;
       this.positions[i].y = ((this.positions[nextKeyFrameT].y - newPos.y) * i / (nextKeyFrameT)) + newPos.y;
       this.positions[i].z = ((this.positions[nextKeyFrameT].z - newPos.z) * i / (nextKeyFrameT)) + newPos.z;
     }
+    return;
   }
 
-}
-
-var newDancerPosObj = {Dancer: d}
-newDancerPosObj[0] =
-{
-  x: d.positions[0].x,
-  y: d.positions[0].y,
-  z: d.positions[0].z,
-};
-var j;
-for (j = 0; j < d.positions.length - 1; j++) {
-  var firstPosX = d.positions[j].x;
-  var firstPosY = d.positions[j].y;
-  var firstPosZ = d.positions[j].z;
-  var firstTime = d.positions[j].time;
-  var secondPosX = d.positions[j+1].x;
-  var secondPosY = d.positions[j+1].y;
-  var secondPosZ = d.positions[j+1].z;
-  var secondTime = d.positions[j+1].time;
-  var k;
-  for (k = firstTime + 1; k <= secondTime; k++) {
-    newDancerPosObj[k] =
-    {
-      x: ((secondPosX - firstPosX) * (k - firstTime) / (secondTime - firstTime)) + firstPosX,
-      y: ((secondPosY - firstPosY) * (k - firstTime) / (secondTime - firstTime)) + firstPosY,
-      z: ((secondPosZ - firstPosZ) * (k - firstTime) / (secondTime - firstTime)) + firstPosZ,
-    };
+  // Update the last position
+  updateLastPosition(secondToLastT, finalKeyFrameT, newPos) {
+    this.positions[finalKeyFrameT] = newPos;
+    var timeDiff = finalKeyFrameT - secondToLastT;
+    for (var i = 1, i < finalKeyFrameT; i++) {
+      this.positions[secondToLastT + i].x = ((newPos.x - this.positions[secondToLastT].x) * i / (timeDiff)) + this.positions[secondToLastT].x;
+      this.positions[secondToLastT + i].y = ((newPos.y - this.positions[secondToLastT].y) * i / (timeDiff)) + this.positions[secondToLastT].y;
+      this.positions[secondToLastT + i].z = ((newPos.z - this.positions[secondToLastT].z) * i / (timeDiff)) + this.positions[secondToLastT].z;
+    }
+    return;
   }
+
+  // Update a position between the first and last positions (in the middle of the routine)
+  updateMiddlePosition(keyframeBeforeT, updatedKeyframeT, keyframeAfterT, newPos) {
+    this.positions[updatedKeyframeT] = newPos;
+    var timeDiff = updatedKeyframeT - keyframeBeforeT;
+    for (var i = 1, i < updatedKeyframeT; i++) {
+      this.positions[keyframeBeforeT + i].x = ((newPos.x - this.positions[keyframeBeforeT].x) * i / (timeDiff)) + this.positions[keyframeBeforeT].x;
+      this.positions[keyframeBeforeT + i].y = ((newPos.y - this.positions[keyframeBeforeT].y) * i / (timeDiff)) + this.positions[keyframeBeforeT].y;
+      this.positions[keyframeBeforeT + i].z = ((newPos.z - this.positions[keyframeBeforeT].z) * i / (timeDiff)) + this.positions[keyframeBeforeT].z;
+    }
+    timeDiff = keyframeAfterT - updatedKeyframeT;
+    for (var i = 1; i < keyframeAfterT; i++) {
+      this.positions[updatedKeyframeT + i].x = ((this.positions[nextKeyFrameT].x - newPos.x) * i / (nextKeyFrameT)) + newPos.x;
+      this.positions[updatedKeyframeT + i].y = ((this.positions[nextKeyFrameT].y - newPos.y) * i / (nextKeyFrameT)) + newPos.y;
+      this.positions[updatedKeyframeT + i].z = ((this.positions[nextKeyFrameT].z - newPos.z) * i / (nextKeyFrameT)) + newPos.z;
+    }
+    return;
+  }
+
+  addNewLastPosition(oldLastKeyframeT, newLastKeyframeT, newPos) {
+    var timeDiff = newLastKeyframeT - oldLastKeyframeT;
+    for (var i = 1, i < newLastKeyframeT; i++) {
+      this.positions[oldLastKeyframeT + i].x = ((newPos.x - this.positions[oldLastKeyframeT].x) * i / (timeDiff)) + this.positions[oldLastKeyframeT].x;
+      this.positions[oldLastKeyframeT + i].y = ((newPos.y - this.positions[oldLastKeyframeT].y) * i / (timeDiff)) + this.positions[oldLastKeyframeT].y;
+      this.positions[oldLastKeyframeT + i].z = ((newPos.z - this.positions[oldLastKeyframeT].z) * i / (timeDiff)) + this.positions[oldLastKeyframeT].z;
+    }
+    this.positions[newLastKeyframeT] = newPos;
+  }
+
 }
 
 class Stage {
 
   constructor() {
     this.dancers = [];
-    this.keyframes = [];
+    this.keyframes = [0];
   }
 
   addDancer(dan) {
@@ -193,52 +207,31 @@ addKeyFrame -
         }
       }
       for (dancer in stage.dancers) {
-        dancer.addNewMiddlePosition(stage.keyframes[i - 1], stage.keyframes[i], stage.keyframes[i + 1], newPos);
+        dancer.updateMiddlePosition(stage.keyframes[i - 1], stage.keyframes[i], stage.keyframes[i + 1], newPos);
       }
     }
   }
 
-
-
-  for dancer in stage.getDancers() {
-
-    if (stage.keyframes.contains(t)) {
-      if (t == 0) {
-
-      } else if (t == danceDesigner.maxT) {
-
-      } else {
-        dancer.updatePosition(keyframes[t - 1], keyframes[t]);
-      }
-    } else {
-      if (t > danceDesigner.maxT) {
-        dancer.addLatePosition(t);
-      }
-
-      dancer.addMiddlePosition(prevKeyFrameT, t, nextKeyFrameT);
-    }
-  }
-
-if editing dancer.positions[0]:
-  -need to recompute dancer.positions[0 to 9]
-
-if editing dancer.positions[10]:
-  -need to recompute dancer.positions[1 to 49]
-
-if adding dancer.positions[5]:
-  -need to recompute dancer.positions[1 to 9]
-
-if adding dancer.positions[100]:
-  -need to add dancer.positions[51 to 100]
-
-dancers:
-for each dancer:
-positions:
-dancer.positions[0] = {position};
-dancer.positions[1] = {position};
-
-to play:
-  set the positions to each of the dancers to the corresponding dancer.positions[t]
+// if editing dancer.positions[0]:
+//   -need to recompute dancer.positions[0 to 9]
+//
+// if editing dancer.positions[10]:
+//   -need to recompute dancer.positions[1 to 49]
+//
+// if adding dancer.positions[5]:
+//   -need to recompute dancer.positions[1 to 9]
+//
+// if adding dancer.positions[100]:
+//   -need to add dancer.positions[51 to 100]
+//
+// dancers:
+// for each dancer:
+// positions:
+// dancer.positions[0] = {position};
+// dancer.positions[1] = {position};
+//
+// to play:
+//   set the positions to each of the dancers to the corresponding dancer.positions[t]
 
   getDancer(threeJSPose) {
     var i;
@@ -263,16 +256,16 @@ to play:
     return;
   }
 
-  play() {
-    var i;
-    for (i = 0; i < this.dancers.length; i++) {
-      const d = this.dancers[i];
-      var j;
-      for (j = 0; j < d.positions.length; j++) {
-      }
-    }
-    return;
-  }
+  // play() {
+  //   var i;
+  //   for (i = 0; i < this.dancers.length; i++) {
+  //     const d = this.dancers[i];
+  //     var j;
+  //     for (j = 0; j < d.positions.length; j++) {
+  //     }
+  //   }
+  //   return;
+  // }
 
   clearDancers() {
     this.dancers = [];
@@ -328,8 +321,10 @@ var danceDesigner = {
     this.loader = new THREE.TextureLoader();
     var janet = new Dancer("Janet");
     janet.updateColor(0x293fff);
-    var j1 = new Position(-2, 0, -5, 0);
-    janet.addPosition(j1);
+    //var j1 = new Position(-2, 0, -5, 0);
+    var j1 = new THREE.Vector3(-2, 0, -5);
+    janet.updateOnlyPosition(j1);
+    // janet.addPosition(j1);
     var geometry = new THREE.BoxGeometry(1, 2, 1);
     geometry.name = "Janet";
     var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: this.loader.load('files/janet.jpg')});
@@ -341,8 +336,10 @@ var danceDesigner = {
 
     var phillip = new Dancer("Phillip");
     phillip.updateColor(0xf8f833);
-    var p1 = new Position(2, 0, -3, 0);
-    phillip.addPosition(p1);
+    //var p1 = new Position(2, 0, -3, 0);
+    var p1 = new THREE.Vector3(2, 0, -3);
+    phillip.updateOnlyPosition(p1);
+    //phillip.addPosition(p1);
     var phillipMesh;
     var geometry = new THREE.BoxGeometry(1, 2, 1);
     geometry.name = "Phillip";
@@ -479,16 +476,26 @@ var danceDesigner = {
       danceDesigner.selection = intersects[0].object;
 
       var found = false;
-      for (var i = 0; i < danceDesigner.dancerPos.length; i++) {
+      // for (var i = 0; i < danceDesigner.dancerPos.length; i++) {
+      for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
         var tempT = Math.round(t);
         if (tempT > danceDesigner.maxT) {
           tempT = Math.round(danceDesigner.maxT);
         }
+
         console.log("t: ", t);
         console.log("maxT: ", danceDesigner.maxT);
         console.log("tempT: ", tempT);
         console.log("NOTICE ME FIRST: ", danceDesigner.dancerPos[i]);
         console.log("NOTICE THIS: ", danceDesigner.dancerPos[i][tempT]);
+
+        if ((Math.abs(danceDesigner.s.dancers[i][tempT].x - intersects[0].object.position.x) < 1) &&
+        (Math.abs(danceDesigner.s.dancers[i][tempT].y - intersects[0].object.position.y) < 1) &&
+        (Math.abs(danceDesigner.s.dancers[i][tempT].z - intersects[0].object.position.z) < 1)) {
+          danceDesigner.movingDancer = danceDesigner.danceDesigner.s.dancers[i];
+          found = true;
+        }
+
         if ((Math.abs(danceDesigner.dancerPos[i][tempT].x - intersects[0].object.position.x) < 1) &&
         (Math.abs(danceDesigner.dancerPos[i][tempT].y - intersects[0].object.position.y) < 1) &&
         (Math.abs(danceDesigner.dancerPos[i][tempT].z - intersects[0].object.position.z) < 1)) {
@@ -747,9 +754,9 @@ var TimelineEditor = function () {
     newTimeMark.style.position = 'absolute';
     newTimeMark.style.top = '0px';
     newTimeMark.style.left = '-8px';
-    newTimeMark.style.width = '23px';
+    newTimeMark.style.width = '30px';
     newTimeMark.style.height = '100%';
-    newTimeMark.style.background = 'linear-gradient(90deg, transparent 8px, #7f93ff 12px, #7f93ff 13px, transparent 9px) 0% 0% / 16px 16px repeat-y';
+    newTimeMark.style.background = 'linear-gradient(90deg, transparent 8px, #7f93ff 16px, #7f93ff 16px, transparent 9px) 0% 0% / 16px 16px repeat-y';
     newTimeMark.style.pointerEvents = 'none';
 
     timeMarks.push({mark: newTimeMark, time: t});
