@@ -866,6 +866,7 @@ async function addNewKeyFrame(t) {
   } else {
     // Adding a new keyframe
     danceDesigner.s.addKeyFrame(t);
+    timeline.addTimeMark(t);
     if (t > danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 2]) {
       // Adding a new keyframe at the end of the routine
       danceDesigner.maxT = t;
@@ -888,7 +889,6 @@ async function addNewKeyFrame(t) {
       }
     }
   }
-  timeline.addTimeMark(t);
   return;
 }
 
