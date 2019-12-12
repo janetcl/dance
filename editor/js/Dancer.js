@@ -137,6 +137,19 @@ class Dancer {
     this.positions.push(newPos);
   }
 
+  async removeLastKeyframe(secondToLastT, lastKeyframeT) {
+    this.positions.length = secondToLastT + 1;
+  }
+
+  async removeMiddleKeyframe(beforeT, afterT) {
+    var timeDiff = afterT - beforeT;
+    for (var i = 1; i < timeDiff; i++) {
+      this.positions[beforeT + i].x = ((this.positions[afterT].x - this.positions[beforeT].x) * i / (timeDiff)) + this.positions[beforeT].x;
+      this.positions[beforeT + i].y = ((this.positions[afterT].y - this.positions[beforeT].y) * i / (timeDiff)) + this.positions[beforeT].y;
+      this.positions[beforeT + i].z = ((this.positions[afterT].z - this.positions[beforeT].z) * i / (timeDiff)) + this.positions[beforeT].z;
+    }
+  }
+
 }
 
 class Stage {
@@ -362,7 +375,6 @@ var danceDesigner = {
   onDocumentMouseDown: function (event) {
     // Get mouse position
     if (event.clientX > (window.innerWidth * 8 / 10) || event.clientY > (window.innerHeight * 8 / 10)) {
-      console.log("outside of window");
       return;
     }
     var mouseX = (event.clientX / danceDesigner.rendererWidth) * 2 - 1;
@@ -375,7 +387,6 @@ var danceDesigner = {
     // Find all intersected objects
     var intersects = danceDesigner.raycaster.intersectObjects(danceDesigner.dancersArr);
     if (intersects.length > 0) {
-      console.log(intersects);
       // Disable the controls
       danceDesigner.controls.enabled = false;
       // Set the selection - first intersected object
@@ -398,10 +409,6 @@ var danceDesigner = {
       // Calculate the offset
       var intersects = danceDesigner.raycaster.intersectObject(danceDesigner.plane);
       danceDesigner.offset.copy(intersects[0].point).sub(danceDesigner.plane.position);
-    } else {
-       console.log('moving');
-       console.log(danceDesigner.controls);
-       danceDesigner.controls.enabled = true;
     }
   },
   onDocumentMouseMove: function (event) {
@@ -512,6 +519,17 @@ var TimelineEditor = function () {
 		function onMouseMove( event ) {
 
       t = ((event.offsetX + scroller.scrollLeft) / scale);
+      var lessT = Math.round(t - 1);
+      t = Math.round(t);
+      var greaterT = Math.round(t + 1);
+      if (danceDesigner.s.keyframes.includes(t) || danceDesigner.s.keyframes.includes(lessT) || danceDesigner.s.keyframes.includes(greaterT)) {
+        // Determine where the current time is in the keyframes[] array if it exists
+        for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
+          if (danceDesigner.s.keyframes[i] == t || danceDesigner.s.keyframes[i] == lessT || danceDesigner.s.keyframes[i] == greaterT) {
+            t = danceDesigner.s.keyframes[i];
+          }
+        }
+      }
       updateTimeMark();
 
 		}
@@ -658,6 +676,18 @@ var TimelineEditor = function () {
     newTimeMark.style.left = ( t * scale ) - scroller.scrollLeft - 12 + 'px';
     timeline.dom.appendChild( newTimeMark );
 
+    console.log("timeMarks " ,timeMarks);
+  }
+
+  function removeTimeMark(t) {
+    for (var i = 0; i < timeMarks.length; i++) {
+      if (timeMarks[i].time == t) {
+          timeline.dom.removeChild( timeMarks[i].mark);
+          timeMarks.splice(i, 1);
+          console.log("timeMarks " ,timeMarks);
+          return;
+      }
+    }
   }
 
   function removeTimeMarks() {
@@ -671,6 +701,7 @@ var TimelineEditor = function () {
     container: container,
     updateTimeMark: updateTimeMark,
     addTimeMark: addTimeMark,
+    removeTimeMark: removeTimeMark,
     removeTimeMarks: removeTimeMarks,
   };
 
@@ -877,6 +908,53 @@ function onButtonClick(event) {
   // } else
   if (event.target.id === "undo") {
     addNewKeyFrame(t);
+  } else if (event.target.id === "delete") {
+    var keyframeIndex = -1;
+
+    var lessT = Math.round(t - 1);
+    t = Math.round(t);
+    var greaterT = Math.round(t + 1);
+    if (danceDesigner.s.keyframes.includes(t) || danceDesigner.s.keyframes.includes(lessT) || danceDesigner.s.keyframes.includes(greaterT)) {
+      // Determine where the current time is in the keyframes[] array if it exists
+      for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
+        if (danceDesigner.s.keyframes[i] == t || danceDesigner.s.keyframes[i] == lessT || danceDesigner.s.keyframes[i] == greaterT) {
+          t = danceDesigner.s.keyframes[i];
+          keyframeIndex = i;
+        }
+      }
+    }
+
+    console.log(danceDesigner.s.keyframes);
+    console.log("keyframeIndex ", keyframeIndex);
+    console.log("t: ", t);
+
+    if (keyframeIndex == -1) {
+      return;
+    }
+
+    // Update the dancers' positions in the dance
+    for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+      if (keyframeIndex == 0) {
+        // Cannot remove the first keyframe
+        return;
+      } else if (keyframeIndex == (danceDesigner.s.keyframes.length - 1)) {
+        danceDesigner.s.dancers[i].removeLastKeyframe(danceDesigner.s.keyframes[keyframeIndex - 1], danceDesigner.s.keyframes[keyframeIndex]);
+        danceDesigner.maxT = danceDesigner.s.keyframes[keyframeIndex - 1];
+      } else {
+        danceDesigner.s.dancers[i].removeMiddleKeyframe(danceDesigner.s.keyframes[keyframeIndex - 1], danceDesigner.s.keyframes[keyframeIndex + 1]);
+      }
+
+    }
+
+    // Filter existing keyframes to remove keyframe mark
+    danceDesigner.s.keyframes = danceDesigner.s.keyframes.filter(function(time, index, arr){
+        return time !== t;
+    });
+
+    console.log("t: ", t);
+    // Update time mark in timeline
+    timeline.removeTimeMark(t);
+
   } else if (event.target.id === "clear") {
     for (i = 0; i < danceDesigner.s.dancers.length; i++) {
       danceDesigner.s.dancers[i].positions = [];
@@ -901,6 +979,7 @@ function onButtonClick(event) {
 function initializeLesson() {
   danceDesigner.init();
   animate(0, 0);
+  timeline.addTimeMark(0);
 }
 if (window.addEventListener)
   window.addEventListener('load', initializeLesson, false);
