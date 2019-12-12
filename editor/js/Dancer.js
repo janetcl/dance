@@ -529,15 +529,21 @@ var TimelineEditor = function () {
             t = danceDesigner.s.keyframes[i];
           }
         }
+      } else {
+        // Set the dancers' position to the maximum position
+        for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+          danceDesigner.s.dancers[i].mesh.position.x = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].x;
+          danceDesigner.s.dancers[i].mesh.position.y = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].y;
+          danceDesigner.s.dancers[i].mesh.position.z = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].z;
+        }
       }
       updateTimeMark();
-
 		}
 
 		function onMouseUp( event ) {
 
-			onMouseMove( event );
       t = ((event.offsetX + scroller.scrollLeft) / scale);
+			onMouseMove( event );
       updateTimeMark();
 			document.removeEventListener( 'mousemove', onMouseMove );
 			document.removeEventListener( 'mouseup', onMouseUp );
@@ -545,6 +551,7 @@ var TimelineEditor = function () {
 		}
 
     t = ((event.offsetX + scroller.scrollLeft) / scale);
+    onMouseMove(event);
     updateTimeMark();
 
 		document.addEventListener( 'mousemove', onMouseMove, false );
