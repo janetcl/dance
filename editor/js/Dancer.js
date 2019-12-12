@@ -184,7 +184,7 @@ var danceDesigner = {
   dancersArr: [], maxT: null, stagePlane: null,
   xMax: null, xMin: null, zMax: null, zMin: null,
   camera1: null, renderer1: null, camera2: null, renderer2: null,
-  scene2: null, renderers: [],
+  scene2: null, renderers: [], clock: null,
   // dancerPos: [], dancers: {},
   init: function() {
     this.scene = new THREE.Scene();
@@ -323,6 +323,10 @@ var danceDesigner = {
     this.camera.position.y = 3;
     this.controls = new THREE.OrbitControls( this.camera, this.renderer.domElement );
     this.controls.target.set( 0, 0, -2 );
+    this.controls.maxDistance = 30;
+
+    // Prepare clock
+    this.clock = new THREE.Clock();
 
     var axesHelper = new THREE.AxesHelper( 5 );
     this.scene.add( axesHelper );
@@ -371,6 +375,7 @@ var danceDesigner = {
     // Find all intersected objects
     var intersects = danceDesigner.raycaster.intersectObjects(danceDesigner.dancersArr);
     if (intersects.length > 0) {
+      console.log(intersects);
       // Disable the controls
       danceDesigner.controls.enabled = false;
       // Set the selection - first intersected object
@@ -393,6 +398,10 @@ var danceDesigner = {
       // Calculate the offset
       var intersects = danceDesigner.raycaster.intersectObject(danceDesigner.plane);
       danceDesigner.offset.copy(intersects[0].point).sub(danceDesigner.plane.position);
+    } else {
+       console.log('moving');
+       console.log(danceDesigner.controls);
+       danceDesigner.controls.enabled = true;
     }
   },
   onDocumentMouseMove: function (event) {
@@ -450,9 +459,7 @@ var danceDesigner = {
     }
   },
   onDocumentMouseUp: function (event) {
-    // Enable the controls
     if (event.clientX > (window.innerWidth * 8 / 10) || event.clientY > (window.innerHeight * 8 / 10)) {
-      //console.log("outside of window");
       return;
     }
     if (danceDesigner.selection) {
@@ -462,6 +469,7 @@ var danceDesigner = {
       danceDesigner.s.dancers[i].potentialPose = null;
     }
     danceDesigner.movingDancer = null;
+    // Enable the controls
     danceDesigner.controls.enabled = true;
     danceDesigner.selection = null;
   }
@@ -647,7 +655,7 @@ var TimelineEditor = function () {
     newTimeMark.style.pointerEvents = 'none';
 
     timeMarks.push({mark: newTimeMark, time: t});
-    newTimeMark.style.left = ( t * scale ) - scroller.scrollLeft - 8 + 'px';
+    newTimeMark.style.left = ( t * scale ) - scroller.scrollLeft - 12 + 'px';
     timeline.dom.appendChild( newTimeMark );
 
   }
@@ -773,7 +781,7 @@ function render() {
 function update() {
   document.getElementById("Time").innerHTML = "Current Time: " + t;
   document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes;
-  gotoKeyFrame = document.getElementById("gotoKeyFrame").value;
+  keyframes = danceDesigner.s.keyframes.length;
   danceDesigner.controls.update();
 }
 
@@ -783,8 +791,7 @@ var buttons = document.getElementsByTagName("button");
 for (let i = 0; i < buttons.length; i++) {
   buttons[i].addEventListener("click", onButtonClick, false);
 };
-var keyframes = 0;
-var gotoKeyFrame = document.getElementById("gotoKeyFrame").value;
+var keyframes = 1;
 document.getElementById("Time").innerHTML = "Current Time: " + t;
 document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes;
 var newPosThreeVector = null;
@@ -856,18 +863,19 @@ async function addNewKeyFrame(t) {
 
 // Handle button clicking
 function onButtonClick(event) {
-  if (event.target.id === "setPosition") {
-    if (gotoKeyFrame > danceDesigner.maxT / 50) {
-      alert("Invalid Keyframe");
-    }
-    for (i = 0; i < danceDesigner.s.dancers.length; i++) {
-      var potentialPose = danceDesigner.s.dancers[i].potentialPose;
-      if (potentialPose) {
-        danceDesigner.s.dancers[i].addPosition(potentialPose);
-        danceDesigner.s.dancers[i].potentialPose = null;
-      }
-    }
-  } else if (event.target.id === "undo") {
+  // if (event.target.id === "setPosition") {
+  //   if (gotoKeyFrame > danceDesigner.maxT / 50) {
+  //     alert("Invalid Keyframe");
+  //   }
+  //   for (i = 0; i < danceDesigner.s.dancers.length; i++) {
+  //     var potentialPose = danceDesigner.s.dancers[i].potentialPose;
+  //     if (potentialPose) {
+  //       danceDesigner.s.dancers[i].addPosition(potentialPose);
+  //       danceDesigner.s.dancers[i].potentialPose = null;
+  //     }
+  //   }
+  // } else
+  if (event.target.id === "undo") {
     addNewKeyFrame(t);
   } else if (event.target.id === "clear") {
     for (i = 0; i < danceDesigner.s.dancers.length; i++) {
