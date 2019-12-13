@@ -512,6 +512,9 @@ var TimelineEditor = function () {
   canvas.style.background = 'rgba( 255, 255, 255, 0.3 )';
 	canvas.style.position = 'absolute';
 
+  var currentKeyFrameTime = 0;
+  var inAKeyFrame = true;
+
   canvas.addEventListener( 'mousedown', function ( event ) {
 
 		event.preventDefault();
@@ -527,9 +530,14 @@ var TimelineEditor = function () {
         for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
           if (danceDesigner.s.keyframes[i] == t || danceDesigner.s.keyframes[i] == lessT || danceDesigner.s.keyframes[i] == greaterT) {
             t = danceDesigner.s.keyframes[i];
+            currentKeyFrameTime = t;
+            inAKeyFrame = true;
+            changeTimeMarkColor(currentKeyFrameTime, inAKeyFrame);
           }
         }
       } else {
+        inAKeyFrame = false;
+        changeTimeMarkColor(currentKeyFrameTime, inAKeyFrame);
         // Set the dancers' position to the maximum position
         for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
           danceDesigner.s.dancers[i].mesh.position.x = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].x;
@@ -550,8 +558,33 @@ var TimelineEditor = function () {
 
 		}
 
+    // t = ((event.offsetX + scroller.scrollLeft) / scale);
+    // onMouseMove(event);
+    // updateTimeMark();
     t = ((event.offsetX + scroller.scrollLeft) / scale);
-    onMouseMove(event);
+    var lessT = Math.round(t - 1);
+    t = Math.round(t);
+    var greaterT = Math.round(t + 1);
+    if (danceDesigner.s.keyframes.includes(t) || danceDesigner.s.keyframes.includes(lessT) || danceDesigner.s.keyframes.includes(greaterT)) {
+      // Determine where the current time is in the keyframes[] array if it exists
+      for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
+        if (danceDesigner.s.keyframes[i] == t || danceDesigner.s.keyframes[i] == lessT || danceDesigner.s.keyframes[i] == greaterT) {
+          t = danceDesigner.s.keyframes[i];
+          currentKeyFrameTime = t;
+          inAKeyFrame = true;
+          changeTimeMarkColor(currentKeyFrameTime, inAKeyFrame);
+        }
+      }
+    } else {
+      inAKeyFrame = false;
+      changeTimeMarkColor(currentKeyFrameTime, inAKeyFrame);
+      // Set the dancers' position to the maximum position
+      for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+        danceDesigner.s.dancers[i].mesh.position.x = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].x;
+        danceDesigner.s.dancers[i].mesh.position.y = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].y;
+        danceDesigner.s.dancers[i].mesh.position.z = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].z;
+      }
+    }
     updateTimeMark();
 
 		document.addEventListener( 'mousemove', onMouseMove, false );
@@ -683,7 +716,7 @@ var TimelineEditor = function () {
     newTimeMark.style.left = ( t * scale ) - scroller.scrollLeft - 12 + 'px';
     timeline.dom.appendChild( newTimeMark );
 
-    console.log("timeMarks " ,timeMarks);
+    currentKeyFrameTime = t;
   }
 
   function removeTimeMark(t) {
@@ -691,7 +724,6 @@ var TimelineEditor = function () {
       if (timeMarks[i].time == t) {
           timeline.dom.removeChild( timeMarks[i].mark);
           timeMarks.splice(i, 1);
-          console.log("timeMarks " ,timeMarks);
           return;
       }
     }
@@ -704,12 +736,26 @@ var TimelineEditor = function () {
     timeMarks = [];
   }
 
+  function changeTimeMarkColor(t, editing) {
+    for (var i = 0; i < timeMarks.length; i++) {
+      if (timeMarks[i].time == t) {
+        if (editing) {
+          timeMarks[i].mark.style.background = 'linear-gradient(90deg, transparent 8px, #ffde00 16px, #ffde00 16px, transparent 9px) 0% 0% / 16px 16px repeat-y';
+        } else {
+          timeMarks[i].mark.style.background = 'linear-gradient(90deg, transparent 8px, #7f93ff 16px, #7f93ff 16px, transparent 9px) 0% 0% / 16px 16px repeat-y';
+        }
+        return;
+      }
+    }
+  }
+
   return {
     container: container,
     updateTimeMark: updateTimeMark,
     addTimeMark: addTimeMark,
     removeTimeMark: removeTimeMark,
     removeTimeMarks: removeTimeMarks,
+    changeTimeMarkColor: changeTimeMarkColor,
   };
 
 };
@@ -874,6 +920,7 @@ async function addNewKeyFrame(t) {
     // Adding a new keyframe
     danceDesigner.s.addKeyFrame(t);
     timeline.addTimeMark(t);
+    timeline.changeTimeMarkColor(t, true);
     if (t > danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 2]) {
       // Adding a new keyframe at the end of the routine
       danceDesigner.maxT = t;
@@ -931,10 +978,6 @@ function onButtonClick(event) {
       }
     }
 
-    console.log(danceDesigner.s.keyframes);
-    console.log("keyframeIndex ", keyframeIndex);
-    console.log("t: ", t);
-
     if (keyframeIndex == -1) {
       return;
     }
@@ -958,7 +1001,6 @@ function onButtonClick(event) {
         return time !== t;
     });
 
-    console.log("t: ", t);
     // Update time mark in timeline
     timeline.removeTimeMark(t);
 
@@ -987,6 +1029,7 @@ function initializeLesson() {
   danceDesigner.init();
   animate(0, 0);
   timeline.addTimeMark(0);
+  timeline.changeTimeMarkColor(0, true);
 }
 if (window.addEventListener)
   window.addEventListener('load', initializeLesson, false);
