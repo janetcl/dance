@@ -464,6 +464,10 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 		rotateStart.set( event.clientX, event.clientY );
 
+		console.log("event.clientX ", event.clientX);
+
+		console.log("event.clientY", event.clientY);
+
 	}
 
 	function handleMouseDownDolly( event ) {

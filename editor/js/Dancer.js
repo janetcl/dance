@@ -376,9 +376,6 @@ var danceDesigner = {
     event.preventDefault();
     if (event.clientY > (window.innerHeight * 8 / 10) && event.clientY < ((window.innerHeight * 8 / 10) + 32)) {
 
-      console.log("TIMELINE");
-
-
   		function onMouseMove( event ) {
 
         t = ((event.offsetX + timeline.scroller.scrollLeft) / timeline.scale);
@@ -416,10 +413,6 @@ var danceDesigner = {
       t = ((event.offsetX + timeline.scroller.scrollLeft) / timeline.scale);
       var lessT = Math.round(t - 1);
       t = Math.round(t);
-      console.log("event.offsetX ", event.offsetX);
-      console.log("timeline.scroller.scrollLeft ", timeline.scroller.scrollLeft);
-      console.log("timeline.scale ", timeline.scale);
-      console.log("t: ", t);
       var greaterT = Math.round(t + 1);
       if (danceDesigner.s.keyframes.includes(t) || danceDesigner.s.keyframes.includes(lessT) || danceDesigner.s.keyframes.includes(greaterT)) {
         // Determine where the current time is in the keyframes[] array if it exists
@@ -443,41 +436,43 @@ var danceDesigner = {
 
     } else if (event.clientX > (window.innerWidth * 8 / 10) || event.clientY > ((window.innerHeight * 8 / 10) + 32)) {
       return;
-    }
-    var mouseX = (event.clientX / danceDesigner.rendererWidth) * 2 - 1;
-    var mouseY = -(event.clientY / danceDesigner.rendererHeight) * 2 + 1;
-    // Get 3D vector from 3D mouse position using 'unproject' function
-    var vector = new THREE.Vector3(mouseX, mouseY, 1);
-    vector.unproject(danceDesigner.camera);
-    // Set the raycaster position
-    danceDesigner.raycaster.set( danceDesigner.camera.position, vector.sub( danceDesigner.camera.position ).normalize() );
-    // Find all intersected objects
-    var intersects = danceDesigner.raycaster.intersectObjects(danceDesigner.dancersArr);
-    if (intersects.length > 0) {
-      // Disable the controls
-      danceDesigner.controls.enabled = false;
-      // Set the selection - first intersected object
-      danceDesigner.selection = intersects[0].object;
+    } else {
+      var mouseX = (event.clientX / danceDesigner.rendererWidth) * 2 - 1;
+      var mouseY = -(event.clientY / danceDesigner.rendererHeight) * 2 + 1;
+      // Get 3D vector from 3D mouse position using 'unproject' function
+      var vector = new THREE.Vector3(mouseX, mouseY, 1);
+      vector.unproject(danceDesigner.camera);
+      // Set the raycaster position
+      danceDesigner.raycaster.set( danceDesigner.camera.position, vector.sub( danceDesigner.camera.position ).normalize() );
+      // Find all intersected objects
+      var intersects = danceDesigner.raycaster.intersectObjects(danceDesigner.dancersArr);
+      if (intersects.length > 0) {
+        // Disable the controls
+        danceDesigner.controls.enabled = false;
+        // Set the selection - first intersected object
+        danceDesigner.selection = intersects[0].object;
 
-      var found = false;
-      for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-        var tempT = Math.round(t);
-        if (tempT > danceDesigner.maxT) {
-          tempT = Math.round(danceDesigner.maxT);
-        }
-        console.log(t);
-        console.log(tempT);
+        var found = false;
+        for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+          var tempT = Math.round(t);
+          if (tempT > danceDesigner.maxT) {
+            tempT = Math.round(danceDesigner.maxT);
+          }
 
-        if ((Math.abs(danceDesigner.s.dancers[i].positions[tempT].x - intersects[0].object.position.x) < 1) &&
-        (Math.abs(danceDesigner.s.dancers[i].positions[tempT].y - intersects[0].object.position.y) < 1) &&
-        (Math.abs(danceDesigner.s.dancers[i].positions[tempT].z - intersects[0].object.position.z) < 1)) {
-          danceDesigner.movingDancer = danceDesigner.s.dancers[i];
-          found = true;
+          if ((Math.abs(danceDesigner.s.dancers[i].positions[tempT].x - intersects[0].object.position.x) < 1) &&
+          (Math.abs(danceDesigner.s.dancers[i].positions[tempT].y - intersects[0].object.position.y) < 1) &&
+          (Math.abs(danceDesigner.s.dancers[i].positions[tempT].z - intersects[0].object.position.z) < 1)) {
+            danceDesigner.movingDancer = danceDesigner.s.dancers[i];
+            found = true;
+          }
         }
+        // Calculate the offset
+        var intersects = danceDesigner.raycaster.intersectObject(danceDesigner.plane);
+        danceDesigner.offset.copy(intersects[0].point).sub(danceDesigner.plane.position);
+      } else {
+        console.log("on stage");
+        //vector.project(danceDesigner.camera);
       }
-      // Calculate the offset
-      var intersects = danceDesigner.raycaster.intersectObject(danceDesigner.plane);
-      danceDesigner.offset.copy(intersects[0].point).sub(danceDesigner.plane.position);
     }
   },
   onDocumentMouseMove: function (event) {
@@ -580,70 +575,6 @@ var TimelineEditor = function () {
   canvas.style.width = '100%';
   canvas.style.background = 'rgba( 255, 255, 255, 0.3 )';
 	canvas.style.position = 'absolute';
-
-  // canvas.addEventListener( 'mousedown', function ( event ) {
-  //
-	// 	event.preventDefault();
-  //
-	// 	function onMouseMove( event ) {
-  //
-  //     t = ((event.offsetX + scroller.scrollLeft) / scale);
-  //     var lessT = Math.round(t - 1);
-  //     t = Math.round(t);
-  //     var greaterT = Math.round(t + 1);
-  //     if (danceDesigner.s.keyframes.includes(t) || danceDesigner.s.keyframes.includes(lessT) || danceDesigner.s.keyframes.includes(greaterT)) {
-  //       // Determine where the current time is in the keyframes[] array if it exists
-  //       for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
-  //         if (danceDesigner.s.keyframes[i] == t || danceDesigner.s.keyframes[i] == lessT || danceDesigner.s.keyframes[i] == greaterT) {
-  //           t = danceDesigner.s.keyframes[i];
-  //         }
-  //       }
-  //     } else {
-  //       // Set the dancers' position to the maximum position
-  //       for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-  //         danceDesigner.s.dancers[i].mesh.position.x = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].x;
-  //         danceDesigner.s.dancers[i].mesh.position.y = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].y;
-  //         danceDesigner.s.dancers[i].mesh.position.z = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].z;
-  //       }
-  //     }
-  //     updateTimeMark();
-	// 	}
-  //
-	// 	function onMouseUp( event ) {
-  //
-  //     t = ((event.offsetX + scroller.scrollLeft) / scale);
-	// 		onMouseMove( event );
-  //     updateTimeMark();
-	// 		document.removeEventListener( 'mousemove', onMouseMove );
-	// 		document.removeEventListener( 'mouseup', onMouseUp );
-  //
-	// 	}
-  //
-  //   t = ((event.offsetX + scroller.scrollLeft) / scale);
-  //   var lessT = Math.round(t - 1);
-  //   t = Math.round(t);
-  //   var greaterT = Math.round(t + 1);
-  //   if (danceDesigner.s.keyframes.includes(t) || danceDesigner.s.keyframes.includes(lessT) || danceDesigner.s.keyframes.includes(greaterT)) {
-  //     // Determine where the current time is in the keyframes[] array if it exists
-  //     for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
-  //       if (danceDesigner.s.keyframes[i] == t || danceDesigner.s.keyframes[i] == lessT || danceDesigner.s.keyframes[i] == greaterT) {
-  //         t = danceDesigner.s.keyframes[i];
-  //       }
-  //     }
-  //   } else {
-  //     // Set the dancers' position to the maximum position
-  //     for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-  //       danceDesigner.s.dancers[i].mesh.position.x = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].x;
-  //       danceDesigner.s.dancers[i].mesh.position.y = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].y;
-  //       danceDesigner.s.dancers[i].mesh.position.z = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].z;
-  //     }
-  //   }
-  //   updateTimeMark();
-  //
-	// 	document.addEventListener( 'mousemove', onMouseMove, false );
-	// 	document.addEventListener( 'mouseup', onMouseUp, false );
-  //
-	// }, false );
 
   timeline.dom.appendChild( canvas );
 
