@@ -513,7 +513,6 @@ var TimelineEditor = function () {
 	canvas.style.position = 'absolute';
 
   var currentKeyFrameTime = 0;
-  var inAKeyFrame = true;
 
   canvas.addEventListener( 'mousedown', function ( event ) {
 
@@ -531,13 +530,13 @@ var TimelineEditor = function () {
           if (danceDesigner.s.keyframes[i] == t || danceDesigner.s.keyframes[i] == lessT || danceDesigner.s.keyframes[i] == greaterT) {
             t = danceDesigner.s.keyframes[i];
             currentKeyFrameTime = t;
-            inAKeyFrame = true;
-            changeTimeMarkColor(currentKeyFrameTime, inAKeyFrame);
+            changeTimeMarkColor(currentKeyFrameTime, true);
+          } else {
+            changeTimeMarkColor(danceDesigner.s.keyframes[i], false);
           }
         }
       } else {
-        inAKeyFrame = false;
-        changeTimeMarkColor(currentKeyFrameTime, inAKeyFrame);
+        changeTimeMarkColor(currentKeyFrameTime, false);
         // Set the dancers' position to the maximum position
         for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
           danceDesigner.s.dancers[i].mesh.position.x = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].x;
@@ -571,13 +570,13 @@ var TimelineEditor = function () {
         if (danceDesigner.s.keyframes[i] == t || danceDesigner.s.keyframes[i] == lessT || danceDesigner.s.keyframes[i] == greaterT) {
           t = danceDesigner.s.keyframes[i];
           currentKeyFrameTime = t;
-          inAKeyFrame = true;
-          changeTimeMarkColor(currentKeyFrameTime, inAKeyFrame);
+          changeTimeMarkColor(currentKeyFrameTime, true);
+        } else {
+          changeTimeMarkColor(danceDesigner.s.keyframes[i], false);
         }
       }
     } else {
-      inAKeyFrame = false;
-      changeTimeMarkColor(currentKeyFrameTime, inAKeyFrame);
+      changeTimeMarkColor(currentKeyFrameTime, false);
       // Set the dancers' position to the maximum position
       for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
         danceDesigner.s.dancers[i].mesh.position.x = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].x;
@@ -697,6 +696,8 @@ var TimelineEditor = function () {
 			loopMark.style.display = 'none';
 		//}
 
+    console.log(timeMarks);
+
 	}
 
   var timeMarks = [];
@@ -772,6 +773,7 @@ function animate() {
     if (t > danceDesigner.maxT) {
       play = false;
     }
+    timeline.changeTimeMarkColor(t, false);
     timeline.updateTimeMark();
     for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
       var d = danceDesigner.s.dancers[i];
