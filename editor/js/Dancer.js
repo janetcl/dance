@@ -373,8 +373,75 @@ var danceDesigner = {
     // this.renderers.push({renderer: this.renderer2, scene: this.scene.clone(), time: 0});
   },
   onDocumentMouseDown: function (event) {
-    // Get mouse position
-    if (event.clientX > (window.innerWidth * 8 / 10) || event.clientY > (window.innerHeight * 8 / 10)) {
+    event.preventDefault();
+    if (event.clientY > (window.innerHeight * 8 / 10) && event.clientY < ((window.innerHeight * 8 / 10) + 32)) {
+
+      console.log("TIMELINE");
+
+
+  		function onMouseMove( event ) {
+
+        t = ((event.offsetX + timeline.scroller.scrollLeft) / timeline.scale);
+        var lessT = Math.round(t - 1);
+        t = Math.round(t);
+        var greaterT = Math.round(t + 1);
+        if (danceDesigner.s.keyframes.includes(t) || danceDesigner.s.keyframes.includes(lessT) || danceDesigner.s.keyframes.includes(greaterT)) {
+          // Determine where the current time is in the keyframes[] array if it exists
+          for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
+            if (danceDesigner.s.keyframes[i] == t || danceDesigner.s.keyframes[i] == lessT || danceDesigner.s.keyframes[i] == greaterT) {
+              t = danceDesigner.s.keyframes[i];
+            }
+          }
+        } else {
+          // Set the dancers' position to the maximum position
+          for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+            danceDesigner.s.dancers[i].mesh.position.x = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].x;
+            danceDesigner.s.dancers[i].mesh.position.y = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].y;
+            danceDesigner.s.dancers[i].mesh.position.z = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].z;
+          }
+        }
+        timeline.updateTimeMark();
+  		}
+
+  		function onMouseUp( event ) {
+
+        t = ((event.offsetX + timeline.scroller.scrollLeft) / timeline.scale);
+  			onMouseMove( event );
+        timeline.updateTimeMark();
+  			document.removeEventListener( 'mousemove', onMouseMove );
+  			document.removeEventListener( 'mouseup', onMouseUp );
+
+  		}
+
+      t = ((event.offsetX + timeline.scroller.scrollLeft) / timeline.scale);
+      var lessT = Math.round(t - 1);
+      t = Math.round(t);
+      console.log("event.offsetX ", event.offsetX);
+      console.log("timeline.scroller.scrollLeft ", timeline.scroller.scrollLeft);
+      console.log("timeline.scale ", timeline.scale);
+      console.log("t: ", t);
+      var greaterT = Math.round(t + 1);
+      if (danceDesigner.s.keyframes.includes(t) || danceDesigner.s.keyframes.includes(lessT) || danceDesigner.s.keyframes.includes(greaterT)) {
+        // Determine where the current time is in the keyframes[] array if it exists
+        for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
+          if (danceDesigner.s.keyframes[i] == t || danceDesigner.s.keyframes[i] == lessT || danceDesigner.s.keyframes[i] == greaterT) {
+            t = danceDesigner.s.keyframes[i];
+          }
+        }
+      } else {
+        // Set the dancers' position to the maximum position
+        for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+          danceDesigner.s.dancers[i].mesh.position.x = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].x;
+          danceDesigner.s.dancers[i].mesh.position.y = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].y;
+          danceDesigner.s.dancers[i].mesh.position.z = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].z;
+        }
+      }
+      timeline.updateTimeMark();
+
+  		document.addEventListener( 'mousemove', onMouseMove, false );
+  		document.addEventListener( 'mouseup', onMouseUp, false );
+
+    } else if (event.clientX > (window.innerWidth * 8 / 10) || event.clientY > ((window.innerHeight * 8 / 10) + 32)) {
       return;
     }
     var mouseX = (event.clientX / danceDesigner.rendererWidth) * 2 - 1;
@@ -398,6 +465,8 @@ var danceDesigner = {
         if (tempT > danceDesigner.maxT) {
           tempT = Math.round(danceDesigner.maxT);
         }
+        console.log(t);
+        console.log(tempT);
 
         if ((Math.abs(danceDesigner.s.dancers[i].positions[tempT].x - intersects[0].object.position.x) < 1) &&
         (Math.abs(danceDesigner.s.dancers[i].positions[tempT].y - intersects[0].object.position.y) < 1) &&
@@ -512,69 +581,70 @@ var TimelineEditor = function () {
   canvas.style.background = 'rgba( 255, 255, 255, 0.3 )';
 	canvas.style.position = 'absolute';
 
-  canvas.addEventListener( 'mousedown', function ( event ) {
+  // canvas.addEventListener( 'mousedown', function ( event ) {
+  //
+	// 	event.preventDefault();
+  //
+	// 	function onMouseMove( event ) {
+  //
+  //     t = ((event.offsetX + scroller.scrollLeft) / scale);
+  //     var lessT = Math.round(t - 1);
+  //     t = Math.round(t);
+  //     var greaterT = Math.round(t + 1);
+  //     if (danceDesigner.s.keyframes.includes(t) || danceDesigner.s.keyframes.includes(lessT) || danceDesigner.s.keyframes.includes(greaterT)) {
+  //       // Determine where the current time is in the keyframes[] array if it exists
+  //       for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
+  //         if (danceDesigner.s.keyframes[i] == t || danceDesigner.s.keyframes[i] == lessT || danceDesigner.s.keyframes[i] == greaterT) {
+  //           t = danceDesigner.s.keyframes[i];
+  //         }
+  //       }
+  //     } else {
+  //       // Set the dancers' position to the maximum position
+  //       for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+  //         danceDesigner.s.dancers[i].mesh.position.x = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].x;
+  //         danceDesigner.s.dancers[i].mesh.position.y = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].y;
+  //         danceDesigner.s.dancers[i].mesh.position.z = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].z;
+  //       }
+  //     }
+  //     updateTimeMark();
+	// 	}
+  //
+	// 	function onMouseUp( event ) {
+  //
+  //     t = ((event.offsetX + scroller.scrollLeft) / scale);
+	// 		onMouseMove( event );
+  //     updateTimeMark();
+	// 		document.removeEventListener( 'mousemove', onMouseMove );
+	// 		document.removeEventListener( 'mouseup', onMouseUp );
+  //
+	// 	}
+  //
+  //   t = ((event.offsetX + scroller.scrollLeft) / scale);
+  //   var lessT = Math.round(t - 1);
+  //   t = Math.round(t);
+  //   var greaterT = Math.round(t + 1);
+  //   if (danceDesigner.s.keyframes.includes(t) || danceDesigner.s.keyframes.includes(lessT) || danceDesigner.s.keyframes.includes(greaterT)) {
+  //     // Determine where the current time is in the keyframes[] array if it exists
+  //     for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
+  //       if (danceDesigner.s.keyframes[i] == t || danceDesigner.s.keyframes[i] == lessT || danceDesigner.s.keyframes[i] == greaterT) {
+  //         t = danceDesigner.s.keyframes[i];
+  //       }
+  //     }
+  //   } else {
+  //     // Set the dancers' position to the maximum position
+  //     for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+  //       danceDesigner.s.dancers[i].mesh.position.x = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].x;
+  //       danceDesigner.s.dancers[i].mesh.position.y = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].y;
+  //       danceDesigner.s.dancers[i].mesh.position.z = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].z;
+  //     }
+  //   }
+  //   updateTimeMark();
+  //
+	// 	document.addEventListener( 'mousemove', onMouseMove, false );
+	// 	document.addEventListener( 'mouseup', onMouseUp, false );
+  //
+	// }, false );
 
-		event.preventDefault();
-
-		function onMouseMove( event ) {
-
-      t = ((event.offsetX + scroller.scrollLeft) / scale);
-      var lessT = Math.round(t - 1);
-      t = Math.round(t);
-      var greaterT = Math.round(t + 1);
-      if (danceDesigner.s.keyframes.includes(t) || danceDesigner.s.keyframes.includes(lessT) || danceDesigner.s.keyframes.includes(greaterT)) {
-        // Determine where the current time is in the keyframes[] array if it exists
-        for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
-          if (danceDesigner.s.keyframes[i] == t || danceDesigner.s.keyframes[i] == lessT || danceDesigner.s.keyframes[i] == greaterT) {
-            t = danceDesigner.s.keyframes[i];
-          }
-        }
-      } else {
-        // Set the dancers' position to the maximum position
-        for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-          danceDesigner.s.dancers[i].mesh.position.x = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].x;
-          danceDesigner.s.dancers[i].mesh.position.y = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].y;
-          danceDesigner.s.dancers[i].mesh.position.z = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].z;
-        }
-      }
-      updateTimeMark();
-		}
-
-		function onMouseUp( event ) {
-
-      t = ((event.offsetX + scroller.scrollLeft) / scale);
-			onMouseMove( event );
-      updateTimeMark();
-			document.removeEventListener( 'mousemove', onMouseMove );
-			document.removeEventListener( 'mouseup', onMouseUp );
-
-		}
-
-    t = ((event.offsetX + scroller.scrollLeft) / scale);
-    var lessT = Math.round(t - 1);
-    t = Math.round(t);
-    var greaterT = Math.round(t + 1);
-    if (danceDesigner.s.keyframes.includes(t) || danceDesigner.s.keyframes.includes(lessT) || danceDesigner.s.keyframes.includes(greaterT)) {
-      // Determine where the current time is in the keyframes[] array if it exists
-      for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
-        if (danceDesigner.s.keyframes[i] == t || danceDesigner.s.keyframes[i] == lessT || danceDesigner.s.keyframes[i] == greaterT) {
-          t = danceDesigner.s.keyframes[i];
-        }
-      }
-    } else {
-      // Set the dancers' position to the maximum position
-      for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-        danceDesigner.s.dancers[i].mesh.position.x = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].x;
-        danceDesigner.s.dancers[i].mesh.position.y = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].y;
-        danceDesigner.s.dancers[i].mesh.position.z = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].z;
-      }
-    }
-    updateTimeMark();
-
-		document.addEventListener( 'mousemove', onMouseMove, false );
-		document.addEventListener( 'mouseup', onMouseUp, false );
-
-	}, false );
   timeline.dom.appendChild( canvas );
 
   function updateMarks() {
@@ -748,6 +818,8 @@ var TimelineEditor = function () {
     removeTimeMark: removeTimeMark,
     removeTimeMarks: removeTimeMarks,
     changeTimeMarkColor: changeTimeMarkColor,
+    scroller: scroller,
+    scale: scale,
   };
 
 };
@@ -1021,6 +1093,7 @@ function onButtonClick(event) {
 function initializeLesson() {
   danceDesigner.init();
   animate(0, 0);
+  t = 0;
   timeline.addTimeMark(0);
   timeline.changeTimeMarkColor(0, true);
 }
