@@ -53,13 +53,6 @@ class Dancer {
     this.positions.sort(function(a, b) {return a.time - b.time});
   }
 
-  // Removes the position at time t from the dancer's positions
-  // removePosition(t) {
-  //   this.positions = this.positions.filter(function(position, index, arr){
-  //       return position.time !== t;
-  //   });
-  // }
-
   // Returns the position at time t if it exists
   getPosition(t) {
     return this.positions[t];
@@ -150,6 +143,114 @@ class Dancer {
     }
   }
 
+  extendLastPosition(secondToLastT, newLastKeyframeT) {
+    var copyPosArray = this.positions.slice(this.positions.length - 1);
+    var oldLastPos = copyPosArray[0];
+    console.log("oldLastPos: ", oldLastPos);
+    // var oldLastPos = this.positions[this.positions.length - 1];
+    var newArray = this.positions.slice(0, secondToLastT + 1);
+    console.log("SLICED", this.positions.slice(0, secondToLastT + 1));
+    console.log("newLastKeyframeT ", newLastKeyframeT);
+    console.log("secondToLastT ", secondToLastT);
+    var timeDiff = newLastKeyframeT - secondToLastT;
+    console.log('time diff: ', timeDiff);
+    for (var i = 1; i < timeDiff; i++) {
+      var xVal = ((oldLastPos.x - this.positions[secondToLastT].x) * i / (timeDiff)) + this.positions[secondToLastT].x;
+      var yVal = ((oldLastPos.y - this.positions[secondToLastT].y) * i / (timeDiff)) + this.positions[secondToLastT].y;
+      var zVal = ((oldLastPos.z - this.positions[secondToLastT].z) * i / (timeDiff)) + this.positions[secondToLastT].z;
+      var newPosition = new THREE.Vector3(xVal, yVal, zVal);
+      console.log("Pushing new position: ", newPosition);
+      console.log("at time i: ", i);
+      newArray[i + secondToLastT] = newPosition;
+    }
+    newArray[newLastKeyframeT] = oldLastPos;
+    console.log("[BEFORE] this.positions length", this.positions.length);
+    console.log("[DONE] modified newArray", newArray);
+    this.positions = newArray;
+    console.log("[DONE] modified this.positions", this.positions);
+    console.log("[DONE] modified this.positions length", this.positions.length);
+  }
+
+  moveLastPosition(newEnd, before, newFrame, after) {
+    var newPos = this.positions[this.positions.length - 1];
+    // Shorten the routine appropriately
+    this.positions.length = newEnd + 1;
+    this.positions[newFrame] = newPos;
+    var timeDiff = newFrame - before;
+    for (var i = 1; i < timeDiff; i++) {
+      this.positions[before + i].x = ((newPos.x - this.positions[before].x) * i / (timeDiff)) + this.positions[before].x;
+      this.positions[before + i].y = ((newPos.y - this.positions[before].y) * i / (timeDiff)) + this.positions[before].y;
+      this.positions[before + i].z = ((newPos.z - this.positions[before].z) * i / (timeDiff)) + this.positions[before].z;
+    }
+    timeDiff = after - newFrame;
+    for (var i = 1; i < timeDiff; i++) {
+      this.positions[newFrame + i].x = ((this.positions[after].x - newPos.x) * i / (timeDiff)) + newPos.x;
+      this.positions[newFrame + i].y = ((this.positions[after].y - newPos.y) * i / (timeDiff)) + newPos.y;
+      this.positions[newFrame + i].z = ((this.positions[after].z - newPos.z) * i / (timeDiff)) + newPos.z;
+    }
+    return;
+  }
+
+  moveLastPositionKeepOrder(newEnd, before, oldEnd) {
+    var newPos = this.positions[oldEnd];
+    var timeDiff = newEnd - before;
+    for (var i = 1; i < timeDiff; i++) {
+      this.positions[before + i].x = ((newPos.x - this.positions[before].x) * i / (timeDiff)) + this.positions[before].x;
+      this.positions[before + i].y = ((newPos.y - this.positions[before].y) * i / (timeDiff)) + this.positions[before].y;
+      this.positions[before + i].z = ((newPos.z - this.positions[before].z) * i / (timeDiff)) + this.positions[before].z;
+    }
+    this.positions[newEnd] = newPos;
+    // Shorten the routine appropriately
+    this.positions.length = newEnd + 1;
+    console.log("[DONE] this.positions: ", this.positions);
+    return;
+  }
+
+  movePositionToNewEnd(old, beforeOld, afterOld, newLast, oldLast) {
+    var newPosArray = this.positions.slice(old, old + 1);
+    var newPos = newPosArray[0];
+    this.removeMiddleKeyframe(beforeOld, afterOld);
+    var timeDiff = newLast - oldLast;
+    for (var i = 1; i < timeDiff; i++) {
+      var xVal = ((newPos.x - this.positions[oldLast].x) * i / (timeDiff)) + this.positions[oldLast].x;
+      var yVal = ((newPos.y - this.positions[oldLast].y) * i / (timeDiff)) + this.positions[oldLast].y;
+      var zVal = ((newPos.z - this.positions[oldLast].z) * i / (timeDiff)) + this.positions[oldLast].z;
+      var newPosition = new THREE.Vector3(xVal, yVal, zVal);
+      this.positions.push(newPosition);
+    }
+    this.positions.push(newPos);
+  }
+
+  async movePositionToNewMiddle(old, beforeOld, afterOld, before, newFrame, after) {
+    console.log("before ", before);
+    console.log("after ", after);
+    console.log("new frame: ", newFrame);
+    console.log("old ", old);
+    console.log("beforeOld ", beforeOld);
+    console.log("afterOld ", afterOld);
+    var newPosArray = this.positions.slice(old, old + 1);
+    var newPos = newPosArray[0];
+    console.log("newPosArray ", newPosArray);
+    console.log(typeof newPos);
+    console.log("NEW POS BEFORE: ", newPos);
+    this.removeMiddleKeyframe(beforeOld, afterOld);
+    console.log("NEW POS AFTER: ", newPos);
+    this.positions[newFrame] = newPos;
+    var timeDiff = newFrame - before;
+    for (var i = 1; i < timeDiff; i++) {
+      this.positions[before + i].x = ((newPos.x - this.positions[before].x) * i / (timeDiff)) + this.positions[before].x;
+      this.positions[before + i].y = ((newPos.y - this.positions[before].y) * i / (timeDiff)) + this.positions[before].y;
+      this.positions[before + i].z = ((newPos.z - this.positions[before].z) * i / (timeDiff)) + this.positions[before].z;
+    }
+    timeDiff = after - newFrame;
+    for (var i = 1; i < timeDiff; i++) {
+      this.positions[newFrame + i].x = ((this.positions[after].x - newPos.x) * i / (timeDiff)) + newPos.x;
+      this.positions[newFrame + i].y = ((this.positions[after].y - newPos.y) * i / (timeDiff)) + newPos.y;
+      this.positions[newFrame + i].z = ((this.positions[after].z - newPos.z) * i / (timeDiff)) + newPos.z;
+    }
+    return;
+  }
+
 }
 
 class Stage {
@@ -197,7 +298,7 @@ var danceDesigner = {
   dancersArr: [], maxT: null, stagePlane: null,
   xMax: null, xMin: null, zMax: null, zMin: null,
   camera1: null, renderer1: null, camera2: null, renderer2: null,
-  scene2: null, renderers: [], clock: null,
+  scene2: null, renderers: [], clock: null, dragControls: null,
   // dancerPos: [], dancers: {},
   init: function() {
     this.scene = new THREE.Scene();
@@ -334,9 +435,20 @@ var danceDesigner = {
     // Set the camera and orbit controls
     this.camera.position.z = 8;
     this.camera.position.y = 3;
+
     this.controls = new THREE.OrbitControls( this.camera, this.renderer.domElement );
     this.controls.target.set( 0, 0, -2 );
-    this.controls.maxDistance = 30;
+    this.controls.maxDistance = 50;
+
+    this.dragControls = new THREE.DragControls(this.dancersArr, this.camera, this.renderer.domElement);
+    this.dragControls.addEventListener( 'dragstart', function ( event ) {
+    	event.object.material.emissive.set( 0xaaaaaa );
+      this.controls.enabled = false;
+    } );
+    this.dragControls.addEventListener( 'dragend', function ( event ) {
+    	event.object.material.emissive.set( 0x000000 );
+      this.controls.enabled = true;
+    } );
 
     // Prepare clock
     this.clock = new THREE.Clock();
@@ -376,8 +488,15 @@ var danceDesigner = {
     event.preventDefault();
     if (event.clientY > (window.innerHeight * 8 / 10) && event.clientY < ((window.innerHeight * 8 / 10) + 32)) {
 
+      var isMovingAKeyFrame = false;
+      var lastKeyframeT = 0;
+
   		function onMouseMove( event ) {
 
+        if (isMovingAKeyFrame) {
+          console.log('update key frame time mark ', lastKeyframeT);
+          timeline.updateKeyframeTimeMark(lastKeyframeT);
+        }
         t = ((event.offsetX + timeline.scroller.scrollLeft) / timeline.scale);
         var lessT = Math.round(t - 1);
         t = Math.round(t);
@@ -400,7 +519,101 @@ var danceDesigner = {
         timeline.updateTimeMark();
   		}
 
-  		function onMouseUp( event ) {
+  		async function onMouseUp( event ) {
+
+        if (isMovingAKeyFrame) {
+
+          t = Math.round(t);
+
+          if (lastKeyframeT == 0) {
+            // What do you do if the user is moving the first keyframe?
+            // Automatically create a new keyframe at time = 0 to replace it
+            alert("Cannot move first key frame.");
+          }
+
+          var lastKeyframeIndex = 0;
+          var currentTimeLessIndex = 0;
+          console.log(danceDesigner.s.keyframes);
+          // Determine where the current time is in the keyframes[] array if it exists
+          for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
+            if (danceDesigner.s.keyframes[i] == lastKeyframeT) {
+              lastKeyframeIndex = i;
+            }
+            if (danceDesigner.s.keyframes[i] < t) {
+              currentTimeLessIndex = i;
+            }
+          }
+          console.log("lastKeyframeIndex" , lastKeyframeIndex);
+
+          if (danceDesigner.s.keyframes.includes(t) || danceDesigner.s.keyframes.includes(t - 1) || danceDesigner.s.keyframes.includes(t + 1)) {
+            alert("Cannot override an existing keyframe.");
+
+            // Return to old state of the world
+
+            isMovingAKeyFrame = false;
+            return;
+          } else {
+            for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+              if (lastKeyframeIndex == danceDesigner.s.keyframes.length - 1) {
+                if (t > lastKeyframeT) {
+                  console.log("EXTEND LAST POSITION");
+                  console.log("lastKeyframeT ", lastKeyframeT);
+                  console.log("danceDesigner.s.keyframes[lastKeyframeIndex - 1] ", danceDesigner.s.keyframes[lastKeyframeIndex - 1]);
+                  console.log("t ", t);
+                  danceDesigner.s.dancers[i].extendLastPosition(danceDesigner.s.keyframes[lastKeyframeIndex - 1], t);
+                  danceDesigner.maxT = t;
+                  danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 1] = t;
+                } else {
+                  // Determine where to move the old position
+                  var beforeFrame = danceDesigner.s.keyframes[currentTimeLessIndex];
+                  // Case where old last position is moving between two other positions
+                  if (t < beforeFrame) {
+                    console.log("MOVING LAST BETWEEN");
+                    var afterFrame = danceDesigner.s.keyframes[currentTimeLessIndex + 1];
+                    danceDesigner.s.dancers[i].moveLastPosition(t, danceDesigner.s.keyframes[lastKeyframeIndex - 1], beforeFrame, afterFrame);
+                    danceDesigner.s.keyframes = danceDesigner.s.keyframes.splice(lastKeyframeIndex, 1);
+                    danceDesigner.s.keyframes.push(t);
+                    danceDesigner.s.keyframes.sort(function(a, b) {
+                      return a - b;
+                    });
+                  }
+                  // Case where the last position is still the last posiition
+                  else {
+                    console.log('MOVE LAST KEEP ORDER');
+                    danceDesigner.s.dancers[i].moveLastPositionKeepOrder(t, danceDesigner.s.keyframes[lastKeyframeIndex - 1], danceDesigner.s.keyframes[lastKeyframeIndex]);
+                    danceDesigner.maxT = t;
+                    danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 1] = t;
+                  }
+                }
+              } else {
+                var disruptedBeforeFrame = danceDesigner.s.keyframes[lastKeyframeIndex - 1];
+                var disruptedAfterFrame = danceDesigner.s.keyframes[lastKeyframeIndex + 1];
+                var secondToLastT = danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 2];
+                if (t > danceDesigner.maxT) {
+                  danceDesigner.s.dancers[i].movePositionToNewEnd(lastKeyframeT, disruptedBeforeFrame, disruptedAfterFrame, t, secondToLastT);
+                } else {
+                  var beforeFrame = danceDesigner.s.keyframes[currentTimeLessIndex];
+                  var afterFrame = danceDesigner.s.keyframes[currentTimeLessIndex + 1];
+                  danceDesigner.s.dancers[i].movePositionToNewMiddle(lastKeyframeT, disruptedBeforeFrame, disruptedAfterFrame, beforeFrame, t, afterFrame);
+                }
+              }
+            }
+
+            danceDesigner.s.keyframes.splice(lastKeyframeIndex, 1);
+            danceDesigner.s.keyframes.push(t);
+            danceDesigner.s.keyframes.sort(function(a, b) {
+              return a - b;
+            });
+
+            isMovingAKeyFrame = false;
+
+            console.log(danceDesigner.s.dancers);
+            console.log(danceDesigner.s.keyframes);
+          }
+          console.log("LAST KEYFRAME T: ", lastKeyframeT);
+          console.log("NEW TIME: ", t);
+          timeline.updateSetKeyframeTimeMark(lastKeyframeT, t);
+        }
 
         t = ((event.offsetX + timeline.scroller.scrollLeft) / timeline.scale);
   			onMouseMove( event );
@@ -419,6 +632,9 @@ var danceDesigner = {
         for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
           if (danceDesigner.s.keyframes[i] == t || danceDesigner.s.keyframes[i] == lessT || danceDesigner.s.keyframes[i] == greaterT) {
             t = danceDesigner.s.keyframes[i];
+            // Select the keyframe to move it
+            isMovingAKeyFrame = true;
+            lastKeyframeT = t;
           }
         }
       } else {
@@ -452,7 +668,6 @@ var danceDesigner = {
         // Set the selection - first intersected object
         danceDesigner.selection = intersects[0].object;
 
-        var found = false;
         for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
           var tempT = Math.round(t);
           if (tempT > danceDesigner.maxT) {
@@ -463,7 +678,6 @@ var danceDesigner = {
           (Math.abs(danceDesigner.s.dancers[i].positions[tempT].y - intersects[0].object.position.y) < 1) &&
           (Math.abs(danceDesigner.s.dancers[i].positions[tempT].z - intersects[0].object.position.z) < 1)) {
             danceDesigner.movingDancer = danceDesigner.s.dancers[i];
-            found = true;
           }
         }
         // Calculate the offset
@@ -471,14 +685,12 @@ var danceDesigner = {
         danceDesigner.offset.copy(intersects[0].point).sub(danceDesigner.plane.position);
       } else {
         console.log("on stage");
-        //vector.project(danceDesigner.camera);
       }
     }
   },
   onDocumentMouseMove: function (event) {
     event.preventDefault();
     if (event.clientX > (window.innerWidth * 8 / 10) || event.clientY > (window.innerHeight * 8 / 10)) {
-      //console.log("outside of window");
       return;
     }
     // Get mouse position
@@ -497,6 +709,7 @@ var danceDesigner = {
         intersects[0].point.sub(danceDesigner.offset),
         danceDesigner.selection.position
       );
+      console.log('updating position');
       // Find the dancer based on the initial pose
       if (danceDesigner.movingDancer) {
         if (newPosThreeVector) {
@@ -684,9 +897,12 @@ var TimelineEditor = function () {
 
     var lessT = Math.round(t - 1);
     var greaterT = Math.round(t + 1);
+    console.log("KEYFRAMES: ", danceDesigner.s.keyframes);
+    console.log("TIME MARKS: ", timeMarks);
     for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
       if (danceDesigner.s.keyframes[i] == t || danceDesigner.s.keyframes[i] == lessT || danceDesigner.s.keyframes[i] == greaterT) {
         changeTimeMarkColor(danceDesigner.s.keyframes[i], true);
+        console.log("TRUE");
       } else {
         changeTimeMarkColor(danceDesigner.s.keyframes[i], false);
       }
@@ -729,6 +945,22 @@ var TimelineEditor = function () {
     timeMarks = [];
   }
 
+  function updateKeyframeTimeMark(time) {
+    for (var i = 0; i < timeMarks.length; i++) {
+      if (timeMarks[i].time == time) {
+          timeMarks[i].mark.style.left = ( t * scale ) - scroller.scrollLeft - 12 + 'px';
+      }
+    }
+  }
+
+  function updateSetKeyframeTimeMark(oldTime, newTime) {
+    for (var i = 0; i < timeMarks.length; i++) {
+      if (timeMarks[i].time == oldTime) {
+          timeMarks[i].time = newTime;
+      }
+    }
+  }
+
   function changeTimeMarkColor(t, editing) {
     for (var i = 0; i < timeMarks.length; i++) {
       if (timeMarks[i].time == t) {
@@ -748,6 +980,8 @@ var TimelineEditor = function () {
     addTimeMark: addTimeMark,
     removeTimeMark: removeTimeMark,
     removeTimeMarks: removeTimeMarks,
+    updateKeyframeTimeMark: updateKeyframeTimeMark,
+    updateSetKeyframeTimeMark: updateSetKeyframeTimeMark,
     changeTimeMarkColor: changeTimeMarkColor,
     scroller: scroller,
     scale: scale,
@@ -765,6 +999,8 @@ function animate() {
       play = false;
     }
     if (t > danceDesigner.maxT) {
+      console.log(danceDesigner.s.dancers);
+      console.log(danceDesigner.s.keyframes);
       play = false;
     }
     timeline.changeTimeMarkColor(t, false);
