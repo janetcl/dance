@@ -146,29 +146,18 @@ class Dancer {
   extendLastPosition(secondToLastT, newLastKeyframeT) {
     var copyPosArray = this.positions.slice(this.positions.length - 1);
     var oldLastPos = copyPosArray[0];
-    console.log("oldLastPos: ", oldLastPos);
     // var oldLastPos = this.positions[this.positions.length - 1];
     var newArray = this.positions.slice(0, secondToLastT + 1);
-    console.log("SLICED", this.positions.slice(0, secondToLastT + 1));
-    console.log("newLastKeyframeT ", newLastKeyframeT);
-    console.log("secondToLastT ", secondToLastT);
     var timeDiff = newLastKeyframeT - secondToLastT;
-    console.log('time diff: ', timeDiff);
     for (var i = 1; i < timeDiff; i++) {
       var xVal = ((oldLastPos.x - this.positions[secondToLastT].x) * i / (timeDiff)) + this.positions[secondToLastT].x;
       var yVal = ((oldLastPos.y - this.positions[secondToLastT].y) * i / (timeDiff)) + this.positions[secondToLastT].y;
       var zVal = ((oldLastPos.z - this.positions[secondToLastT].z) * i / (timeDiff)) + this.positions[secondToLastT].z;
       var newPosition = new THREE.Vector3(xVal, yVal, zVal);
-      console.log("Pushing new position: ", newPosition);
-      console.log("at time i: ", i);
       newArray[i + secondToLastT] = newPosition;
     }
     newArray[newLastKeyframeT] = oldLastPos;
-    console.log("[BEFORE] this.positions length", this.positions.length);
-    console.log("[DONE] modified newArray", newArray);
     this.positions = newArray;
-    console.log("[DONE] modified this.positions", this.positions);
-    console.log("[DONE] modified this.positions length", this.positions.length);
   }
 
   moveLastPosition(newFrame, newEnd, before, after) {
@@ -193,11 +182,6 @@ class Dancer {
 
   moveLastPositionKeepOrder(newEnd, before, oldEnd) {
     var newPos = this.positions[oldEnd];
-    console.log("new end Old position: ", this.positions[newEnd]);
-    console.log("new pos: ", newPos);
-    console.log("new End: ", newEnd);
-    console.log("old End: ", oldEnd);
-    console.log("before: ", before);
     var timeDiff = newEnd - before;
     for (var i = 1; i < timeDiff; i++) {
       this.positions[before + i].x = ((newPos.x - this.positions[before].x) * i / (timeDiff)) + this.positions[before].x;
@@ -207,7 +191,6 @@ class Dancer {
     this.positions[newEnd] = newPos;
     // Shorten the routine appropriately
     this.positions.length = newEnd + 1;
-    console.log("[DONE] this.positions: ", this.positions);
     return;
   }
 
@@ -229,12 +212,6 @@ class Dancer {
 
   movePositionToNewMiddle(old, beforeOld, afterOld, before, newFrame, after) {
     var newPos = new THREE.Vector3(this.positions[old].x, this.positions[old].y, this.positions[old].z);
-    console.log("before ", before);
-    console.log("after ", after);
-    console.log("new frame: ", newFrame);
-    console.log("old ", old);
-    console.log("beforeOld ", beforeOld);
-    console.log("afterOld ", afterOld);
     this.removeMiddleKeyframe(beforeOld, afterOld);
     this.positions[newFrame] = newPos;
     var timeDiff = newFrame - before;
@@ -249,7 +226,6 @@ class Dancer {
       this.positions[newFrame + i].y = ((this.positions[after].y - newPos.y) * i / (timeDiff)) + newPos.y;
       this.positions[newFrame + i].z = ((this.positions[after].z - newPos.z) * i / (timeDiff)) + newPos.z;
     }
-    console.log("THIS POSITIONS: ", this.positions);
     return;
   }
 
@@ -496,7 +472,6 @@ var danceDesigner = {
   		function onMouseMove( event ) {
 
         if (isMovingAKeyFrame) {
-          console.log('update key frame time mark ', lastKeyframeT);
           timeline.updateKeyframeTimeMark(lastKeyframeT);
         }
         t = ((event.offsetX + timeline.scroller.scrollLeft) / timeline.scale);
@@ -544,9 +519,6 @@ var danceDesigner = {
             if (danceDesigner.s.keyframes[i] < t) {
               currentTimeLessIndex = i;
             }
-            console.log('i: ', i);
-            console.log("currentTimeLessIndex: ", currentTimeLessIndex);
-            console.log("lastKeyframeIndex: ", lastKeyframeIndex);
           }
 
           if (danceDesigner.s.keyframes.includes(t) || danceDesigner.s.keyframes.includes(t - 1) || danceDesigner.s.keyframes.includes(t + 1)) {
@@ -567,22 +539,15 @@ var danceDesigner = {
               if (lastKeyframeIndex == danceDesigner.s.keyframes.length - 1) {
                 if (t > lastKeyframeT) {
                   danceDesigner.maxT = t;
-                  console.log("EXTEND LAST POSITION");
-                  console.log("lastKeyframeT ", lastKeyframeT);
-                  console.log("danceDesigner.s.keyframes[lastKeyframeIndex - 1] ", danceDesigner.s.keyframes[lastKeyframeIndex - 1]);
-                  console.log("t ", t);
                   danceDesigner.s.dancers[i].extendLastPosition(danceDesigner.s.keyframes[lastKeyframeIndex - 1], t);
                   // danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 1] = t;
                   keyframeAdjust = "Move Last Extend Routine";
                 } else {
                   // Determine where to move the old position
                   var beforeFrame = danceDesigner.s.keyframes[currentTimeLessIndex];
-                  console.log(' before frame: ', beforeFrame);
-                  console.log("t", t);
                   // Case where old last position is moving between two other positions
                   if (t < secondToLastT) {
                     danceDesigner.maxT = secondToLastT;
-                    console.log("MOVING LAST BETWEEN");
                     var afterFrame = danceDesigner.s.keyframes[currentTimeLessIndex + 1];
                     danceDesigner.s.dancers[i].moveLastPosition(t, danceDesigner.s.keyframes[lastKeyframeIndex - 1], beforeFrame, afterFrame);
                     keyframeAdjust = "Move Last New Order";
@@ -590,7 +555,6 @@ var danceDesigner = {
                   // Case where the last position is still the last posiition
                   else {
                     danceDesigner.maxT = t;
-                    console.log('MOVE LAST KEEP ORDER');
                     danceDesigner.s.dancers[i].moveLastPositionKeepOrder(t, beforeFrame, danceDesigner.s.keyframes[lastKeyframeIndex]);
                     keyframeAdjust = "Move Last Keep Order";
                   }
@@ -602,18 +566,12 @@ var danceDesigner = {
                 if (t > danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 1]) {
                   danceDesigner.maxT = t;
                   // Move the position to a new ending position in the routine
-                  console.log("lastKeyframeT ", lastKeyframeT);
-                  console.log("disruptedBeforeFrame: ", disruptedBeforeFrame);
-                  console.log("disruptedAfterFrame ", disruptedAfterFrame);
-                  console.log("t ", t);
-                  console.log("danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 1] ", danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 1]);
                   danceDesigner.s.dancers[i].movePositionToNewEnd(lastKeyframeT, disruptedBeforeFrame, disruptedAfterFrame, t, danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 1]);
                   keyframeAdjust = "Move Middle Position To New End";
                 } else {
                   // var beforeFrame = danceDesigner.s.keyframes[currentTimeLessIndex];
                   var beforeFrame = danceDesigner.s.keyframes[lastKeyframeIndex - 1];
                   var afterFrame = danceDesigner.s.keyframes[lastKeyframeIndex + 1];
-                  console.log("MOVE TO NEW MIDDLE");
                   danceDesigner.s.dancers[i].movePositionToNewMiddle(lastKeyframeT, disruptedBeforeFrame, disruptedAfterFrame, beforeFrame, t, afterFrame);
                   keyframeAdjust = "Move Middle Position To New Middle";
                 }
@@ -622,7 +580,6 @@ var danceDesigner = {
 
             // Adjust the stage's keyframes appropriately
             if (keyframeAdjust == "Move Last Keep Order" || keyframeAdjust == "Move Last Extend Routine") {
-              console.log("MOVE LAST KEEP ORDER");
               danceDesigner.s.keyframes[lastKeyframeIndex] = t;
             } else {
               danceDesigner.s.keyframes[lastKeyframeIndex] = t;
