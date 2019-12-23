@@ -322,7 +322,7 @@ var danceDesigner = {
     var j1 = new THREE.Vector3(-2, 0, -5);
     janet.addPotentialPos(j1);
     janet.updateOnlyPosition();
-    janet.potentialPose = null;
+    // janet.potentialPose = null;
     janet.mesh.position.x = j1.x;
     janet.mesh.position.y = j1.y;
     janet.mesh.position.z = j1.z;
@@ -337,7 +337,7 @@ var danceDesigner = {
     var p1 = new THREE.Vector3(2, 0, -3);
     phillip.addPotentialPos(p1);
     phillip.updateOnlyPosition();
-    phillip.potentialPose = null;
+    // phillip.potentialPose = null;
     phillip.mesh.position.x = p1.x;
     phillip.mesh.position.y = p1.y;
     phillip.mesh.position.z = p1.z;
@@ -465,7 +465,11 @@ var danceDesigner = {
   onDocumentMouseDown: function (event) {
     event.preventDefault();
     if (event.clientY > (window.innerHeight * 8 / 10) && event.clientY < ((window.innerHeight * 8 / 10) + 32)) {
-
+      if (moveNumber == 0) {
+        console.log("adding initial move");
+        console.log("dancers: ", danceDesigner.s.dancers);
+        addToUndoBuffer();
+      }
       var isMovingAKeyFrame = false;
       var lastKeyframeT = 0;
 
@@ -610,6 +614,8 @@ var danceDesigner = {
 
             console.log(danceDesigner.s.dancers);
             console.log(danceDesigner.s.keyframes);
+            // PUSH TO UNDO BUFFER
+            addToUndoBuffer();
           }
           timeline.updateSetKeyframeTimeMark(lastKeyframeT, t);
         }
@@ -619,7 +625,6 @@ var danceDesigner = {
         timeline.updateTimeMark();
   			document.removeEventListener( 'mousemove', onMouseMove );
   			document.removeEventListener( 'mouseup', onMouseUp );
-
   		}
 
       t = ((event.offsetX + timeline.scroller.scrollLeft) / timeline.scale);
@@ -747,6 +752,9 @@ var danceDesigner = {
     }
     if (danceDesigner.selection) {
       addNewKeyFrame(t);
+
+      // Push to Undo Buffer
+      addToUndoBuffer();
     }
     for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
       danceDesigner.s.dancers[i].potentialPose = null;
@@ -981,6 +989,7 @@ var TimelineEditor = function () {
     changeTimeMarkColor: changeTimeMarkColor,
     scroller: scroller,
     scale: scale,
+    timeMarks: timeMarks,
   };
 
 };
@@ -1031,6 +1040,59 @@ function animate() {
   requestAnimationFrame( animate );
   render();
   update();
+}
+
+var undoBuffer = [];
+var moveNumber = 0;
+
+function addToUndoBuffer() {
+  moveNumber++;
+
+  // Copy over the dancers
+  var oldDancers = danceDesigner.s.dancers.slice(0);
+  // var oldDancers = [];
+  for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+    if (danceDesigner.s.dancers[i].positions.length > 0) {
+      // oldDancers.push(danceDesigner.s.dancers[i]);
+      // oldDancers[i].positions = [];
+      // for (var j = 0; j < oldDancers[i].positions.length; j++) {
+      //   var oldPos = oldDancers[i].positions[j].clone();
+      //   console.log("%d time, old Pos: ", j, oldPos);
+      //   oldDancers[i].positions.push(oldPos);
+      // }
+      oldDancers[i].positions = [...danceDesigner.s.dancers[i].positions];
+      // if (danceDesigner.s.dancers[i].potentialPose != null) {
+      //   oldDancers[i].potentialPose = danceDesigner.s.dancers[i].potentialPose.clone();
+      // }
+    }
+  }
+  console.log("dancers after: ", danceDesigner.s.dancers);
+
+  // Push to the undo buffer
+  undoBuffer.unshift({
+    move: moveNumber,
+    time: t,
+    maxT: danceDesigner.maxT,
+    dancers: oldDancers,
+    keyframes: danceDesigner.s.keyframes.slice(0),
+    timeMarks: timeline.timeMarks.slice(0)
+  });
+
+  // Limit the length
+  if (undoBuffer.length > 10) {
+    undoBuffer.length == 10;
+  }
+
+  console.log("undoBuffer: ", undoBuffer);
+}
+
+function retrieveUndo() {
+  if (undoBuffer.length == 0) {
+    return;
+  }
+
+  // Pop from the front of the undo buffer
+  return undoBuffer.shift();
 }
 
 // Create element function
@@ -1116,6 +1178,8 @@ async function addNewKeyFrame(t) {
     if (danceDesigner.s.dancers[i].potentialPose == null) {
       var newPos = new THREE.Vector3(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z);
       danceDesigner.s.dancers[i].addPotentialPos(newPos);
+    } else {
+      danceDesigner.s.dancers[i].addPotentialPos(danceDesigner.s.dancers[i].potentialPose);
     }
   }
 
@@ -1153,6 +1217,7 @@ async function addNewKeyFrame(t) {
       // Adding a new keyframe at the end of the routine
       danceDesigner.maxT = t;
       for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
+        console.log("adding new last position: ", danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 2]);
         danceDesigner.s.dancers[j].addNewLastPosition(
           danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 2], t);
       }
@@ -1189,7 +1254,30 @@ function onButtonClick(event) {
   //   }
   // } else
   if (event.target.id === "undo") {
-    addNewKeyFrame(t);
+    var oldState = retrieveUndo();
+    console.log("OLD STATE: ", oldState);
+    t = oldState.time;
+    danceDesigner.maxT = oldState.maxT;
+    danceDesigner.s.dancers = oldState.dancers;
+    danceDesigner.s.keyframes = oldState.keyframes;
+    // danceDesigner.s = oldState.stage;
+    timeline.timeMarks = oldState.timeMarks;
+    console.log("RETRIEVING OLD STATE FROM TIME: ", t);
+
+    // Clean up the timeline
+    timeline.removeTimeMarks();
+    for (var i = 0; i < timeline.timeMarks.length; i++) {
+      timeline.addTimeMark(timeline.timeMarks[i].time);
+    }
+
+    // Update the cursor time mark
+    timeline.updateTimeMark();
+
+    console.log("MAXT: ", danceDesigner.maxT);
+    console.log("STAGE: ", danceDesigner.s);
+    console.log("KEYFRAMES: ", danceDesigner.s.keyframes);
+    console.log("DANCERS: ", danceDesigner.s.dancers);
+
   } else if (event.target.id === "delete") {
     var keyframeIndex = -1;
 
