@@ -229,6 +229,12 @@ class Dancer {
     return;
   }
 
+  clone() {
+    var cloneDancer = new Dancer(this.name, this.mesh);
+    cloneDancer.positions = this.positions.slice(0);
+    return cloneDancer;
+  }
+
 }
 
 class Stage {
@@ -747,6 +753,7 @@ var danceDesigner = {
     }
   },
   onDocumentMouseUp: function (event) {
+    event.preventDefault();
     if (event.clientX > (window.innerWidth * 8 / 10) || event.clientY > (window.innerHeight * 8 / 10)) {
       return;
     }
@@ -1049,21 +1056,18 @@ function addToUndoBuffer() {
   moveNumber++;
 
   // Copy over the dancers
-  var oldDancers = danceDesigner.s.dancers.slice(0);
-  // var oldDancers = [];
+  // var oldDancers = danceDesigner.s.dancers.slice(0);
+  var oldDancers = [];
   for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
     if (danceDesigner.s.dancers[i].positions.length > 0) {
-      // oldDancers.push(danceDesigner.s.dancers[i]);
-      // oldDancers[i].positions = [];
-      // for (var j = 0; j < oldDancers[i].positions.length; j++) {
-      //   var oldPos = oldDancers[i].positions[j].clone();
-      //   console.log("%d time, old Pos: ", j, oldPos);
-      //   oldDancers[i].positions.push(oldPos);
-      // }
-      oldDancers[i].positions = [...danceDesigner.s.dancers[i].positions];
-      // if (danceDesigner.s.dancers[i].potentialPose != null) {
-      //   oldDancers[i].potentialPose = danceDesigner.s.dancers[i].potentialPose.clone();
-      // }
+
+      // just store the positions not the dancer objects
+      // redo how you are doing everything - store keyframe data in an array
+      // [] everytime you add a new keyframe, recompute ALL of the positions based on the keyframes
+      oldDancers.push(danceDesigner.s.dancers[i].clone());
+      if (danceDesigner.s.dancers[i].potentialPose != null) {
+        oldDancers[i].potentialPose = danceDesigner.s.dancers[i].potentialPose.clone();
+      }
     }
   }
   console.log("dancers after: ", danceDesigner.s.dancers);
@@ -1217,7 +1221,6 @@ async function addNewKeyFrame(t) {
       // Adding a new keyframe at the end of the routine
       danceDesigner.maxT = t;
       for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
-        console.log("adding new last position: ", danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 2]);
         danceDesigner.s.dancers[j].addNewLastPosition(
           danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 2], t);
       }
