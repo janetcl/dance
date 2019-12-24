@@ -1351,6 +1351,8 @@ async function onButtonClick(event) {
     // Update time mark in timeline
     timeline.removeTimeMark(t);
 
+    await addToUndoBuffer();
+
     justHitUndo = false;
   } else if (event.target.id === "clear") {
     for (i = 0; i < danceDesigner.s.dancers.length; i++) {
