@@ -796,6 +796,8 @@ var t = 0;
 var lightAngle = 0;
 var play = false;
 
+// var sound = document.getElementById('sound');
+
 var TimelineEditor = function () {
 
   var container = new UI.Panel();
@@ -888,6 +890,44 @@ var TimelineEditor = function () {
 
 	}, false );
 	timeline.dom.appendChild( scroller );
+
+  // var wavesurfer = WaveSurfer.create({
+  //   container: '#timelineEditor',
+  //   scrollParent: true
+  // });
+
+  // wavesurfer.load(sound.src);
+
+  // Initialize WaveSurfer
+  var wavesurfer = WaveSurfer.create({
+      container: '#timelineEditor',
+      scrollParent: true
+  });
+
+  // Once the user loads a file in the fileinput, the file should be loaded into waveform
+  document.getElementById("fileinput").addEventListener('change', function(e){
+      var file = this.files[0];
+
+      if (file) {
+          var reader = new FileReader();
+
+          reader.onload = function (evt) {
+              // Create a Blob providing as first argument a typed array with the file buffer
+              var blob = new window.Blob([new Uint8Array(evt.target.result)]);
+
+              // Load the blob into Wavesurfer
+              wavesurfer.loadBlob(blob);
+          };
+
+          reader.onerror = function (evt) {
+              console.error("An error ocurred reading the file: ", evt);
+          };
+
+          // Read File as an ArrayBuffer
+          reader.readAsArrayBuffer(file);
+      }
+  }, false);
+
 
   var loopMark = document.createElement( 'div' );
 	loopMark.style.position = 'absolute';
@@ -1016,13 +1056,13 @@ var TimelineEditor = function () {
     scroller: scroller,
     scale: scale,
     timeMarks: timeMarks,
+    wavesurfer: wavesurfer,
   };
 
 };
 
 var timeline = new TimelineEditor();
 document.getElementById( 'timelineEditor' ).appendChild( timeline.container.dom );
-
 
 function animate() {
   if (play) {
@@ -1371,9 +1411,10 @@ async function onButtonClick(event) {
     }
     lightAngle = 0;
     play = true;
+    // sound.play();
+    timeline.wavesurfer.playPause();
   }
 }
-
 
 // Initialize lesson on page load
 function initializeLesson() {
