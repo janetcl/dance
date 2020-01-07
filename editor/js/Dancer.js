@@ -891,16 +891,9 @@ var TimelineEditor = function () {
 	}, false );
 	timeline.dom.appendChild( scroller );
 
-  // var wavesurfer = WaveSurfer.create({
-  //   container: '#timelineEditor',
-  //   scrollParent: true
-  // });
-
-  // wavesurfer.load(sound.src);
-
   // Initialize WaveSurfer
   var wavesurfer = WaveSurfer.create({
-      container: '#timelineEditor',
+      container: scroller,
       scrollParent: true
   });
 
