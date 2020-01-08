@@ -372,7 +372,6 @@ var danceDesigner = {
     this.maxT = 0;
     //this.dancers = {[janet.name]: janetMesh, [phillip.name]: phillipMesh};
     this.dancersArr = [janetMesh, phillipMesh];
-    // this.s.play();
 
     var spotLight = new THREE.SpotLight( {color: 0xffffff, intensity: 0.1});
     spotLight.position.set( -1, 60, 20 );
@@ -795,6 +794,7 @@ var danceDesigner = {
 var t = 0;
 var lightAngle = 0;
 var play = false;
+var hasMusic = false;
 
 // var sound = document.getElementById('sound');
 
@@ -828,50 +828,50 @@ var TimelineEditor = function () {
 
   function updateMarks() {
 
-    canvas.width = scroller.clientWidth;
-
-    var context = canvas.getContext( '2d', { alpha: false } );
-
-    context.fillStyle = '#555';
-    context.fillRect( 0, 0, canvas.width, canvas.height );
-
-    context.strokeStyle = '#888';
-    context.beginPath();
-
-    context.translate( - scroller.scrollLeft, 0 );
-
-    var duration = 500;
-    var width = duration * scale;
-    var scale4 = scale / 4;
-
-    for ( var i = 0.5; i <= width; i += scale ) {
-
-      context.moveTo( i + ( scale4 * 0 ), 18 ); context.lineTo( i + ( scale4 * 0 ), 26 );
-
-      if ( scale > 16 ) context.moveTo( i + ( scale4 * 1 ), 22 ), context.lineTo( i + ( scale4 * 1 ), 26 );
-      if ( scale >  8 ) context.moveTo( i + ( scale4 * 2 ), 22 ), context.lineTo( i + ( scale4 * 2 ), 26 );
-      if ( scale > 16 ) context.moveTo( i + ( scale4 * 3 ), 22 ), context.lineTo( i + ( scale4 * 3 ), 26 );
-
-    }
-
-    context.stroke();
-
-    context.font = '10px Arial';
-    context.fillStyle = '#888'
-    context.textAlign = 'center';
-
-    var step = Math.max( 1, Math.floor( 64 / scale ) );
-
-    for ( var i = 0; i < duration; i += step ) {
-
-      var minute = Math.floor( i / 60 );
-      var second = Math.floor( i % 60 );
-
-      var text = ( minute > 0 ? minute + ':' : '' ) + ( '0' + second ).slice( - 2 );
-
-      context.fillText( text, i * scale, 13 );
-
-    }
+    // canvas.width = scroller.clientWidth;
+    //
+    // var context = canvas.getContext( '2d', { alpha: false } );
+    //
+    // context.fillStyle = '#555';
+    // context.fillRect( 0, 0, canvas.width, canvas.height );
+    //
+    // context.strokeStyle = '#888';
+    // context.beginPath();
+    //
+    // context.translate( - scroller.scrollLeft, 0 );
+    //
+    // var duration = 500;
+    // var width = duration * scale;
+    // var scale4 = scale / 4;
+    //
+    // for ( var i = 0.5; i <= width; i += scale ) {
+    //
+    //   context.moveTo( i + ( scale4 * 0 ), 18 ); context.lineTo( i + ( scale4 * 0 ), 26 );
+    //
+    //   if ( scale > 16 ) context.moveTo( i + ( scale4 * 1 ), 22 ), context.lineTo( i + ( scale4 * 1 ), 26 );
+    //   if ( scale >  8 ) context.moveTo( i + ( scale4 * 2 ), 22 ), context.lineTo( i + ( scale4 * 2 ), 26 );
+    //   if ( scale > 16 ) context.moveTo( i + ( scale4 * 3 ), 22 ), context.lineTo( i + ( scale4 * 3 ), 26 );
+    //
+    // }
+    //
+    // context.stroke();
+    //
+    // context.font = '10px Arial';
+    // context.fillStyle = '#888'
+    // context.textAlign = 'center';
+    //
+    // var step = Math.max( 1, Math.floor( 64 / scale ) );
+    //
+    // for ( var i = 0; i < duration; i += step ) {
+    //
+    //   var minute = Math.floor( i / 60 );
+    //   var second = Math.floor( i % 60 );
+    //
+    //   var text = ( minute > 0 ? minute + ':' : '' ) + ( '0' + second ).slice( - 2 );
+    //
+    //   context.fillText( text, i * scale, 13 );
+    //
+    // }
 
   }
 
@@ -894,7 +894,12 @@ var TimelineEditor = function () {
   // Initialize WaveSurfer
   var wavesurfer = WaveSurfer.create({
       container: scroller,
-      scrollParent: true
+      scrollParent: true,
+      waveColor: 'violet',
+      progressColor: 'purple',
+      barWidth: 2,
+      barHeight: 1, // the height of the wave
+      barGap: null
   });
 
   // Once the user loads a file in the fileinput, the file should be loaded into waveform
@@ -902,6 +907,7 @@ var TimelineEditor = function () {
       var file = this.files[0];
 
       if (file) {
+          hasMusic = true;
           var reader = new FileReader();
 
           reader.onload = function (evt) {
@@ -921,6 +927,7 @@ var TimelineEditor = function () {
       }
   }, false);
 
+  wavesurfer.toggleInteraction();
 
   var loopMark = document.createElement( 'div' );
 	loopMark.style.position = 'absolute';
@@ -969,6 +976,10 @@ var TimelineEditor = function () {
       } else {
         changeTimeMarkColor(danceDesigner.s.keyframes[i], false);
       }
+    }
+
+    if (!play) {
+      wavesurfer.setCurrentTime(keyframeTimeToRealTime(t));
     }
 	}
 
@@ -1058,41 +1069,60 @@ var timeline = new TimelineEditor();
 document.getElementById( 'timelineEditor' ).appendChild( timeline.container.dom );
 
 function animate() {
-  if (play) {
-    if (danceDesigner.maxT === 0) {
-      play = false;
+  if (hasMusic) {
+    currentTime = Math.round(timeline.wavesurfer.getCurrentTime());
+    if (play) {
+      t = realTimeToKeyframeTime(timeline.wavesurfer.getCurrentTime());
+      timeline.changeTimeMarkColor(t, false);
+      timeline.updateTimeMark();
     }
-    if (t > danceDesigner.maxT) {
-      console.log(danceDesigner.s.dancers);
-      console.log(danceDesigner.s.keyframes);
-      play = false;
-    }
-    timeline.changeTimeMarkColor(t, false);
-    timeline.updateTimeMark();
-    for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-      var d = danceDesigner.s.dancers[i];
-      if (d.positions[t]) {
-        d.mesh.position.x = d.positions[t].x;
-        d.mesh.position.y = d.positions[t].y;
-        d.mesh.position.z = d.positions[t].z;
-      }
-    }
-    t += 1;
-    lightAngle += 5;
-    if (lightAngle > 360) { lightAngle = 0;};
-    danceDesigner.light.position.x = 5 * Math.cos(lightAngle * Math.PI / 180);
-    danceDesigner.light.position.z = 5 * Math.sin(lightAngle * Math.PI / 180);
-  } else {
     var closestT = Math.round(t);
     if (closestT > danceDesigner.maxT) {
       closestT = danceDesigner.maxT - 1;
     }
     for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
       var d = danceDesigner.s.dancers[i];
-      if (d.positions[t]) {
+      if (d.positions[closestT]) {
         d.mesh.position.x = d.positions[closestT].x;
         d.mesh.position.y = d.positions[closestT].y;
         d.mesh.position.z = d.positions[closestT].z;
+      }
+    }
+  } else {
+    if (play) {
+      console.log("danceDesigner.maxT: ", danceDesigner.maxT);
+      console.log("t: ", t);
+      if (danceDesigner.maxT === 0 || t > danceDesigner.maxT) {
+        play = false;
+      }
+      console.log(t);
+      timeline.changeTimeMarkColor(t, false);
+      timeline.updateTimeMark();
+      for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+        var d = danceDesigner.s.dancers[i];
+        if (d.positions[t]) {
+          d.mesh.position.x = d.positions[t].x;
+          d.mesh.position.y = d.positions[t].y;
+          d.mesh.position.z = d.positions[t].z;
+        }
+      }
+      t += 1;
+      lightAngle += 5;
+      if (lightAngle > 360) { lightAngle = 0;};
+      danceDesigner.light.position.x = 5 * Math.cos(lightAngle * Math.PI / 180);
+      danceDesigner.light.position.z = 5 * Math.sin(lightAngle * Math.PI / 180);
+    } else {
+      var closestT = Math.round(t);
+      if (closestT > danceDesigner.maxT) {
+        closestT = danceDesigner.maxT - 1;
+      }
+      for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+        var d = danceDesigner.s.dancers[i];
+        if (d.positions[closestT]) {
+          d.mesh.position.x = d.positions[closestT].x;
+          d.mesh.position.y = d.positions[closestT].y;
+          d.mesh.position.z = d.positions[closestT].z;
+        }
       }
     }
   }
@@ -1202,10 +1232,24 @@ function render() {
   }
 }
 
+function keyframeTimeToRealTime(keyframeTime) {
+  return keyframeTime / 4;
+}
+
+function realTimeToKeyframeTime(realTime) {
+  return Math.round(realTime * 4);
+}
+
+var currentTime = Math.round(timeline.wavesurfer.getCurrentTime());
 
 // Update controls and stats
 function update() {
-  document.getElementById("Time").innerHTML = "Current Time: " + t;
+  if (hasMusic) {
+    document.getElementById("Time").innerHTML = "Current Time: " + currentTime;
+    play = timeline.wavesurfer.isPlaying();
+  } else {
+    document.getElementById("Time").innerHTML = "Current Time: " + Math.round(keyframeTimeToRealTime(t));
+  }
   document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes;
   keyframes = danceDesigner.s.keyframes.length;
   danceDesigner.controls.update();
@@ -1399,13 +1443,15 @@ async function onButtonClick(event) {
     justHitUndo = false;
   } else if (event.target.id === "play") {
     play = false;
-    if (t > danceDesigner.maxT) {
+    // init = true;
+    if (!hasMusic && t > danceDesigner.maxT) {
       t = 0;
     }
     lightAngle = 0;
     play = true;
-    // sound.play();
-    timeline.wavesurfer.playPause();
+    if (hasMusic) {
+      timeline.wavesurfer.playPause();
+    }
   }
 }
 
