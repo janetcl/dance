@@ -548,12 +548,9 @@ var danceDesigner = {
           }
 
           if (danceDesigner.s.keyframes.includes(t) || danceDesigner.s.keyframes.includes(t - 1) || danceDesigner.s.keyframes.includes(t + 1)) {
-            alert("Cannot override an existing keyframe.");
-
-            // Return to old state of the world
-
+            timeline.updateSetKeyframeTimeMark(lastKeyframeT, t);
+            justHitUndo = false;
             isMovingAKeyFrame = false;
-            return;
           } else {
 
             var keyframeAdjust = null;
