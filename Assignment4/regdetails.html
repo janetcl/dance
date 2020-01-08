@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+ <html>
+   <head>
+      <title>Registrar's Office Class Details</title>
+      <link rel="stylesheet" href="/reg.css">
+      </head>
+   <body>
+     <h1>
+     <strong>Registrar's Office: Class Details</strong>
+     </h1>
+      <hr>
+        <h2> Class Details (class id {{classDetails.getClassId()}}) </h2>
+        <strong>Course Id: </strong>{{classDetails.getCourseId()}} <br>
+        <strong>Days: </strong>{{classDetails.getDays()}} <br>
+        <strong>Start time: </strong>{{classDetails.getStartTime()}} <br>
+        <strong>End time: </strong>{{classDetails.getEndTime()}} <br>
+        <strong>Building: </strong>{{classDetails.getBuilding()}} <br>
+        <strong>Room: </strong>{{classDetails.getRoom()}}
+      </hr>
+      <hr>
+      <h2> Course Details (course id {{classDetails.getCourseId()}}) </h2>
+        % for deptAndNumber in courseDetails.getDeptAndNumber():
+          <strong>Dept and Number: </strong>{{deptAndNumber}}<br>
+        % end
+        <strong>Area: </strong>{{courseDetails.getArea()}} <br>
+        <strong>Title: </strong>{{courseDetails.getTitle()}} <br>
+        <strong>Description: </strong>{{courseDetails.getDescription()}} <br>
+        <strong>Prerequisites: </strong> {{courseDetails.getPrereqs()}} <br>
+        % for professor in courseDetails.getProfessor():
+          <strong>Professor(s): </strong> {{professor}} <br>
+        % end
+      </hr>
+      <hr>
+      Click here to do <a href="/?dept={{prevDept}}&coursenum={{prevCourseNum}}&area={{prevArea}}&title={{prevTitle}}">another class search</a>
+      <br>
+      </hr>
+      <hr class="footer">
+      Created by Grace Ackerman and Janet Lee.
+      <hr>
+   </body>
+ </html>
