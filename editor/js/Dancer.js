@@ -1,3 +1,5 @@
+import TimelinePlugin from './WaveSurferTimeline.js';
+
 class Position {
   constructor(x, y, z, t) {
     this.x = x;
@@ -6,6 +8,12 @@ class Position {
     this.time = t;
   }
 }
+
+// make an ajax request to the python server
+// when the user clicks a button for example (save)
+// express the data as json
+
+// use https with heroku
 
 class Dancer {
 
@@ -233,6 +241,19 @@ class Dancer {
     return cloneDancer;
   }
 
+  addPositionsForNewDancer(maxTime, position) {
+    for (var i = 0; i <= maxTime; i++) {
+      if (this.positions[i]) {
+        this.positions[i].x = position.x;
+        this.positions[i].y = position.y;
+        this.positions[i].z = position.z;
+      } else {
+        this.positions.push(position);
+      }
+    }
+    return;
+  }
+
   computePositions(keyframes) {
     if (keyframes.length == 1) {
       return;
@@ -345,7 +366,6 @@ var danceDesigner = {
     var j1 = new THREE.Vector3(-2, 0, -5);
     janet.addPotentialPos(j1);
     janet.updateOnlyPosition();
-    // janet.potentialPose = null;
     janet.mesh.position.x = j1.x;
     janet.mesh.position.y = j1.y;
     janet.mesh.position.z = j1.z;
@@ -360,7 +380,6 @@ var danceDesigner = {
     var p1 = new THREE.Vector3(2, 0, -3);
     phillip.addPotentialPos(p1);
     phillip.updateOnlyPosition();
-    // phillip.potentialPose = null;
     phillip.mesh.position.x = p1.x;
     phillip.mesh.position.y = p1.y;
     phillip.mesh.position.z = p1.z;
@@ -370,7 +389,6 @@ var danceDesigner = {
     this.s.addDancer(janet);
     this.s.addDancer(phillip);
     this.maxT = 0;
-    //this.dancers = {[janet.name]: janetMesh, [phillip.name]: phillipMesh};
     this.dancersArr = [janetMesh, phillipMesh];
 
     var spotLight = new THREE.SpotLight( {color: 0xffffff, intensity: 0.1});
@@ -494,7 +512,7 @@ var danceDesigner = {
       }
       var isMovingAKeyFrame = false;
       var lastKeyframeT = 0;
-
+      console.log("dancers: ", danceDesigner.s.dancers);
   		function onMouseMove( event ) {
 
         if (isMovingAKeyFrame) {
@@ -603,25 +621,7 @@ var danceDesigner = {
               return a - b;
             });
           }
-          //
-          // else if (keyframeAdjust == "Move Last New Order") {
-          //   console.log("MOVE LAST NEW ORDER");
-          //   danceDesigner.s.keyframes[lastKeyframeIndex] = t;
-          //   danceDesigner.s.keyframes.sort(function(a, b) {
-          //     return a - b;
-          //   });
-          // } else if (keyframeAdjust == "Move Middle Position To New End") {
-          //   console.log("Move Middle Position To New End");
-          //   danceDesigner.s.keyframes[lastKeyframeIndex] = t;
-          //   danceDesigner.s.keyframes.sort(function(a, b) {
-          //     return a - b;
-          //   });
-          // }
-          // danceDesigner.s.keyframes.splice(lastKeyframeIndex, 1);
-          // danceDesigner.s.keyframes.push(t);
-          // danceDesigner.s.keyframes.sort(function(a, b) {
-          //   return a - b;
-          // });
+
           isMovingAKeyFrame = false;
 
           console.log(danceDesigner.s.dancers);
@@ -694,6 +694,7 @@ var danceDesigner = {
           (Math.abs(danceDesigner.s.dancers[i].positions[tempT].y - intersects[0].object.position.y) < 1) &&
           (Math.abs(danceDesigner.s.dancers[i].positions[tempT].z - intersects[0].object.position.z) < 1)) {
             danceDesigner.movingDancer = danceDesigner.s.dancers[i];
+            console.log(danceDesigner.movingDancer);
           }
         }
         // Calculate the offset
@@ -748,6 +749,7 @@ var danceDesigner = {
           var newPos = new THREE.Vector3(newPosThreeVector.x, newPosThreeVector.y, newPosThreeVector.z);
           danceDesigner.movingDancer.addPotentialPos(newPos);
         }
+
       }
     } else {
       // Update position of the plane if need
@@ -764,6 +766,7 @@ var danceDesigner = {
       return;
     }
     if (danceDesigner.selection) {
+      console.log("ADDING A NEW KEYFRAME");
       await addNewKeyFrame(t);
 
       // Push to Undo Buffer
@@ -807,13 +810,16 @@ var TimelineEditor = function () {
   timeline.setOverflow( 'auto' );
   container.add( timeline );
 
+  var canvasDiv = document.createElement( 'div' );
+  canvasDiv.id = 'canvasDiv';
+
   var canvas = document.createElement( 'canvas' );
   canvas.height = 32;
   canvas.style.width = '100%';
   canvas.style.background = 'rgba( 255, 255, 255, 0.3 )';
 	canvas.style.position = 'absolute';
-
-  timeline.dom.appendChild( canvas );
+  canvasDiv.appendChild(canvas);
+  timeline.dom.appendChild( canvasDiv );
 
   function updateMarks() {
 
@@ -879,44 +885,6 @@ var TimelineEditor = function () {
 
 	}, false );
 	timeline.dom.appendChild( scroller );
-
-  // Initialize WaveSurfer
-  var wavesurfer = WaveSurfer.create({
-      container: scroller,
-      scrollParent: true,
-      waveColor: 'violet',
-      progressColor: 'purple',
-      barWidth: 2,
-      barHeight: 1, // the height of the wave
-      barGap: null
-  });
-
-  // Once the user loads a file in the fileinput, the file should be loaded into waveform
-  document.getElementById("fileinput").addEventListener('change', function(e){
-      var file = this.files[0];
-
-      if (file) {
-          hasMusic = true;
-          var reader = new FileReader();
-
-          reader.onload = function (evt) {
-              // Create a Blob providing as first argument a typed array with the file buffer
-              var blob = new window.Blob([new Uint8Array(evt.target.result)]);
-
-              // Load the blob into Wavesurfer
-              wavesurfer.loadBlob(blob);
-          };
-
-          reader.onerror = function (evt) {
-              console.error("An error ocurred reading the file: ", evt);
-          };
-
-          // Read File as an ArrayBuffer
-          reader.readAsArrayBuffer(file);
-      }
-  }, false);
-
-  wavesurfer.toggleInteraction();
 
   var loopMark = document.createElement( 'div' );
 	loopMark.style.position = 'absolute';
@@ -1049,7 +1017,6 @@ var TimelineEditor = function () {
     scroller: scroller,
     scale: scale,
     timeMarks: timeMarks,
-    wavesurfer: wavesurfer,
   };
 
 };
@@ -1057,11 +1024,55 @@ var TimelineEditor = function () {
 var timeline = new TimelineEditor();
 document.getElementById( 'timelineEditor' ).appendChild( timeline.container.dom );
 
+// Initialize WaveSurfer
+var wavesurfer = WaveSurfer.create({
+    container: timeline.scroller,
+    scrollParent: true,
+    waveColor: 'violet',
+    progressColor: 'purple',
+    barWidth: 2,
+    barHeight: 1, // the height of the wave
+    barGap: null,
+    plugins: [
+      TimelinePlugin.create({
+        container: "#waveform"
+      })
+    ]
+});
+
+// Once the user loads a file in the fileinput, the file should be loaded into waveform
+document.getElementById("fileinput").addEventListener('change', function(e){
+    var file = this.files[0];
+
+    if (file) {
+        hasMusic = true;
+        var reader = new FileReader();
+
+        reader.onload = function (evt) {
+            // Create a Blob providing as first argument a typed array with the file buffer
+            var blob = new window.Blob([new Uint8Array(evt.target.result)]);
+
+            // Load the blob into Wavesurfer
+            wavesurfer.loadBlob(blob);
+        };
+
+        reader.onerror = function (evt) {
+            console.error("An error ocurred reading the file: ", evt);
+        };
+
+        // Read File as an ArrayBuffer
+        reader.readAsArrayBuffer(file);
+    }
+}, false);
+
+wavesurfer.toggleInteraction();
+
+
 function animate() {
   if (hasMusic) {
-    currentTime = Math.round(timeline.wavesurfer.getCurrentTime());
+    currentTime = Math.round(wavesurfer.getCurrentTime());
     if (play) {
-      t = realTimeToKeyframeTime(timeline.wavesurfer.getCurrentTime());
+      t = realTimeToKeyframeTime(wavesurfer.getCurrentTime());
       timeline.changeTimeMarkColor(t, false);
       timeline.updateTimeMark();
     }
@@ -1229,13 +1240,13 @@ function realTimeToKeyframeTime(realTime) {
   return Math.round(realTime * 4);
 }
 
-var currentTime = Math.round(timeline.wavesurfer.getCurrentTime());
+var currentTime = Math.round(wavesurfer.getCurrentTime());
 
 // Update controls and stats
 function update() {
   if (hasMusic) {
     document.getElementById("Time").innerHTML = "Current Time: " + currentTime;
-    play = timeline.wavesurfer.isPlaying();
+    play = wavesurfer.isPlaying();
   } else {
     document.getElementById("Time").innerHTML = "Current Time: " + Math.round(keyframeTimeToRealTime(t));
   }
@@ -1324,10 +1335,35 @@ async function addNewKeyFrame(t) {
 }
 
 var justHitUndo = false;
+var newDancerNumber = 1;
 
 // Handle button clicking
 async function onButtonClick(event) {
-  if (event.target.id === "undo") {
+  if (event.target.id === "addDancer") {
+
+    var loader = new THREE.TextureLoader();
+    var geometry = new THREE.BoxGeometry(1, 2, 1);
+    geometry.name = "Eunice" + newDancerNumber;
+    var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: loader.load('files/janet.jpg')});
+    var newMesh = new THREE.Mesh(geometry, material);
+    var newDancer = new Dancer("Eunice" + newDancerNumber, newMesh);
+    newDancer.updateColor(0xffc0cb);
+    var posDefault = new THREE.Vector3(-15, 0, -20);
+    newDancer.addPotentialPos(posDefault);
+    newDancer.updateOnlyPosition();
+    newDancer.addPositionsForNewDancer(danceDesigner.maxT, posDefault);
+    newDancer.mesh.position.x = posDefault.x;
+    newDancer.mesh.position.y = posDefault.y;
+    newDancer.mesh.position.z = posDefault.z;
+
+    // Add the new dancer to the scene
+    danceDesigner.scene.add(newDancer.mesh);
+    danceDesigner.dancersArr.push(newMesh);
+    danceDesigner.s.addDancer(newDancer);
+
+    // Increment new dancer count
+    newDancerNumber++;
+  } else if (event.target.id === "undo") {
 
     if (!justHitUndo) {
       console.log('DID NOT JUST HIT UNDO');
@@ -1439,7 +1475,7 @@ async function onButtonClick(event) {
     lightAngle = 0;
     play = true;
     if (hasMusic) {
-      timeline.wavesurfer.playPause();
+      wavesurfer.playPause();
     }
   }
 }
