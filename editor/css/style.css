@@ -4,7 +4,7 @@ body {
   font-family: "Courier New", Courier, monospace;
   font-size: 18px;
   color: white;
-  background-color: #4a7e65;
+  background-color: #0067f4;
 }
 
 .Panel {
@@ -24,7 +24,7 @@ body {
 }
 
 .bottomBar {
-  margin-top: 500px;
+  margin-top: 440px;
   vertical-align: bottom;
 }
 
@@ -67,4 +67,109 @@ body {
 
 button{
   margin: 20px;
+}
+
+.playButton {
+  background-color: Transparent;
+  background-repeat:no-repeat;
+  border: none;
+  outline: none;
+}
+
+/* .playButton.pause {
+  width: 74px;
+  height: 74px;
+  border-color: #202020;
+  border-style: double;
+  border-width: 0px 0px 0px 37px;
+}
+
+.playButton.play {
+  box-sizing: border-box;
+  width: 74px;
+  height: 74px;
+  border-width: 37px 0px 37px 74px;
+  border-color: transparent transparent transparent #202020;
+} */
+
+/* .playButton {
+  border: 0;
+  background: transparent;
+  box-sizing: border-box;
+  width: 0;
+  height: 74px;
+
+  border-color: transparent transparent transparent #202020;
+  transition: 100ms all ease;
+  cursor: pointer;
+
+  // play state
+  border-style: solid;
+  border-width: 37px 0 37px 60px;
+
+  &.paused {
+    border-style: double;
+    border-width: 0px 0 0px 60px;
+  }
+
+  &:hover {
+    border-color: transparent transparent transparent #404040;
+  }
+} */
+
+#player {
+	width: 100px;
+	height: 50px;
+	position: relative;
+	/* margin: 0 auto; */
+  margin-right: 10px;
+  margin-left: auto;
+	top: 80px;
+
+	i {
+		position: absolute;
+		margin-top: -6px;
+		color: #666;
+	}
+
+	i.fa-volume-down {
+		margin-left: -8px;
+	}
+
+	i.fa-volume-up {
+		margin-right: -8px;
+		right: 0;
+	}
+}
+
+#volume {
+	position: absolute;
+	left: 24px;
+	margin: 0 auto;
+	height: 5px;
+	width: 100;
+	background: #555;
+	border-radius: 15px;
+
+	.ui-slider-range-min {
+		height: 5px;
+		width: 100px;
+		position: absolute;
+		background: $primary-color;
+		border: none;
+		border-radius: 10px;
+  	outline: none;
+	}
+
+	.ui-slider-handle {
+		width: 20px;
+  	height: 20px;
+		border-radius: 20px;
+  	background: #FFF;
+  	position: absolute;
+  	margin-left: -8px;
+  	margin-top: -8px;
+  	cursor: pointer;
+  	outline: none;
+	}
 }

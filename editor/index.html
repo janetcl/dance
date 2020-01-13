@@ -5,9 +5,10 @@
  <title>Dance Designer</title>
  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
  <link rel="shortcut icon" type="image/png" href="files/dancer.png"/>
+ <script src="https://kit.fontawesome.com/79de6bbc8d.js" crossorigin="anonymous"></script>
  </head>
  <body ontouchstart="" style="margin: 0;">
-   <link href="css/style.css" rel="stylesheet" />
+   <link href="css/style.css" rel="stylesheet"/>
    <div style="width:100%;height:60px;text-align: center; color:white; font-weight: bolder;" class="ui top">Dance Designer</div>
    <div class="ui">
      <p style="margin-left:20px; width: 250px;" id="keyFrames" class="ui"></p>
@@ -16,14 +17,21 @@
        </canvas>
      </div>
      <button style="margin-top:50px; right:130px; width: 60px;" id="addDancer" class="ui">Add Dancer</button>
+     <div id="player">
+       <div class="slidecontainer">
+        <input type="range" min="1" max="100" value="50" class="slider" id="volume">
+       </div>
+       <!-- <i class="fa fa-volume-down"></i>
+       <input type="range" min="1" max="100" value="50" class="slider" id="volume">
+       <i class="fa fa-volume-up"></i> -->
+     </div>
      <div class="bottomBar" id="bottomBar">
-       <div class="timeline">
-        </div>
-        <input type="file" id="fileinput"/>
-        <div id="waveform"></div>
-        <button style="margin-bottom:10px; right:130px; width: 60px;" id="play" class="ui">Play</button>
-        <button style="margin-bottom:10px; right:60px; width: 60px;" id="undo" class="ui">Undo</button>
-        <button style="margin-bottom:10px; right:10px; width: 60px;" id="delete" class="ui">Delete</button>
+      <div id="waveform">
+          <input type="file" id="fileinput"/>
+      </div>
+      <button class="ui playButton" style="margin-bottom:10px; right:100px; width:50px;" id="play"><i class="fas fa-play" id="playIcon"></i></button>
+      <button class="ui playButton" style="margin-bottom:10px; right:60px; width: 50px;" id="undo"><i class="fas fa-undo"></i></button>
+      <button class="ui playButton" style="margin-bottom:10px; right:10px; width: 50px;" id="delete"><i class="fas fa-trash"></i></button>
      </div>
    </div>
    <div id="timelineEditor">

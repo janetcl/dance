@@ -362,7 +362,7 @@ var danceDesigner = {
     var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: this.loader.load('files/janet.jpg')});
     var janetMesh = new THREE.Mesh(geometry, material);
     var janet = new Dancer("Janet", janetMesh);
-    janet.updateColor(0x293fff);
+    janet.updateColor(0x00c969);
     var j1 = new THREE.Vector3(-2, 0, -5);
     janet.addPotentialPos(j1);
     janet.updateOnlyPosition();
@@ -812,6 +812,7 @@ var TimelineEditor = function () {
 
   var canvasDiv = document.createElement( 'div' );
   canvasDiv.id = 'canvasDiv';
+  canvasDiv.style.background = 'rgba( 255, 255, 255, 0.3 )';
 
   var canvas = document.createElement( 'canvas' );
   canvas.height = 32;
@@ -950,7 +951,7 @@ var TimelineEditor = function () {
     newTimeMark.style.left = '-8px';
     newTimeMark.style.width = '30px';
     newTimeMark.style.height = '100%';
-    newTimeMark.style.background = 'linear-gradient(90deg, transparent 8px, #7f93ff 16px, #7f93ff 16px, transparent 9px) 0% 0% / 16px 16px repeat-y';
+    newTimeMark.style.background = 'linear-gradient(90deg, transparent 8px, #1100c9 16px, #1100c9 16px, transparent 9px) 0% 0% / 16px 16px repeat-y';
     newTimeMark.style.pointerEvents = 'none';
 
     timeMarks.push({mark: newTimeMark, time: t});
@@ -998,7 +999,7 @@ var TimelineEditor = function () {
         if (editing) {
           timeMarks[i].mark.style.background = 'linear-gradient(90deg, transparent 8px, #ffde00 16px, #ffde00 16px, transparent 9px) 0% 0% / 16px 16px repeat-y';
         } else {
-          timeMarks[i].mark.style.background = 'linear-gradient(90deg, transparent 8px, #7f93ff 16px, #7f93ff 16px, transparent 9px) 0% 0% / 16px 16px repeat-y';
+          timeMarks[i].mark.style.background = 'linear-gradient(90deg, transparent 8px, #1100c9 16px, #1100c9 16px, transparent 9px) 0% 0% / 16px 16px repeat-y';
         }
         return;
       }
@@ -1467,6 +1468,10 @@ async function onButtonClick(event) {
     keyframes = 0;
     justHitUndo = false;
   } else if (event.target.id === "play") {
+    var playButton = document.getElementById("play");
+    var playButtonIcon = document.getElementById("playIcon");
+    playButtonIcon.classList.toggle("fa-pause");
+    playButtonIcon.classList.toggle("fa-play");
     play = false;
     // init = true;
     if (!hasMusic && t > danceDesigner.maxT) {
@@ -1479,6 +1484,27 @@ async function onButtonClick(event) {
     }
   }
 }
+
+// Volume controls
+var volume = document.getElementById("volume");
+// volume.innerHTML = slider({
+//   	min: 0,
+//   	max: 100,
+//   	value: 0,
+// 		range: "min",
+//   	slide: function(event, ui) {
+//     	wavesurfer.setVolume(ui.value / 100);
+//   	}
+// });
+
+// Update the current slider value (each time you drag the slider handle)
+volume.oninput = function() {
+  console.log('input : ', volume.value);
+  if (wavesurfer) {
+    wavesurfer.setVolume(volume.value / 100);
+  }
+}
+
 
 // Initialize lesson on page load
 function initializeLesson() {
