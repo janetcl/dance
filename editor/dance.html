@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+ <head>
+ <meta charset=utf-8>
+ <title>Dance Designer</title>
+ <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+ <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+ <link rel="shortcut icon" type="image/png" href="static/files/dancer.png"/>
+ <script type="text/javascript"
+      src="https://kit.fontawesome.com/79de6bbc8d.js" crossorigin="anonymous"></script>
+ </head>
+ <body ontouchstart="" style="margin: 0;">
+   <div style="width:100%;height:60px;text-align: center; color:white; font-weight: bolder;" class="ui top">Dance Designer</div>
+   <div class="ui">
+     <p style="margin-left:20px; width: 250px;" id="keyFrames" class="ui"></p>
+     <div class="mainRenderer">
+       <canvas id="renderer">
+       </canvas>
+     </div>
+     <button style="margin-top:50px; right:130px; width: 60px;" id="addDancer" class="ui">Add Dancer</button>
+     <button style="margin-top:100px; right:130px; width: 60px;" id="saveDance" class="ui">Save Dance</button>
+     <div id="player">
+       <div class="slidecontainer">
+        <input type="range" min="1" max="100" value="50" class="slider" id="volume">
+       </div>
+       <!-- <i class="fa fa-volume-down"></i>
+       <input type="range" min="1" max="100" value="50" class="slider" id="volume">
+       <i class="fa fa-volume-up"></i> -->
+     </div>
+     <div class="bottomBar" id="bottomBar">
+      <div id="waveform">
+          <input type="file" id="fileinput"/>
+      </div>
+      <button class="ui playButton" style="margin-bottom:10px; right:100px; width:50px;" id="play"><i class="fas fa-play" id="playIcon"></i></button>
+      <button class="ui playButton" style="margin-bottom:10px; right:60px; width: 50px;" id="undo"><i class="fas fa-undo"></i></button>
+      <button class="ui playButton" style="margin-bottom:10px; right:10px; width: 50px;" id="delete"><i class="fas fa-trash"></i></button>
+     </div>
+   </div>
+   <div id="timelineEditor">
+   </div>
+   <div class="ui time">
+     <p style="text-align:right;" id="Time" class="ui time"></p>
+   </div>
+   <script type="text/javascript"
+        src="{{ url_for('static', filename='js/three.js') }}"></script>
+   <script type="text/javascript"
+        src="{{ url_for('static', filename='js/rbitControls.js') }}"></script>
+   <script type="text/javascript"
+        src="{{ url_for('static', filename='js/DragControls.js') }}"></script>
+   <script type="module"
+        src="{{ url_for('static', filename='js/Dancer.js') }}"></script>
+   <script type="module"
+        src="{{ url_for('static', filename='js/WaveSurferTimeline.js') }}"></script>
+   <script type="text/javascript"
+        src="{{ url_for('static', filename='js/signals.min.js') }}"></script>
+   <script type="text/javascript"
+        src="{{ url_for('static', filename='js/ui.js') }}"></script>
+   <script type="text/javascript"
+        src="{{ url_for('static', filename='js/TimelineEditor.js') }}"></script>
+   <script type="text/javascript" src="https://unpkg.com/wavesurfer.js"></script>
+ </body>
+</html>

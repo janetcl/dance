@@ -1,0 +1,10 @@
+DROP TABLE IF EXISTS stages;
+
+CREATE TABLE stages (user TEXT, stageName TEXT, details TEXT, stageId INT);
+
+INSERT INTO stages (user, stageName, details, stageId)
+   VALUES ('Janet','Dance1','The Practice of Programming',40);
+INSERT INTO stages (user, stageName, details, stageId)
+   VALUES ('Janet','Dance2','The C Programming Language',24);
+INSERT INTO stages (user, stageName, details, stageId)
+   VALUES ('Sedgewick','Dance3','Algorithms in C',61);
