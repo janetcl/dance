@@ -19,6 +19,8 @@
      </div>
      <button style="margin-top:50px; right:130px; width: 60px;" id="addDancer" class="ui">Add Dancer</button>
      <button style="margin-top:100px; right:130px; width: 60px;" id="saveDance" class="ui">Save Dance</button>
+     <p style="margin-top:140px; right:130px; width: 60px;" class="ui">Welcome, {{name}}</p>
+     <p style="margin-top:150px; right:130px; width: 60px;" class="ui">{{email}}</p>
      <div id="player">
        <div class="slidecontainer">
         <input type="range" min="1" max="100" value="50" class="slider" id="volume">
@@ -44,7 +46,7 @@
    <script type="text/javascript"
         src="{{ url_for('static', filename='js/three.js') }}"></script>
    <script type="text/javascript"
-        src="{{ url_for('static', filename='js/rbitControls.js') }}"></script>
+        src="{{ url_for('static', filename='js/OrbitControls.js') }}"></script>
    <script type="text/javascript"
         src="{{ url_for('static', filename='js/DragControls.js') }}"></script>
    <script type="module"

@@ -38,8 +38,12 @@
 					</span>
 
 					<a href="#" class="btn-face m-b-20">
-						<i class="fab fa-facebook"></i>
-						Facebook
+						<!-- <i class="fab fa-facebook"></i>
+						Facebook -->
+            <fb:login-button
+              scope="public_profile,email"
+              onlogin="checkLoginState();">
+            </fb:login-button>
 					</a>
 
 					<a href="#" class="btn-google m-b-20">
@@ -119,6 +123,29 @@
 <!--===============================================================================================-->
   <script type="text/javascript"
        src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+
+   <script>
+     window.fbAsyncInit = function() {
+       FB.init({
+         appId      : '{your-app-id}',
+         cookie     : true,
+         xfbml      : true,
+         version    : '{api-version}'
+       });
+
+       FB.AppEvents.logPageView();
+
+     };
+
+     (function(d, s, id){
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) {return;}
+        js = d.createElement(s); js.id = id;
+        js.src = "https://connect.facebook.net/en_US/sdk.js";
+        fjs.parentNode.insertBefore(js, fjs);
+      }(document, 'script', 'facebook-jssdk'));
+   </script>
 
 </body>
 </html>

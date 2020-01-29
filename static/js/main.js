@@ -3,6 +3,12 @@
     "use strict";
 
 
+    function checkLoginState() {
+      FB.getLoginStatus(function(response) {
+        statusChangeCallback(response);
+      });
+    }
+
     /*==================================================================
     [ Validate ]*/
     var input = $('.validate-input .input100');
@@ -51,7 +57,7 @@
 
         $(thisAlert).removeClass('alert-validate');
     }
-    
-    
+
+
 
 })(jQuery);

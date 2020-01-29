@@ -6,97 +6,141 @@
 # Based on penny.py by Bob Dondero
 #-----------------------------------------------------------------------
 
-# # Python standard libraries
-# import json
-# import os
-# import sqlite3
-#
-# # Third-party libraries
-# # from flask import Flask, redirect, request, url_for
-# from flask_login import (
-#     LoginManager,
-#     current_user,
-#     login_required,
-#     login_user,
-#     logout_user,
-# )
-# from oauthlib.oauth2 import WebApplicationClient
-# import requests
-#
-# # Internal imports
-# # from db import init_db_command
-# from user import User
+import os
+import requests_oauthlib
+from requests_oauthlib.compliance_fixes import facebook_compliance_fix
 
 from sys import argv
 from database import Database
-# from time import localtime, asctime, strftime
 from flask import Flask, request, make_response, redirect, url_for
 from flask import render_template
 
-#-----------------------------------------------------------------------
 
-# # Configuration
-# GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", None)
-# GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", None)
-# GOOGLE_DISCOVERY_URL = (
-#     "https://accounts.google.com/.well-known/openid-configuration"
-# )
+CLIENT_ID = os.environ.get("CLIENT_ID")
+print(CLIENT_ID)
+CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
+print(CLIENT_SECRET)
+
+FB_CLIENT_ID = os.environ.get("FB_CLIENT_ID")
+print(FB_CLIENT_ID)
+FB_CLIENT_SECRET = os.environ.get("FB_CLIENT_SECRET")
+print(FB_CLIENT_SECRET)
+
+FB_AUTHORIZATION_BASE_URL = "https://www.facebook.com/dialog/oauth"
+FB_TOKEN_URL = "https://graph.facebook.com/oauth/access_token"
+
+FB_SCOPE = ["email"]
+
+AUTHORIZATION_BASE_URL = "https://app.simplelogin.io/oauth2/authorize"
+TOKEN_URL = "https://app.simplelogin.io/oauth2/token"
+USERINFO_URL = "https://app.simplelogin.io/oauth2/userinfo"
+
+# This allows us to use a plain HTTP callback
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 #-----------------------------------------------------------------------
 
 app = Flask(__name__, template_folder='.')
-# app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 
 #-----------------------------------------------------------------------
 
-# # User session management setup
-# # https://flask-login.readthedocs.io/en/latest
-# login_manager = LoginManager()
-# login_manager.init_app(app)
-#
-# # Naive database setup
-# try:
-#     init_db_command()
-# except sqlite3.OperationalError:
-#     # Assume it's already been created
-#     pass
-#
-# # OAuth 2 client setup
-# client = WebApplicationClient(GOOGLE_CLIENT_ID)
-#
-# # Flask-Login helper to retrieve a user from our db
-# @login_manager.user_loader
-# def load_user(user_id):
-#     return User.get(user_id)
-
-#-----------------------------------------------------------------------
-
-# def getAmPm():
-#     if strftime('%p') == "AM":
-#         return 'morning'
-#     return 'afternoon'
-#
-# def getCurrentTime():
-#     return asctime(localtime())
-
-#-----------------------------------------------------------------------
-
-@app.route('/')
-@app.route('/index')
+@app.route("/")
 def index():
+    return """
+    <a href="/fb-login">Login with Facebook</a>
+    """
 
-    html = render_template('index.html')
-        # ampm=getAmPm(),
-        # currentTime=getCurrentTime())
-    database = Database()
-    print("searching database")
-    database.connect()
-    stages = database.search('Janet')
-    for stage in stages:
-        print(stage)
-    database.disconnect()
-    response = make_response(html)
-    return response
+# Your ngrok url, obtained after running "ngrok http 8000"
+URL = "https://3b3e01a3.ngrok.io"
+
+# @app.route('/index')
+# def index():
+#
+#     html = render_template('index.html')
+#     database = Database()
+#     print("searching database")
+#     database.connect()
+#     stages = database.search('Janet')
+#     for stage in stages:
+#         print(stage)
+#     database.disconnect()
+#     response = make_response(html)
+#     return response
+
+@app.route("/fb-login")
+def login():
+    facebook = requests_oauthlib.OAuth2Session(
+        FB_CLIENT_ID, redirect_uri=URL + "/fb-callback", scope=FB_SCOPE
+    )
+    authorization_url, _ = facebook.authorization_url(FB_AUTHORIZATION_BASE_URL)
+
+    return redirect(authorization_url)
+
+
+@app.route("/fb-callback")
+def callback():
+    facebook = requests_oauthlib.OAuth2Session(
+        FB_CLIENT_ID, scope=FB_SCOPE, redirect_uri=URL + "/fb-callback"
+    )
+
+    # we need to apply a fix for Facebook here
+    facebook = facebook_compliance_fix(facebook)
+
+    facebook.fetch_token(
+        FB_TOKEN_URL,
+        client_secret=FB_CLIENT_SECRET,
+        authorization_response=request.url,
+    )
+
+    # Fetch a protected resource, i.e. user profile, via Graph API
+
+    facebook_user_data = facebook.get(
+        "https://graph.facebook.com/me?fields=id,name,email,picture{url}"
+    ).json()
+
+    email = facebook_user_data["email"]
+    name = facebook_user_data["name"]
+    picture_url = facebook_user_data.get("picture", {}).get("data", {}).get("url")
+
+    return render_template('dance.html',
+        name=name,
+        email=email,
+        avatar_url=picture_url)
+
+    # return f"""
+    # User information: <br>
+    # Name: {name} <br>
+    # Email: {email} <br>
+    # Avatar <img src="{picture_url}"> <br>
+    # <a href="/">Home</a>
+    # """
+
+
+# @app.route("/login")
+# def login():
+#     simplelogin = requests_oauthlib.OAuth2Session(
+#         CLIENT_ID, redirect_uri="http://localhost:8000/callback"
+#     )
+#     authorization_url, _ = simplelogin.authorization_url(AUTHORIZATION_BASE_URL)
+#
+#     return redirect(authorization_url)
+#
+#
+# @app.route("/callback")
+# def callback():
+#     simplelogin = requests_oauthlib.OAuth2Session(CLIENT_ID)
+#     simplelogin.fetch_token(
+#         TOKEN_URL, client_secret=CLIENT_SECRET, authorization_response=request.url
+#     )
+#
+#     user_info = simplelogin.get(USERINFO_URL).json()
+#     return f"""
+#     User information: <br>
+#     Name: {user_info["name"]} <br>
+#     Email: {user_info["email"]} <br>
+#     Avatar <img src="{user_info.get('avatar_url')}"> <br>
+#     <a href="/">Home</a>
+#     """
 
 #-----------------------------------------------------------------------
 #
