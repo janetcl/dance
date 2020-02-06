@@ -338,18 +338,18 @@ var danceDesigner = {
     var width1 = window.innerWidth / 6;
     var height1 = window.innerHeight / 6;
     var viewAngle1 = 45;
-    // this.camera1 = new THREE.PerspectiveCamera( viewAngle1, width1 / height1, nearClipping, farClipping );
-    // this.renderer1 = new THREE.WebGLRenderer({canvas: document.getElementById("0")});
-    // document.getElementById("0").addEventListener('click', function() {
-    //   t = 0;
-    //   timeline.updateTimeMark();
-    //   console.log(0);
-    // }, false);
-    // this.renderer1.setSize( width1, height1 );
-    // document.body.appendChild( this.renderer1.domElement );
-    // this.camera1.position.z = -10;
-    // this.camera1.position.y = 30;
-    // this.camera1.lookAt(new THREE.Vector3(0, 0, -10));
+    this.camera1 = new THREE.PerspectiveCamera( viewAngle1, width1 / height1, nearClipping, farClipping );
+    this.renderer1 = new THREE.WebGLRenderer({canvas: document.getElementById("0")});
+    document.getElementById("0").addEventListener('click', function() {
+      t = 0;
+      timeline.updateTimeMark();
+      console.log(0);
+    }, false);
+    this.renderer1.setSize( width1, height1 );
+    document.body.appendChild( this.renderer1.domElement );
+    this.camera1.position.z = -10;
+    this.camera1.position.y = 30;
+    this.camera1.lookAt(new THREE.Vector3(0, 0, -10));
 
     // Events
     document.addEventListener('mousedown', this.onDocumentMouseDown, false);
@@ -1340,7 +1340,9 @@ var newDancerNumber = 1;
 
 // Handle button clicking
 async function onButtonClick(event) {
-  if (event.target.id === "addDancer") {
+  if (event.target.id == "saveDance") {
+    // TODO: Implement a method here that will save the danceDesigner object
+  } else if (event.target.id === "addDancer") {
 
     var loader = new THREE.TextureLoader();
     var geometry = new THREE.BoxGeometry(1, 2, 1);
