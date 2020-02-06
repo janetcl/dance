@@ -1342,6 +1342,23 @@ var newDancerNumber = 1;
 async function onButtonClick(event) {
   if (event.target.id == "saveDance") {
     // TODO: Implement a method here that will save the danceDesigner object
+    const data = { danceDesigner: danceDesigner };
+
+  fetch('', {
+    method: 'POST', // or 'PUT'
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
+  .then((response) => response.json())
+  .then((data) => {
+    console.log('Success:', data);
+  })
+  .catch((error) => {
+    console.error('Error:', error);
+  });
+
   } else if (event.target.id === "addDancer") {
 
     var loader = new THREE.TextureLoader();

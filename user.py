@@ -1,6 +1,6 @@
 from flask_login import UserMixin
 
-from database import get_db
+from db import get_db
 
 class User(UserMixin):
     def __init__(self, id_, name, email, profile_pic):
@@ -12,6 +12,16 @@ class User(UserMixin):
     @staticmethod
     def get(user_id):
         db = get_db()
+
+        # Printing debug statements
+        cursor = db.execute(
+            "SELECT * FROM user"
+        )
+        row = cursor.fetchone()
+        while row is not None:
+          print(row)
+          row = cursor.fetchone()
+
         user = db.execute(
             "SELECT * FROM user WHERE id = ?", (user_id,)
         ).fetchone()

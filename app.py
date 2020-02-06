@@ -11,24 +11,57 @@ import requests_oauthlib
 from requests_oauthlib.compliance_fixes import facebook_compliance_fix
 
 from sys import argv
-from database import Database
+# from db import Database
 from flask import Flask, request, make_response, redirect, url_for
 from flask import render_template
+from flask_heroku import Heroku
 
 # From https://realpython.com/flask-google-login/
-# import sqlite3
-# from flask_login import (
-#     LoginManager,
-#     current_user,
-#     login_required,
-#     login_user,
-#     logout_user,
-# )
+import sqlite3
+from flask_login import (
+    LoginManager,
+    current_user,
+    login_required,
+    login_user,
+    logout_user,
+    UserMixin,
+)
 from oauthlib.oauth2 import WebApplicationClient
 import requests
 import json
-# from database import init_db_command
+
+# Internal imports
+# from db import init_db_command
 # from user import User
+
+from flask_sqlalchemy import SQLAlchemy
+# Flask app setup
+app = Flask(__name__, template_folder='.')
+app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
+
+# SQLALCHEMY_DATABASE_URI = "https://tigermeals-delivery.herokuapp.com"
+# DATABASE_URI="http://localhost:5000"
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/dancer'
+heroku = Heroku(app)
+db = SQLAlchemy(app)
+
+# Create our database model
+class User(db.Model, UserMixin):
+    __tablename__ = "users"
+    id = db.Column(db.String(120), primary_key=True, unique=True)
+    name = db.Column(db.String(120))
+    email = db.Column(db.String(120))
+    profile_pic = db.Column(db.String(120), unique=True)
+
+    def __init__(self, id, name, email, profile_pic):
+        self.id = id
+        self.name = name
+        self.email = email
+        self.profile_pic = profile_pic
+
+    def __repr__(self):
+        return '<E-mail %r>' % self.email
 
 # # SimpleLogin Information
 # CLIENT_ID = os.environ.get("CLIENT_ID")
@@ -60,14 +93,10 @@ os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 #-----------------------------------------------------------------------
 
-# Flask app setup
-app = Flask(__name__, template_folder='.')
-# app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
-
-# # User session management setup
-# # https://flask-login.readthedocs.io/en/latest
-# login_manager = LoginManager()
-# login_manager.init_app(app)
+# User session management setup
+# https://flask-login.readthedocs.io/en/latest
+login_manager = LoginManager()
+login_manager.init_app(app)
 
 # # Naive database setup
 # try:
@@ -75,52 +104,35 @@ app = Flask(__name__, template_folder='.')
 # except sqlite3.OperationalError:
 #     # Assume it's already been created
 #     pass
-#
+
 # OAuth 2 client setup
 client = WebApplicationClient(GOOGLE_CLIENT_ID)
 
-# # Flask-Login helper to retrieve a user from our db
-# @login_manager.user_loader
-# def load_user(user_id):
-#     return User.get(user_id)
+# Flask-Login helper to retrieve a user from our db
+@login_manager.user_loader
+def load_user(user_id):
+    # return User.get(user_id
+    return db.session.query(User).filter(User.id == user_id)
 
 #-----------------------------------------------------------------------
 
 @app.route("/")
 def index():
-    # if current_user.is_authenticated:
-    #     return (
-    #         "<p>Hello, {}! You're logged in! Email: {}</p>"
-    #         "<div><p>Google Profile Picture:</p>"
-    #         '<img src="{}" alt="Google profile pic"></img></div>'
-    #         '<a class="button" href="/logout">Logout</a>'.format(
-    #             current_user.name, current_user.email, current_user.profile_pic
-    #         )
-    #     )
-    # else:
-    return render_template('index.html')
-    # return """
-    # <a class="button" href="/google-login">Google Login</a>
-    # <br>
-    # <a class="button" href="/fb-login">Login with Facebook</a>
-    # """
+    if current_user.is_authenticated:
+        return (
+            "<p>Hello, {}! You're logged in! Email: {}</p>"
+            "<div><p>Google Profile Picture:</p>"
+            '<img src="{}" alt="Google profile pic"></img></div>'
+            '<div><p>Your dances: </p>'
+            '<a class="button" href="/logout">Logout</a>'.format(
+                current_user.name, current_user.email, current_user.profile_pic
+            )
+        )
+    else:
+        return render_template('index.html')
 
 # Your ngrok url, obtained after running "ngrok http 8000"
 URL = "https://3b3e01a3.ngrok.io"
-
-# @app.route('/index')
-# def index():
-#
-#     html = render_template('index.html')
-#     database = Database()
-#     print("searching database")
-#     database.connect()
-#     stages = database.search('Janet')
-#     for stage in stages:
-#         print(stage)
-#     database.disconnect()
-#     response = make_response(html)
-#     return response
 
 @app.route("/fb-login")
 def fbLogin():
@@ -153,9 +165,32 @@ def fbCallback():
         "https://graph.facebook.com/me?fields=id,name,email,picture{url}"
     ).json()
 
+    unique_id = facebook_user_data["id"]
     email = facebook_user_data["email"]
     name = facebook_user_data["name"]
     picture_url = facebook_user_data.get("picture", {}).get("data", {}).get("url")
+
+    # Create a user in your db with the information provided
+    # by Facebook
+    # user = User(
+    #     id=unique_id, name=name, email=email, profile_pic=picture_url
+    # )
+    id = unique_id
+    profile_pic = picture_url
+
+    user = User(id, name, email, profile_pic)
+
+    # Doesn't exist? Add it to the database.
+    if not db.session.query(User).filter(User.id == id).count():
+        db.session.add(user)
+        db.session.commit()
+
+    print("\n")
+    print("USER: ", user)
+    print("\n")
+
+    # Begin user session by logging the user in
+    login_user(user)
 
     return render_template('dance.html',
         name=name,
@@ -175,8 +210,6 @@ def googleLogin():
     # Find out what URL to hit for Google login
     google_provider_cfg = get_google_provider_cfg()
     authorization_endpoint = google_provider_cfg["authorization_endpoint"]
-
-    # return redirect(authorization_url)
 
     # Use library to construct the request for Google login and provide
     # scopes that let you retrieve user's profile from Google
@@ -215,7 +248,6 @@ def googleCallback():
     # Parse the tokens!
     client.parse_request_body_response(json.dumps(token_response.json()))
 
-
     # Now that you have tokens (yay) let's find and hit the URL
     # from Google that gives you the user's profile information,
     # including their Google profile image and email
@@ -235,59 +267,41 @@ def googleCallback():
     else:
         return "User email not available or not verified by Google.", 400
 
-    # # Create a user in your db with the information provided
-    # # by Google
+    # Create a user in your db with the information provided
+    # by Google
     # user = User(
-    #     id_=unique_id, name=users_name, email=users_email, profile_pic=picture
+    #     id=unique_id, name=users_name, email=users_email, profile_pic=picture
     # )
-    #
-    # # Doesn't exist? Add it to the database.
-    # if not User.get(unique_id):
-    #     User.create(unique_id, users_name, users_email, picture)
+    id = unique_id
+    name = users_name
+    email = users_email
+    profile_pic = picture
 
-    # # Begin user session by logging the user in
-    # login_user(user)
+    user = User(id, name, email, profile_pic)
 
-    # Send user back to homepage
-    # return redirect(url_for("index"))
+    print("\n")
+    print("USER: ", user)
+    print("\n")
+
+    # Doesn't exist? Add it to the database.
+    if not db.session.query(User).filter(User.id == id).count():
+        db.session.add(user)
+        db.session.commit()
+
+    # Begin user session by logging the user in
+    login_user(user)
+
+    # Send user to dance page
     return render_template('dance.html',
         name=users_name,
         email=users_email,
         avatar_url=picture)
 
-    # facebook = requests_oauthlib.OAuth2Session(
-    #     FB_CLIENT_ID, scope=GOOGLE_SCOPE, redirect_uri=URL + "/google-callback"
-    # )
-    #
-    # # we need to apply a fix for Facebook here
-    # facebook = facebook_compliance_fix(facebook)
-    #
-    # google.fetch_token(
-    #     FB_TOKEN_URL,
-    #     client_secret=FB_CLIENT_SECRET,
-    #     authorization_response=request.url,
-    # )
-    #
-    # # Fetch a protected resource, i.e. user profile, via Graph API
-    #
-    # google_user_data = facebook.get(
-    #     "https://graph.facebook.com/me?fields=id,name,email,picture{url}"
-    # ).json()
-    #
-    # email = facebook_user_data["email"]
-    # name = facebook_user_data["name"]
-    # picture_url = facebook_user_data.get("picture", {}).get("data", {}).get("url")
-    #
-    # return render_template('dance.html',
-    #     name=name,
-    #     email=email,
-    #     avatar_url=picture_url)
-
-# @app.route("/logout")
-# @login_required
-# def logout():
-#     logout_user()
-#     return redirect(url_for("index"))
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for("index"))
 
 # @app.route("/login")
 # def login():
@@ -316,54 +330,17 @@ def googleCallback():
 #     """
 
 #-----------------------------------------------------------------------
-#
-# @app.route('/searchform')
-# def searchForm():
-#
-#     errorMsg = request.args.get('errorMsg')
-#     if errorMsg is None:
-#         errorMsg = ''
-#
-#     prevAuthor = request.cookies.get('prevAuthor')
-#     if prevAuthor is None:
-#         prevAuthor = '(None)'
-#
-#     html = render_template('searchform.html',
-#         ampm=getAmPm(),
-#         currentTime=getCurrentTime(),
-#         errorMsg=errorMsg,
-#         prevAuthor=prevAuthor)
-#     response = make_response(html)
-#     return response
 
-#-----------------------------------------------------------------------
+# if __name__ == '__main__':
+#     app.debug = True
+#     app.run()
 
-# @app.route('/searchresults')
-# def searchResults():
-#
-#     author = request.args.get('author')
-#     if (author is None) or (author.strip() == ''):
-#         errorMsg = 'Please type an author name.'
-#         return redirect(url_for('searchForm', errorMsg=errorMsg))
-#
-#     database = Database()
-#     database.connect()
-#     books = database.search(author)
-#     database.disconnect()
-#
-#     html = render_template('searchresults.html',
-#         ampm=getAmPm(),
-#         currentTime=getCurrentTime(),
-#         author=author,
-#         books=books)
-#     response = make_response(html)
-#     response.set_cookie('prevAuthor', author)
-#     return response
-
-#-----------------------------------------------------------------------
+# if __name__ == "__main__":
+#     # app.run(ssl_context="adhoc")
+#     app.run(port=6000, ssl_context=('cert.pem', 'key.pem'))
 
 if __name__ == '__main__':
     if len(argv) != 2:
         print('Usage: ' + argv[0] + ' port')
         exit(1)
-    app.run(host='0.0.0.0', port=int(argv[1]), debug=True)
+    app.run(host='127.0.0.1', port=int(argv[1]), debug=True)
