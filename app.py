@@ -129,7 +129,8 @@ def index():
         return render_template('index.html')
 
 # Your ngrok url, obtained after running "ngrok http 8000"
-URL = "https://3b3e01a3.ngrok.io"
+# URL = "https://3b3e01a3.ngrok.io"
+URL = "https://dancetigers.herokuapp.com"
 
 @app.route("/fb-login")
 def fbLogin():
