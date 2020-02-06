@@ -39,10 +39,7 @@ from flask_sqlalchemy import SQLAlchemy
 app = Flask(__name__, template_folder='.')
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 
-# SQLALCHEMY_DATABASE_URI = "https://tigermeals-delivery.herokuapp.com"
-# DATABASE_URI="http://localhost:5000"
-
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/dancer'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/dancer'
 heroku = Heroku(app)
 db = SQLAlchemy(app)
 
