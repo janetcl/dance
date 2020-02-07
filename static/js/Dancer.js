@@ -324,29 +324,31 @@ var danceDesigner = {
   // dancerPos: [], dancers: {},
   init: function() {
     this.scene = new THREE.Scene();
-    this.rendererWidth = window.innerWidth * 8 / 10;
-    this.rendererHeight = window.innerHeight * 8 / 10;
+    // this.rendererWidth = window.innerWidth * 8 / 10;
+    // this.rendererHeight = window.innerHeight * 8 / 10;
+    this.rendererWidth = 900;
+    this.rendererHeight = 570;
     var viewAngle = 45;
     var nearClipping = 0.1;
     var farClipping = 9999;
     this.camera = new THREE.PerspectiveCamera( viewAngle, this.rendererWidth / this.rendererHeight, nearClipping, farClipping );
     this.renderer = new THREE.WebGLRenderer({canvas: document.getElementById("renderer")});
     this.renderer.setSize( this.rendererWidth, this.rendererHeight );
-    document.body.appendChild( this.renderer.domElement );
 
     // Create small renderer for aerial view
-    var width1 = window.innerWidth / 6;
-    var height1 = window.innerHeight / 6;
+    // var width1 = window.innerWidth / 6;
+    // var height1 = window.innerHeight / 6;
+    var width1 = 300;
+    var height1 = 190;
     var viewAngle1 = 45;
     this.camera1 = new THREE.PerspectiveCamera( viewAngle1, width1 / height1, nearClipping, farClipping );
     this.renderer1 = new THREE.WebGLRenderer({canvas: document.getElementById("0")});
-    document.getElementById("0").addEventListener('click', function() {
-      t = 0;
-      timeline.updateTimeMark();
-      console.log(0);
-    }, false);
+    // document.getElementById("0").addEventListener('click', function() {
+    //   t = 0;
+    //   timeline.updateTimeMark();
+    //   console.log(0);
+    // }, false);
     this.renderer1.setSize( width1, height1 );
-    document.body.appendChild( this.renderer1.domElement );
     this.camera1.position.z = -10;
     this.camera1.position.y = 30;
     this.camera1.lookAt(new THREE.Vector3(0, 0, -10));
@@ -504,7 +506,7 @@ var danceDesigner = {
   },
   onDocumentMouseDown: function (event) {
     event.preventDefault();
-    if (event.clientY > (window.innerHeight * 8 / 10) && event.clientY < ((window.innerHeight * 8 / 10) + 32)) {
+    if (event.clientY > (danceDesigner.rendererHeight) && event.clientY < ((danceDesigner.rendererHeight) + 32)) {
       if (moveNumber == 0) {
         console.log("adding initial move");
         console.log("dancers: ", danceDesigner.s.dancers);
@@ -666,7 +668,7 @@ var danceDesigner = {
   		document.addEventListener( 'mousemove', onMouseMove, false );
   		document.addEventListener( 'mouseup', onMouseUp, false );
 
-    } else if (event.clientX > (window.innerWidth * 8 / 10) || event.clientY > ((window.innerHeight * 8 / 10) + 32)) {
+    } else if (event.clientX > danceDesigner.rendererHeight || event.clientY > (danceDesigner.rendererHeight + 32)) {
       return;
     } else {
       var mouseX = (event.clientX / danceDesigner.rendererWidth) * 2 - 1;
@@ -1199,7 +1201,7 @@ function ac(p, c) {
 function render() {
   if (danceDesigner.renderer) {
     danceDesigner.renderer.render(danceDesigner.scene, danceDesigner.camera);
-    // danceDesigner.renderer1.render(danceDesigner.scene, danceDesigner.camera1);
+    danceDesigner.renderer1.render(danceDesigner.scene, danceDesigner.camera1);
 
     // Render the timeline renderers
     // for (let a = 0; a < danceDesigner.renderers.length; a++) {
@@ -1504,25 +1506,25 @@ async function onButtonClick(event) {
   }
 }
 
-// Volume controls
-var volume = document.getElementById("volume");
-// volume.innerHTML = slider({
-//   	min: 0,
-//   	max: 100,
-//   	value: 0,
-// 		range: "min",
-//   	slide: function(event, ui) {
-//     	wavesurfer.setVolume(ui.value / 100);
-//   	}
-// });
-
-// Update the current slider value (each time you drag the slider handle)
-volume.oninput = function() {
-  console.log('input : ', volume.value);
-  if (wavesurfer) {
-    wavesurfer.setVolume(volume.value / 100);
-  }
-}
+// // Volume controls
+// var volume = document.getElementById("volume");
+// // volume.innerHTML = slider({
+// //   	min: 0,
+// //   	max: 100,
+// //   	value: 0,
+// // 		range: "min",
+// //   	slide: function(event, ui) {
+// //     	wavesurfer.setVolume(ui.value / 100);
+// //   	}
+// // });
+//
+// // Update the current slider value (each time you drag the slider handle)
+// volume.oninput = function() {
+//   console.log('input : ', volume.value);
+//   if (wavesurfer) {
+//     wavesurfer.setVolume(volume.value / 100);
+//   }
+// }
 
 
 // Initialize lesson on page load

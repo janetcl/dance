@@ -5,11 +5,63 @@
  <title>Dance Designer</title>
  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+ <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.css') }}">
  <link rel="shortcut icon" type="image/png" href="static/files/dancer.png"/>
  <script type="text/javascript"
       src="https://kit.fontawesome.com/79de6bbc8d.js" crossorigin="anonymous"></script>
  </head>
- <body ontouchstart="" style="margin: 0;">
+ <body ontouchstart="" style="margin: 0; color: white; background-color: #0067f4;">
+
+   <div class="row" style="justify-content: space-between;">
+     <div class="col-renderer">
+       <div class="row" style="justify-content: space-between; position: absolute; width: 100%;">
+         <p style="margin-left:20px; position: absolute;" id="keyFrames"></p>
+         <div class="title">Dance Designer</div>
+         <p style="margin-right: 20px; text-align:right;" id="Time" class="time"></p>
+       </div>
+       <canvas id="renderer">
+       </canvas>
+     </div>
+     <div class="col-special">
+       <div class="row ml-1">
+         <button style="width: 60px;" id="addDancer">Add Dancer</button>
+         <br>
+         <button style="width: 60px;" id="saveDance">Save Dance</button>
+       </div>
+       <div class="row ml-1">
+         <p style="width: 60px;">Welcome, {{name}}</p>
+         <p style="width: 60px;">{{email}}</p>
+       </div>
+       <div class="row ml-1">
+         <canvas id="0">
+          </canvas>
+       </div>
+       <div class="row ml-1" style="align-self: flex-end;">
+         <!-- <div id="player">
+           <div class="slidecontainer">
+            <input type="range" min="1" max="100" value="50" class="slider" id="volume">
+           </div>
+         </div> -->
+         <div class="bottomBar" id="bottomBar">
+          <div id="waveform">
+              <input type="file" id="fileinput"/>
+          </div>
+          <button class="ui playButton" style="margin-bottom:10px; right:100px; width:50px;" id="play"><i class="fas fa-play" id="playIcon"></i></button>
+          <button class="ui playButton" style="margin-bottom:10px; right:60px; width: 50px;" id="undo"><i class="fas fa-undo"></i></button>
+          <button class="ui playButton" style="margin-bottom:10px; right:10px; width: 50px;" id="delete"><i class="fas fa-trash"></i></button>
+         </div>
+       </div>
+     </div>
+   </div>
+
+   <div class="row timelineBar">
+     <div id="timelineEditor">
+     </div>
+
+   </div>
+
+<!--
+
    <div style="width:100%;height:60px;text-align: center; color:white; font-weight: bolder;" class="ui top">Dance Designer</div>
    <div class="ui">
      <p style="margin-left:20px; width: 250px;" id="keyFrames" class="ui"></p>
@@ -25,9 +77,9 @@
        <div class="slidecontainer">
         <input type="range" min="1" max="100" value="50" class="slider" id="volume">
        </div>
-       <!-- <i class="fa fa-volume-down"></i>
+       <i class="fa fa-volume-down"></i>
        <input type="range" min="1" max="100" value="50" class="slider" id="volume">
-       <i class="fa fa-volume-up"></i> -->
+       <i class="fa fa-volume-up"></i>
      </div>
      <div class="bottomBar" id="bottomBar">
       <div id="waveform">
@@ -44,7 +96,7 @@
      <p style="text-align:right;" id="Time" class="ui time"></p>
      <canvas id="0">
       </canvas>
-   </div>
+   </div> -->
    <script type="text/javascript"
         src="{{ url_for('static', filename='js/three.js') }}"></script>
    <script type="text/javascript"
@@ -62,5 +114,9 @@
    <script type="text/javascript"
         src="{{ url_for('static', filename='js/TimelineEditor.js') }}"></script>
    <script type="text/javascript" src="https://unpkg.com/wavesurfer.js"></script>
+   <script type="text/javascript"
+        src="{{ url_for('static', filename='js/jquery-3.2.1.min.js') }}"></script>
+   <script type="text/javascript"
+        src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
  </body>
 </html>

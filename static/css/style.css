@@ -17,15 +17,40 @@ body {
 	user-select: none;
 }
 
-.top {
-  margin-top: 20px;
+.title {
+  margin-top: 5px;
   font-family: "Courier New", Courier, monospace;
-  font-size: 18px;
+  font-size: 25px;
+  text-align: center;
+  font-weight: bolder;
+  justify-content: center;
+  position: absolute;
+}
+
+.col-renderer {
+  width: 570px;
+}
+
+.col-special {
+  width: calc(100% - 900px);
+  width: -o-calc(100% - 900px); /* opera */
+  width: -webkit-calc(100% - 900px); /* google, safari */
+  width: -moz-calc(100% - 900px); /* firefox */
+  height: calc(100% - 570px);
+  height: -o-calc(100% - 570px); /* opera */
+  height: -webkit-calc(100% - 570px); /* google, safari */
+  height: -moz-calc(100% - 570px); /* firefox */
 }
 
 .bottomBar {
-  margin-top: 440px;
   vertical-align: bottom;
+}
+
+.timelineBar {
+  height: calc(100% - 570px);
+  height: -o-calc(100% - 570px); /* opera */
+  height: -webkit-calc(100% - 570px); /* google, safari */
+  height: -moz-calc(100% - 570px); /* firefox */
 }
 
 .keyframes {
@@ -40,20 +65,21 @@ body {
 
 .time {
   right: 10px;
+  position: absolute;
 }
 
 .timelineCanvas {
   margin-right: 10px;
 }
 
+/* #renderer {
+  width: 80%;
+  height: 80%;
+} */
+
 .ui {
   position: absolute;
   width: 100%;
-}
-
-.mainRenderer {
-  top: 0;
-  height: 80%;
 }
 
 .timeline {
