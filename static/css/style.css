@@ -7,6 +7,11 @@ body {
   background-color: #0067f4;
 }
 
+/* @media (min-width: 992px) */
+.container {
+  max-width: 2000px;
+}
+
 .Panel {
 	-moz-user-select: none;
 	-webkit-user-select: none;
@@ -17,6 +22,10 @@ body {
 	user-select: none;
 }
 
+.topBar {
+  background-color: #E1F5FE;
+  height: 40px;
+}
 .title {
   margin-top: 5px;
   font-family: "Courier New", Courier, monospace;
@@ -28,7 +37,7 @@ body {
 }
 
 .col-renderer {
-  width: 570px;
+  width: 900px;
 }
 
 .col-special {
@@ -36,17 +45,23 @@ body {
   width: -o-calc(100% - 900px); /* opera */
   width: -webkit-calc(100% - 900px); /* google, safari */
   width: -moz-calc(100% - 900px); /* firefox */
-  height: calc(100% - 570px);
-  height: -o-calc(100% - 570px); /* opera */
-  height: -webkit-calc(100% - 570px); /* google, safari */
-  height: -moz-calc(100% - 570px); /* firefox */
+  height: 570px;
+}
+
+.main {
+  padding-right: 0px;
+  padding-left: 0px;
+  margin-left: 0px;
+  margin-right: 0px;
 }
 
 .bottomBar {
   vertical-align: bottom;
+  justify-content: flex-end;
 }
 
 .timelineBar {
+  width: 100%;
   height: calc(100% - 570px);
   height: -o-calc(100% - 570px); /* opera */
   height: -webkit-calc(100% - 570px); /* google, safari */
@@ -61,11 +76,6 @@ body {
 .currentKeyFrame {
   left: 10px;
   margin-top: 125px;
-}
-
-.time {
-  right: 10px;
-  position: absolute;
 }
 
 .timelineCanvas {

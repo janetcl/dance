@@ -463,11 +463,14 @@ var danceDesigner = {
     this.dragControls = new THREE.DragControls(this.dancersArr, this.camera, this.renderer.domElement);
     this.dragControls.addEventListener( 'dragstart', function ( event ) {
     	event.object.material.emissive.set( 0xaaaaaa );
+      console.log("moving object: ", event.object);
+      console.log("new position: ", event.object.position);
       danceDesigner.controls.enabled = false;
     } );
 
     this.dragControls.addEventListener( 'dragend', function ( event ) {
     	event.object.material.emissive.set( 0x000000 );
+      console.log("FINAL position: ", event.object.position);
       danceDesigner.controls.enabled = true;
     } );
 
@@ -506,13 +509,13 @@ var danceDesigner = {
     event.preventDefault();
     if (event.clientY > (danceDesigner.rendererHeight) && event.clientY < ((danceDesigner.rendererHeight) + 32)) {
       if (moveNumber == 0) {
-        console.log("adding initial move");
-        console.log("dancers: ", danceDesigner.s.dancers);
+        // console.log("adding initial move");
+        // console.log("dancers: ", danceDesigner.s.dancers);
         addToUndoBuffer();
       }
       var isMovingAKeyFrame = false;
       var lastKeyframeT = 0;
-      console.log("dancers: ", danceDesigner.s.dancers);
+      // console.log("dancers: ", danceDesigner.s.dancers);
   		function onMouseMove( event ) {
 
         if (isMovingAKeyFrame) {
@@ -554,7 +557,7 @@ var danceDesigner = {
 
           var lastKeyframeIndex = 0;
           var currentTimeLessIndex = 0;
-          console.log(danceDesigner.s.keyframes);
+          // console.log(danceDesigner.s.keyframes);
           // Determine where the current time is in the keyframes[] array if it exists
           for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
             if (danceDesigner.s.keyframes[i] == lastKeyframeT) {
@@ -624,8 +627,8 @@ var danceDesigner = {
 
           isMovingAKeyFrame = false;
 
-          console.log(danceDesigner.s.dancers);
-          console.log(danceDesigner.s.keyframes);
+          // console.log(danceDesigner.s.dancers);
+          // console.log(danceDesigner.s.keyframes);
           // PUSH TO UNDO BUFFER
           await addToUndoBuffer();
           timeline.updateSetKeyframeTimeMark(lastKeyframeT, t);
@@ -694,14 +697,14 @@ var danceDesigner = {
           (Math.abs(danceDesigner.s.dancers[i].positions[tempT].y - intersects[0].object.position.y) < 1) &&
           (Math.abs(danceDesigner.s.dancers[i].positions[tempT].z - intersects[0].object.position.z) < 1)) {
             danceDesigner.movingDancer = danceDesigner.s.dancers[i];
-            console.log(danceDesigner.movingDancer);
+            // console.log(danceDesigner.movingDancer);
           }
         }
         // Calculate the offset
         var intersects = danceDesigner.raycaster.intersectObject(danceDesigner.plane);
         danceDesigner.offset.copy(intersects[0].point).sub(danceDesigner.plane.position);
       } else {
-        console.log("on stage");
+        // console.log("on stage");
       }
     }
   },
@@ -1093,12 +1096,12 @@ function animate() {
     }
   } else {
     if (play) {
-      console.log("danceDesigner.maxT: ", danceDesigner.maxT);
-      console.log("t: ", t);
+      // console.log("danceDesigner.maxT: ", danceDesigner.maxT);
+      // console.log("t: ", t);
       if (danceDesigner.maxT === 0 || t > danceDesigner.maxT) {
         play = false;
       }
-      console.log(t);
+      // console.log(t);
       timeline.changeTimeMarkColor(t, false);
       timeline.updateTimeMark();
       for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
@@ -1165,16 +1168,16 @@ async function addToUndoBuffer() {
     undoBufferFilled = true;
   }
 
-  console.log("undoBuffer: ", undoBuffer);
+  // console.log("undoBuffer: ", undoBuffer);
 }
 
 function retrieveUndo() {
-  console.log("Undo buffer length: ", undoBuffer.length);
+  // console.log("Undo buffer length: ", undoBuffer.length);
   if (undoBuffer.length == 0) {
     return;
   }
 
-  console.log('undo buffer before shifting: ', undoBuffer);
+  // console.log('undo buffer before shifting: ', undoBuffer);
 
   // Pop from the front of the undo buffer
   return undoBuffer.shift();
@@ -1345,21 +1348,21 @@ async function onButtonClick(event) {
   if (event.target.id == "saveDance") {
     // TODO: Implement a method here that will save the danceDesigner object
     const data = { danceDesigner: danceDesigner };
-
-  fetch('', {
-    method: 'POST', // or 'PUT'
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  })
-  .then((response) => response.json())
-  .then((data) => {
-    console.log('Success:', data);
-  })
-  .catch((error) => {
-    console.error('Error:', error);
-  });
+  //
+  // fetch('', {
+  //   method: 'POST', // or 'PUT'
+  //   headers: {
+  //     'Content-Type': 'application/json',
+  //   },
+  //   body: JSON.stringify(data),
+  // })
+  // .then((response) => response.json())
+  // .then((data) => {
+  //   console.log('Success:', data);
+  // })
+  // .catch((error) => {
+  //   console.error('Error:', error);
+  // });
 
   } else if (event.target.id === "addDancer") {
 

@@ -11,54 +11,88 @@
       src="https://kit.fontawesome.com/79de6bbc8d.js" crossorigin="anonymous"></script>
  </head>
  <body ontouchstart="" style="margin: 0; color: white; background-color: #0067f4;">
-
-   <div class="row" style="justify-content: space-between;">
-     <div class="col-renderer">
-       <div class="row" style="justify-content: space-between; position: absolute; width: 100%;">
-         <p style="margin-left:20px; position: absolute;" id="keyFrames"></p>
-         <div class="title">Dance Designer</div>
-         <p style="margin-right: 20px; text-align:right;" id="Time" class="time"></p>
-       </div>
-       <canvas id="renderer">
-       </canvas>
-     </div>
-     <div class="col-special">
-       <div class="row ml-1">
-         <button style="width: 60px;" id="addDancer">Add Dancer</button>
-         <br>
-         <button style="width: 60px;" id="saveDance">Save Dance</button>
-       </div>
-       <div class="row ml-1">
-         <p style="width: 60px;">Welcome, {{name}}</p>
-         <p style="width: 60px;">{{email}}</p>
-       </div>
-       <div class="row ml-1">
-         <canvas id="0">
-          </canvas>
-       </div>
-       <div class="row ml-1" style="align-self: flex-end;">
-         <!-- <div id="player">
-           <div class="slidecontainer">
-            <input type="range" min="1" max="100" value="50" class="slider" id="volume">
+   <div class="container main">
+     <div class="row" style="justify-content: space-between; width: 100%;">
+       <div class="col-renderer">
+         <div class="row" style="justify-content: space-between; position: absolute; width: 900px;">
+           <div class="col-4">
+             <p style="margin-top: 5px; margin-left: 10px; position: absolute;" id="keyFrames"></p>
            </div>
-         </div> -->
-         <div class="bottomBar" id="bottomBar">
-          <div id="waveform">
-              <input type="file" id="fileinput"/>
-          </div>
-          <button class="ui playButton" style="margin-bottom:10px; right:100px; width:50px;" id="play"><i class="fas fa-play" id="playIcon"></i></button>
-          <button class="ui playButton" style="margin-bottom:10px; right:60px; width: 50px;" id="undo"><i class="fas fa-undo"></i></button>
-          <button class="ui playButton" style="margin-bottom:10px; right:10px; width: 50px;" id="delete"><i class="fas fa-trash"></i></button>
+           <div class="col-4" style="justify-content: center;">
+             <p class="title">Dance Designer</p>
+           </div>
+           <div class="col-4" style="justify-content: flex-end; align-items: flex-end;">
+             <p style="margin-top: 5px; align-self: flex-end; position: absolute; text-align:right;" id="Time" class="time"></p>
+           </div>
+           <!-- <p style="margin-left:20px; position: absolute;" id="keyFrames"></p>
+           <div class="title">Dance Designer</div>
+           <p style="margin-right: 20px; text-align:right;" id="Time" class="time"></p> -->
+         </div>
+         <canvas id="renderer">
+         </canvas>
+       </div>
+       <div class="col-special">
+         <div class="topBar">
+           <div class="row">
+             <div class="col-3">
+               <img src="{{avatar_url}}" style="width: 32px; height: 32px; margin-top: 4px; margin-left: 4px;"></img>
+             </div>
+             <div class="col-9">
+               <p style="align-self: right; text-align: left; color: black;">Welcome, {{name}}!</p>
+             </div>
+           </div>
+         </div>
+         <div class="row ml-1 mt-2">
+           <p>{{email}}</p>
+         </div>
+         <div class="row ml-1 mt-0">
+           <div class="col-6">
+             <button class="btn btn-light" id="addDancer">Add Dancer</button>
+           </div>
+           <div class="col-6">
+             <button class="btn btn-light" id="saveDance">Save Dance</button>
+           </div>
+         </div>
+         <div class="row ml-1 mt-2">
+           <canvas id="0">
+            </canvas>
+         </div>
+         <div class="row ml-1 mt-5" style="align-self: flex-end; align-items: flex-end;">
+           <!-- <div id="player">
+             <div class="slidecontainer">
+              <input type="range" min="1" max="100" value="50" class="slider" id="volume">
+             </div>
+           </div> -->
+           <div class="bottomBar" id="bottomBar">
+            <div id="waveform">
+                <input type="file" id="fileinput"/>
+            </div>
+            <div class="row" style="justify-content: center;">
+              <!-- <button class="playButton" style="width:50px; color: white;" id="play"><i class="fas fa-play" id="playIcon"></i></button>
+              <button class="playButton" style="width: 50px; color: white;" id="undo"><i class="fas fa-undo"></i></button>
+              <button class="playButton" style="width: 50px; color: white;" id="delete"><i class="fas fa-trash"></i></button> -->
+              <div class="col-4">
+                <button class="playButton" style="width:50px; color: white;" id="play"><i class="fas fa-play" id="playIcon"></i></button>
+              </div>
+              <div class="col-4">
+                <button class="playButton" style="width: 50px; color: white;" id="undo"><i class="fas fa-undo"></i></button>
+              </div>
+              <div class="col-4">
+                <button class="playButton" style="width: 50px; color: white;" id="delete"><i class="fas fa-trash"></i></button>
+              </div>
+
+            </div>
+           </div>
          </div>
        </div>
      </div>
-   </div>
 
-   <div class="row timelineBar">
-     <div id="timelineEditor">
+     <div class="row timelineBar">
+       <div id="timelineEditor">
      </div>
 
    </div>
+ </div>
 
 <!--
 
