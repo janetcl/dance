@@ -320,7 +320,7 @@ var danceDesigner = {
   dancersArr: [], maxT: null, stagePlane: null,
   xMax: null, xMin: null, zMax: null, zMin: null,
   camera1: null, renderer1: null, camera2: null, renderer2: null,
-  scene2: null, renderers: [], clock: null, dragControls: null,
+  scene2: null, renderers: [], dragControls: null,
   // dancerPos: [], dancers: {},
   init: function() {
     this.scene = new THREE.Scene();
@@ -463,15 +463,13 @@ var danceDesigner = {
     this.dragControls = new THREE.DragControls(this.dancersArr, this.camera, this.renderer.domElement);
     this.dragControls.addEventListener( 'dragstart', function ( event ) {
     	event.object.material.emissive.set( 0xaaaaaa );
-      this.controls.enabled = false;
-    } );
-    this.dragControls.addEventListener( 'dragend', function ( event ) {
-    	event.object.material.emissive.set( 0x000000 );
-      this.controls.enabled = true;
+      danceDesigner.controls.enabled = false;
     } );
 
-    // Prepare clock
-    this.clock = new THREE.Clock();
+    this.dragControls.addEventListener( 'dragend', function ( event ) {
+    	event.object.material.emissive.set( 0x000000 );
+      danceDesigner.controls.enabled = true;
+    } );
 
     var axesHelper = new THREE.AxesHelper( 5 );
     this.scene.add( axesHelper );
@@ -709,7 +707,7 @@ var danceDesigner = {
   },
   onDocumentMouseMove: function (event) {
     event.preventDefault();
-    if (event.clientX > (window.innerWidth * 8 / 10) || event.clientY > (window.innerHeight * 8 / 10)) {
+    if (event.clientX > danceDesigner.rendererWidth || event.clientY > danceDesigner.rendererWidth) {
       return;
     }
     // Get mouse position
@@ -750,6 +748,8 @@ var danceDesigner = {
           }
           var newPos = new THREE.Vector3(newPosThreeVector.x, newPosThreeVector.y, newPosThreeVector.z);
           danceDesigner.movingDancer.addPotentialPos(newPos);
+          // set the new position
+          danceDesigner.movingDancer.positions[t] = newPos;
         }
 
       }
@@ -764,7 +764,7 @@ var danceDesigner = {
   },
   onDocumentMouseUp: async function (event) {
     event.preventDefault();
-    if (event.clientX > (window.innerWidth * 8 / 10) || event.clientY > (window.innerHeight * 8 / 10)) {
+    if (event.clientX > danceDesigner.rendererWidth || event.clientY > danceDesigner.rendererWidth) {
       return;
     }
     if (danceDesigner.selection) {
