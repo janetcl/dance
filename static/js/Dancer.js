@@ -18,7 +18,8 @@ class Position {
 class Dancer {
 
   constructor(name, mesh) {
-    this.positions = [];
+    this.keyframePositions = []; // [ { time: position } ] eg: [ {0: (0,0,0)}, { 20: (0, 1, 10)}]
+    this.positions = []; // all positions where the index is the time
     this.name = name;
     this.potentialPose = null;
     this.mesh = mesh;
@@ -43,97 +44,134 @@ class Dancer {
     this.potentialPose = pos;
   }
 
+  addInitPosition(pos) {
+    this.positions.push(pos);
+  }
+
   async getPotentialPose() {
     return this.potentialPose;
   }
 
-  addPosition(pos) {
+  addKFPosition(time, pos) {
     // Filter existing positions to make sure each time has only one position
-    this.positions = this.positions.filter(function(position, index, arr){
-        return position.time !== pos.time;
+    this.keyframePositions = this.keyframePositions.filter(function(position, index, arr){
+        return position.time !== time;
     });
-    // Push new position onto dancer's positions
-    this.positions.push(pos);
+    var keyframePosition = {time: time, position: pos}
+    // var keyframePosition = {[time]: pos};
+    this.keyframePositions.push(keyframePosition);
     // Sort all positions in time order
-    this.positions.sort(function(a, b) {return a.time - b.time});
+    this.keyframePositions.sort(function(a, b) {return a.time - b.time});
   }
 
-  // Returns the position at time t if it exists
-  getPosition(t) {
-    return this.positions[t];
-  }
-
-  // Update the position when there is only one keyframe at t = 0
-  async updateOnlyPosition() {
-    this.positions[0] = await this.getPotentialPose();
-    return;
-  }
-
-  // Update the first position
-  async updateFirstPosition(nextKeyFrameT) {
-    var newPos = await this.getPotentialPose();
-    if (this.positions[0] == newPos) {
-      return;
-    }
-    this.positions[0] = newPos;
-    for (var i = 1; i < nextKeyFrameT; i++) {
-      this.positions[i].x = ((this.positions[nextKeyFrameT].x - newPos.x) * i / (nextKeyFrameT)) + newPos.x;
-      this.positions[i].y = ((this.positions[nextKeyFrameT].y - newPos.y) * i / (nextKeyFrameT)) + newPos.y;
-      this.positions[i].z = ((this.positions[nextKeyFrameT].z - newPos.z) * i / (nextKeyFrameT)) + newPos.z;
-    }
-    return;
-  }
-
-  // Update the last position
-  async updateLastPosition(secondToLastT, finalKeyFrameT) {
-    var newPos = await this.getPotentialPose();
-    if (this.positions[finalKeyFrameT] == newPos) {
-      return;
-    }
-    this.positions[finalKeyFrameT] = newPos;
-    var timeDiff = finalKeyFrameT - secondToLastT;
-    for (var i = 1; i < timeDiff; i++) {
-      this.positions[secondToLastT + i].x = ((newPos.x - this.positions[secondToLastT].x) * i / (timeDiff)) + this.positions[secondToLastT].x;
-      this.positions[secondToLastT + i].y = ((newPos.y - this.positions[secondToLastT].y) * i / (timeDiff)) + this.positions[secondToLastT].y;
-      this.positions[secondToLastT + i].z = ((newPos.z - this.positions[secondToLastT].z) * i / (timeDiff)) + this.positions[secondToLastT].z;
+  updatePositions() {
+    console.log('positions: ', this.positions);
+    console.log('keyframePositions: ', this.keyframePositions)
+    this.positions[0].x = this.keyframePositions[0].position.x;
+    this.positions[0].y = this.keyframePositions[0].position.y;
+    this.positions[0].z = this.keyframePositions[0].position.z;
+    for (var j = 0; j < this.keyframePositions.length - 1; j++) {
+      var firstTime = this.keyframePositions[j];
+      var secondTime = this.keyframePositions[j+1];
+      for (var i = firstTime; i < secondTime; i++) {
+        if (this.positions[i]) {
+          this.positions[i].x = ((secondTime.position.x - firstTime.position.x) * i / (secondTime.time)) + firstTime.position.x;
+          this.positions[i].y = ((secondTime.position.y - firstTime.position.y) * i / (secondTime.time)) + firstTime.position.y;
+          this.positions[i].z = ((secondTime.position.z - firstTime.position.z) * i / (secondTime.time)) + firstTime.position.z;
+        } else {
+          var newPos = new THREE.Vector3(
+            ((secondTime.position.x - firstTime.position.x) * i / (secondTime.time)) + firstTime.position.x,
+            ((secondTime.position.y - firstTime.position.y) * i / (secondTime.time)) + firstTime.position.y,
+            ((secondTime.position.z - firstTime.position.z) * i / (secondTime.time)) + firstTime.position.z
+          );
+          this.positions.push(newPos);
+        }
+      }
+      if (j == this.keyframePositions.length - 2) {
+        if (this.positions[secondTime.time]) {
+          this.positions[secondTime.time].x = secondTime.position.x;
+          this.positions[secondTime.time].y = secondTime.position.y;
+          this.positions[secondTime.time].z = secondTime.position.z;
+        } else {
+          var newPos = new THREE.Vector3(secondTime.position.x, secondTime.position.y, secondTime.position.z);
+          this.positions.push(newPos);
+        }
+      }
     }
     return;
   }
-
-  // Update a position between the first and last positions (in the middle of the routine)
-  async updateMiddlePosition(keyframeBeforeT, updatedKeyframeT, keyframeAfterT) {
-    var newPos = await this.getPotentialPose();
-    if (this.positions[updatedKeyframeT] == newPos) {
-      return;
-    }
-    this.positions[updatedKeyframeT] = newPos;
-    var timeDiff = updatedKeyframeT - keyframeBeforeT;
-    for (var i = 1; i < timeDiff; i++) {
-      this.positions[keyframeBeforeT + i].x = ((newPos.x - this.positions[keyframeBeforeT].x) * i / (timeDiff)) + this.positions[keyframeBeforeT].x;
-      this.positions[keyframeBeforeT + i].y = ((newPos.y - this.positions[keyframeBeforeT].y) * i / (timeDiff)) + this.positions[keyframeBeforeT].y;
-      this.positions[keyframeBeforeT + i].z = ((newPos.z - this.positions[keyframeBeforeT].z) * i / (timeDiff)) + this.positions[keyframeBeforeT].z;
-    }
-    timeDiff = keyframeAfterT - updatedKeyframeT;
-    for (var i = 1; i < timeDiff; i++) {
-      this.positions[updatedKeyframeT + i].x = ((this.positions[keyframeAfterT].x - newPos.x) * i / (timeDiff)) + newPos.x;
-      this.positions[updatedKeyframeT + i].y = ((this.positions[keyframeAfterT].y - newPos.y) * i / (timeDiff)) + newPos.y;
-      this.positions[updatedKeyframeT + i].z = ((this.positions[keyframeAfterT].z - newPos.z) * i / (timeDiff)) + newPos.z;
-    }
-    return;
-  }
-
-  async addNewLastPosition(oldLastKeyframeT, newLastKeyframeT) {
-    var newPos = await this.getPotentialPose();
-    var timeDiff = newLastKeyframeT - oldLastKeyframeT;
-    for (var i = 1; i < timeDiff; i++) {
-      var xVal = ((newPos.x - this.positions[oldLastKeyframeT].x) * i / (timeDiff)) + this.positions[oldLastKeyframeT].x;
-      var yVal = ((newPos.y - this.positions[oldLastKeyframeT].y) * i / (timeDiff)) + this.positions[oldLastKeyframeT].y;
-      var zVal = ((newPos.z - this.positions[oldLastKeyframeT].z) * i / (timeDiff)) + this.positions[oldLastKeyframeT].z;
-      var newPosition = new THREE.Vector3(xVal, yVal, zVal);
-      this.positions.push(newPosition);
-    }
-    this.positions.push(newPos);
-  }
+  // 
+  // // Update the position when there is only one keyframe at t = 0
+  // async updateOnlyPosition() {
+  //   this.positions[0] = await this.getPotentialPose();
+  //   return;
+  // }
+  //
+  // // Update the first position
+  // async updateFirstPosition(nextKeyFrameT) {
+  //   var newPos = await this.getPotentialPose();
+  //   if (this.positions[0] == newPos) {
+  //     return;
+  //   }
+  //   this.positions[0] = newPos;
+  //   for (var i = 1; i < nextKeyFrameT; i++) {
+  //     this.positions[i].x = ((this.positions[nextKeyFrameT].x - newPos.x) * i / (nextKeyFrameT)) + newPos.x;
+  //     this.positions[i].y = ((this.positions[nextKeyFrameT].y - newPos.y) * i / (nextKeyFrameT)) + newPos.y;
+  //     this.positions[i].z = ((this.positions[nextKeyFrameT].z - newPos.z) * i / (nextKeyFrameT)) + newPos.z;
+  //   }
+  //   return;
+  // }
+  //
+  // // Update the last position
+  // async updateLastPosition(secondToLastT, finalKeyFrameT) {
+  //   var newPos = await this.getPotentialPose();
+  //   if (this.positions[finalKeyFrameT] == newPos) {
+  //     return;
+  //   }
+  //   this.positions[finalKeyFrameT] = newPos;
+  //   var timeDiff = finalKeyFrameT - secondToLastT;
+  //   for (var i = 1; i < timeDiff; i++) {
+  //     this.positions[secondToLastT + i].x = ((newPos.x - this.positions[secondToLastT].x) * i / (timeDiff)) + this.positions[secondToLastT].x;
+  //     this.positions[secondToLastT + i].y = ((newPos.y - this.positions[secondToLastT].y) * i / (timeDiff)) + this.positions[secondToLastT].y;
+  //     this.positions[secondToLastT + i].z = ((newPos.z - this.positions[secondToLastT].z) * i / (timeDiff)) + this.positions[secondToLastT].z;
+  //   }
+  //   return;
+  // }
+  //
+  // // Update a position between the first and last positions (in the middle of the routine)
+  // async updateMiddlePosition(keyframeBeforeT, updatedKeyframeT, keyframeAfterT) {
+  //   var newPos = await this.getPotentialPose();
+  //   if (this.positions[updatedKeyframeT] == newPos) {
+  //     return;
+  //   }
+  //   this.positions[updatedKeyframeT] = newPos;
+  //   var timeDiff = updatedKeyframeT - keyframeBeforeT;
+  //   for (var i = 1; i < timeDiff; i++) {
+  //     this.positions[keyframeBeforeT + i].x = ((newPos.x - this.positions[keyframeBeforeT].x) * i / (timeDiff)) + this.positions[keyframeBeforeT].x;
+  //     this.positions[keyframeBeforeT + i].y = ((newPos.y - this.positions[keyframeBeforeT].y) * i / (timeDiff)) + this.positions[keyframeBeforeT].y;
+  //     this.positions[keyframeBeforeT + i].z = ((newPos.z - this.positions[keyframeBeforeT].z) * i / (timeDiff)) + this.positions[keyframeBeforeT].z;
+  //   }
+  //   timeDiff = keyframeAfterT - updatedKeyframeT;
+  //   for (var i = 1; i < timeDiff; i++) {
+  //     this.positions[updatedKeyframeT + i].x = ((this.positions[keyframeAfterT].x - newPos.x) * i / (timeDiff)) + newPos.x;
+  //     this.positions[updatedKeyframeT + i].y = ((this.positions[keyframeAfterT].y - newPos.y) * i / (timeDiff)) + newPos.y;
+  //     this.positions[updatedKeyframeT + i].z = ((this.positions[keyframeAfterT].z - newPos.z) * i / (timeDiff)) + newPos.z;
+  //   }
+  //   return;
+  // }
+  //
+  // async addNewLastPosition(oldLastKeyframeT, newLastKeyframeT) {
+  //   var newPos = await this.getPotentialPose();
+  //   var timeDiff = newLastKeyframeT - oldLastKeyframeT;
+  //   for (var i = 1; i < timeDiff; i++) {
+  //     var xVal = ((newPos.x - this.positions[oldLastKeyframeT].x) * i / (timeDiff)) + this.positions[oldLastKeyframeT].x;
+  //     var yVal = ((newPos.y - this.positions[oldLastKeyframeT].y) * i / (timeDiff)) + this.positions[oldLastKeyframeT].y;
+  //     var zVal = ((newPos.z - this.positions[oldLastKeyframeT].z) * i / (timeDiff)) + this.positions[oldLastKeyframeT].z;
+  //     var newPosition = new THREE.Vector3(xVal, yVal, zVal);
+  //     this.positions.push(newPosition);
+  //   }
+  //   this.positions.push(newPos);
+  // }
 
   removeLastKeyframe(secondToLastT, lastKeyframeT) {
     this.positions.length = secondToLastT + 1;
@@ -367,7 +405,11 @@ var danceDesigner = {
     janet.updateColor(0x00c969);
     var j1 = new THREE.Vector3(-2, 0, -5);
     janet.addPotentialPos(j1);
-    janet.updateOnlyPosition();
+    janet.addInitPosition(j1);
+    janet.addKFPosition(0, j1);
+    console.log(janet.keyframePositions);
+    janet.updatePositions();
+    // janet.updateOnlyPosition();
     janet.mesh.position.x = j1.x;
     janet.mesh.position.y = j1.y;
     janet.mesh.position.z = j1.z;
@@ -381,7 +423,10 @@ var danceDesigner = {
     phillip.updateColor(0xf8f833);
     var p1 = new THREE.Vector3(2, 0, -3);
     phillip.addPotentialPos(p1);
-    phillip.updateOnlyPosition();
+    phillip.addInitPosition(p1);
+    phillip.addKFPosition(0, p1);
+    phillip.updatePositions();
+    // phillip.updateOnlyPosition();
     phillip.mesh.position.x = p1.x;
     phillip.mesh.position.y = p1.y;
     phillip.mesh.position.z = p1.z;
@@ -1297,67 +1342,78 @@ var newPosThreeVector = null;
 async function addNewKeyFrame(t) {
   t = Math.round(t);
 
-  for (i = 0; i < danceDesigner.s.dancers.length; i++) {
-    var dancerMesh = danceDesigner.s.dancers[i].mesh;
-    if (danceDesigner.s.dancers[i].potentialPose == null) {
-      var newPos = new THREE.Vector3(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z);
-      danceDesigner.s.dancers[i].addPotentialPos(newPos);
-    } else {
-      danceDesigner.s.dancers[i].addPotentialPos(danceDesigner.s.dancers[i].potentialPose);
-    }
+  for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+    var dancer = danceDesigner.s.dancers[i];
+    var dancerMesh = dancer.mesh;
+    var newPos = new THREE.Vector3(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z);
+    dancer.addKFPosition(t, newPos);
+    dancer.updatePositions();
+    // if (dancer.potentialPose == null) {
+    //   var newPos = new THREE.Vector3(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z);
+    //   danceDesigner.s.dancers[i].addPotentialPos(newPos);
+    // } else {
+    //   danceDesigner.s.dancers[i].addPotentialPos(danceDesigner.s.dancers[i].potentialPose);
+    // }
   }
 
+  // for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
+  //    var dancer = danceDesigner.s.dancers[j];
+  //    console.log("POTENTIAL POSE: ", dancer.potentialPos);
+  //    dancer.addKFPosition(t, dancer.potentialPos);
+  //    dancer.updatePositions();
+  // }
+
   if (danceDesigner.s.keyframes.includes(t)) {
-    var keyframeIndex = 0;
-    // Determine where the current time is in the keyframes[] array if it exists
-    for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
-      if (danceDesigner.s.keyframes[i] == t) {
-        keyframeIndex = i;
-      }
-    }
-    for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
-       var dancer = danceDesigner.s.dancers[j];
-       if (keyframeIndex == 0) {
-        // Case when we are updating the initial position at t = 0
-        if (danceDesigner.s.keyframes.length == 1) {
-          dancer.updateOnlyPosition();
-        } else {
-          dancer.updateFirstPosition(danceDesigner.s.keyframes[1]);
-        }
-      } else if (keyframeIndex == (danceDesigner.s.keyframes.length - 1)) {
-        // Case when we are updating the last position
-        dancer.updateLastPosition(danceDesigner.s.keyframes[keyframeIndex - 1], danceDesigner.s.keyframes[keyframeIndex]);
-      } else {
-        // Case when we are updating a middle position
-        dancer.updateMiddlePosition(danceDesigner.s.keyframes[keyframeIndex - 1], danceDesigner.s.keyframes[keyframeIndex], danceDesigner.s.keyframes[keyframeIndex + 1]);
-      }
-    }
+    // var keyframeIndex = 0;
+    // // Determine where the current time is in the keyframes[] array if it exists
+    // for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
+    //   if (danceDesigner.s.keyframes[i] == t) {
+    //     keyframeIndex = i;
+    //   }
+    // }
+    // for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
+    //    var dancer = danceDesigner.s.dancers[j];
+    //    if (keyframeIndex == 0) {
+    //     // Case when we are updating the initial position at t = 0
+    //     if (danceDesigner.s.keyframes.length == 1) {
+    //       dancer.updateOnlyPosition();
+    //     } else {
+    //       dancer.updateFirstPosition(danceDesigner.s.keyframes[1]);
+    //     }
+    //   } else if (keyframeIndex == (danceDesigner.s.keyframes.length - 1)) {
+    //     // Case when we are updating the last position
+    //     dancer.updateLastPosition(danceDesigner.s.keyframes[keyframeIndex - 1], danceDesigner.s.keyframes[keyframeIndex]);
+    //   } else {
+    //     // Case when we are updating a middle position
+    //     dancer.updateMiddlePosition(danceDesigner.s.keyframes[keyframeIndex - 1], danceDesigner.s.keyframes[keyframeIndex], danceDesigner.s.keyframes[keyframeIndex + 1]);
+    //   }
+    // }
   } else {
     // Adding a new keyframe
     danceDesigner.s.addKeyFrame(t);
     timeline.addTimeMark(t);
     timeline.changeTimeMarkColor(t, true);
-    if (t > danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 2]) {
-      // Adding a new keyframe at the end of the routine
-      danceDesigner.maxT = t;
-      for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
-        danceDesigner.s.dancers[j].addNewLastPosition(
-          danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 2], t);
-      }
-    } else {
-      // Adding a new keyframe in the middle of the routine
-      var keyframeIndex = 0;
-      // Determine where the current time is in the keyframes[] array if it exists
-      for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
-        if (danceDesigner.s.keyframes[i] == t) {
-          keyframeIndex = i;
-        }
-      }
-      for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
-        danceDesigner.s.dancers[j].updateMiddlePosition(danceDesigner.s.keyframes[keyframeIndex- 1],
-          danceDesigner.s.keyframes[keyframeIndex], danceDesigner.s.keyframes[keyframeIndex + 1]);
-      }
-    }
+    // if (t > danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 2]) {
+    //   // Adding a new keyframe at the end of the routine
+    //   danceDesigner.maxT = t;
+    //   for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
+    //     danceDesigner.s.dancers[j].addNewLastPosition(
+    //       danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 2], t);
+    //   }
+    // } else {
+    //   // Adding a new keyframe in the middle of the routine
+    //   var keyframeIndex = 0;
+    //   // Determine where the current time is in the keyframes[] array if it exists
+    //   for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
+    //     if (danceDesigner.s.keyframes[i] == t) {
+    //       keyframeIndex = i;
+    //     }
+    //   }
+    //   for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
+    //     danceDesigner.s.dancers[j].updateMiddlePosition(danceDesigner.s.keyframes[keyframeIndex- 1],
+    //       danceDesigner.s.keyframes[keyframeIndex], danceDesigner.s.keyframes[keyframeIndex + 1]);
+    //   }
+    // }
   }
   return;
 }
