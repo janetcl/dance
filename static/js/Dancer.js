@@ -1046,6 +1046,9 @@ var wavesurfer = WaveSurfer.create({
     ]
 });
 
+// Set default silent audio
+wavesurfer.load('/static/files/default.mp3');
+
 // Once the user loads a file in the fileinput, the file should be loaded into waveform
 document.getElementById("fileinput").addEventListener('change', function(e){
     var file = this.files[0];
@@ -1246,15 +1249,33 @@ function realTimeToKeyframeTime(realTime) {
   return Math.round(realTime * 4);
 }
 
+function currentTimeFormatted(currentTime) {
+  var minutes = Math.floor(currentTime / 60);
+  var seconds = (currentTime % 60);
+  var secondsString;
+  if (seconds < 10) {
+    secondsString = "0" + seconds;
+  } else {
+    secondsString = seconds.toString();
+  }
+  if (minutes == 0) {
+    return "00:" + secondsString;
+  } else if (minutes > 9) {
+    return minutes + ":" + secondsString;
+  } else return "0" + minutes + ":" + secondsString;
+}
+
 var currentTime = Math.round(wavesurfer.getCurrentTime());
 
 // Update controls and stats
 function update() {
   if (hasMusic) {
-    document.getElementById("Time").innerHTML = "Current Time: " + currentTime;
+    console.log(currentTimeFormatted(currentTime));
+    document.getElementById("Time").innerHTML = "Current Time: " + currentTimeFormatted(currentTime);
     play = wavesurfer.isPlaying();
   } else {
-    document.getElementById("Time").innerHTML = "Current Time: " + Math.round(keyframeTimeToRealTime(t));
+    document.getElementById("Time").innerHTML = "Current Time: " + currentTimeFormatted(Math.round(keyframeTimeToRealTime(t)));
+    console.log(currentTimeFormatted(Math.round(keyframeTimeToRealTime(t))));
   }
   document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes;
   keyframes = danceDesigner.s.keyframes.length;
@@ -1268,7 +1289,8 @@ for (let i = 0; i < buttons.length; i++) {
   buttons[i].addEventListener("click", onButtonClick, false);
 };
 var keyframes = 1;
-document.getElementById("Time").innerHTML = "Current Time: " + t;
+console.log(currentTimeFormatted(currentTime));
+document.getElementById("Time").innerHTML = "Current Time: " + currentTimeFormatted(t);
 document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes;
 var newPosThreeVector = null;
 
