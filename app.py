@@ -30,17 +30,15 @@ from oauthlib.oauth2 import WebApplicationClient
 import requests
 import json
 
-# Internal imports
-# from db import init_db_command
-# from user import User
-
 from flask_sqlalchemy import SQLAlchemy
 # Flask app setup
 app = Flask(__name__, template_folder='.')
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 
+# Toggle between these two to switch between local testing and Heroku
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/dancer'
 heroku = Heroku(app)
+
 db = SQLAlchemy(app)
 
 # Create our database model
@@ -49,7 +47,7 @@ class User(db.Model, UserMixin):
     id = db.Column(db.String(120), primary_key=True, unique=True)
     name = db.Column(db.String(120))
     email = db.Column(db.String(120))
-    profile_pic = db.Column(db.String(120), unique=True)
+    profile_pic = db.Column(db.String(), unique=True)
 
     def __init__(self, id, name, email, profile_pic):
         self.id = id
@@ -59,14 +57,6 @@ class User(db.Model, UserMixin):
 
     def __repr__(self):
         return '<E-mail %r>' % self.email
-
-# # SimpleLogin Information
-# CLIENT_ID = os.environ.get("CLIENT_ID")
-# CLIENT_SECRET = os.environ.get("CLIENT_SECRET")
-#
-# AUTHORIZATION_BASE_URL = "https://app.simplelogin.io/oauth2/authorize"
-# TOKEN_URL = "https://app.simplelogin.io/oauth2/token"
-# USERINFO_URL = "https://app.simplelogin.io/oauth2/userinfo"
 
 # Facebook Login
 FB_CLIENT_ID = os.environ.get("FB_CLIENT_ID")
@@ -95,20 +85,12 @@ os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-# # Naive database setup
-# try:
-#     init_db_command()
-# except sqlite3.OperationalError:
-#     # Assume it's already been created
-#     pass
-
 # OAuth 2 client setup
 client = WebApplicationClient(GOOGLE_CLIENT_ID)
 
 # Flask-Login helper to retrieve a user from our db
 @login_manager.user_loader
 def load_user(user_id):
-    # return User.get(user_id
     return db.session.query(User).filter(User.id == user_id)
 
 #-----------------------------------------------------------------------
@@ -128,8 +110,9 @@ def index():
     else:
         return render_template('index.html')
 
+# Toggle between these two to switch between local testing and Heroku
 # Your ngrok url, obtained after running "ngrok http 8000"
-# URL = "https://3b3e01a3.ngrok.io"
+# URL = "https://2d1855e0.ngrok.io"
 URL = "https://dancetigers.herokuapp.com"
 
 @app.route("/fb-login")
@@ -170,9 +153,6 @@ def fbCallback():
 
     # Create a user in your db with the information provided
     # by Facebook
-    # user = User(
-    #     id=unique_id, name=name, email=email, profile_pic=picture_url
-    # )
     id = unique_id
     profile_pic = picture_url
 
@@ -200,10 +180,6 @@ def get_google_provider_cfg():
 
 @app.route("/google-login")
 def googleLogin():
-    # google = requests_oauthlib.OAuth2Session(
-    #     GOOGLE_CLIENT_ID, redirect_uri=URL + "/google-callback", scope=GOOGLE_SCOPE
-    # )
-    # authorization_url, _ = google.authorization_url(GOOGLE_AUTHORIZATION_BASE_URL)
 
     # Find out what URL to hit for Google login
     google_provider_cfg = get_google_provider_cfg()
@@ -253,7 +229,6 @@ def googleCallback():
     uri, headers, body = client.add_token(userinfo_endpoint)
     userinfo_response = requests.get(uri, headers=headers, data=body)
 
-
     # You want to make sure their email is verified.
     # The user authenticated with Google, authorized your
     # app, and now you've verified their email through Google!
@@ -267,9 +242,6 @@ def googleCallback():
 
     # Create a user in your db with the information provided
     # by Google
-    # user = User(
-    #     id=unique_id, name=users_name, email=users_email, profile_pic=picture
-    # )
     id = unique_id
     name = users_name
     email = users_email
@@ -300,32 +272,6 @@ def googleCallback():
 def logout():
     logout_user()
     return redirect(url_for("index"))
-
-# @app.route("/login")
-# def login():
-#     simplelogin = requests_oauthlib.OAuth2Session(
-#         CLIENT_ID, redirect_uri="http://localhost:8000/callback"
-#     )
-#     authorization_url, _ = simplelogin.authorization_url(AUTHORIZATION_BASE_URL)
-#
-#     return redirect(authorization_url)
-#
-#
-# @app.route("/callback")
-# def callback():
-#     simplelogin = requests_oauthlib.OAuth2Session(CLIENT_ID)
-#     simplelogin.fetch_token(
-#         TOKEN_URL, client_secret=CLIENT_SECRET, authorization_response=request.url
-#     )
-#
-#     user_info = simplelogin.get(USERINFO_URL).json()
-#     return f"""
-#     User information: <br>
-#     Name: {user_info["name"]} <br>
-#     Email: {user_info["email"]} <br>
-#     Avatar <img src="{user_info.get('avatar_url')}"> <br>
-#     <a href="/">Home</a>
-#     """
 
 #-----------------------------------------------------------------------
 
