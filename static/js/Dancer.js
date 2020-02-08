@@ -65,19 +65,17 @@ class Dancer {
   }
 
   async updatePositions() {
-    console.log('before positions: ', this.positions);
-    console.log('keyframePositions: ', this.keyframePositions)
+    // console.log('before positions: ', this.positions);
+    // console.log('keyframePositions: ', this.keyframePositions)
     this.positions[0].x = this.keyframePositions[0].position.x;
     this.positions[0].y = this.keyframePositions[0].position.y;
     this.positions[0].z = this.keyframePositions[0].position.z;
     if (this.keyframePositions.length == 2) {
-      console.log("KF POSITION LENGTH IS 2");
+      // console.log("KF POSITION LENGTH IS 2");
       var firstTime = this.keyframePositions[0];
       var secondTime = this.keyframePositions[1];
       for (var i = 0; i < secondTime.time; i++) {
-        console.log("i: ", i);
         if (this.positions[i]) {
-          console.log("POSITION ALREADY EXISTS");
           this.positions[i].x = ((secondTime.position.x - firstTime.position.x) * i / (secondTime.time)) + firstTime.position.x;
           this.positions[i].y = ((secondTime.position.y - firstTime.position.y) * i / (secondTime.time)) + firstTime.position.y;
           this.positions[i].z = ((secondTime.position.z - firstTime.position.z) * i / (secondTime.time)) + firstTime.position.z;
@@ -101,21 +99,16 @@ class Dancer {
         // this.positions.push(newPos);
       }
     } else {
-      console.log("KF POSITION LENGTH IS NOT 2");
       for (var j = 0; j < this.keyframePositions.length - 1; j++) {
         var firstTime = this.keyframePositions[j];
         var secondTime = this.keyframePositions[j+1];
-        console.log("first time: ", firstTime.time);
-        console.log("second time: ", secondTime.time);
         var timeDiff = secondTime.time - firstTime.time;
         for (var i = 0; i < timeDiff; i++) {
           if (this.positions[firstTime.time + i]) {
-            console.log("position already exists", i + firstTime.time);
             this.positions[firstTime.time + i].x = ((secondTime.position.x - firstTime.position.x) * i / (timeDiff)) + firstTime.position.x;
             this.positions[firstTime.time + i].y = ((secondTime.position.y - firstTime.position.y) * i / (timeDiff)) + firstTime.position.y;
             this.positions[firstTime.time + i].z = ((secondTime.position.z - firstTime.position.z) * i / (timeDiff)) + firstTime.position.z;
           } else {
-            console.log("position did not already exist, ", i + firstTime.time);
             var newPos = new THREE.Vector3(
               ((secondTime.position.x - firstTime.position.x) * i / (timeDiff)) + firstTime.position.x,
               ((secondTime.position.y - firstTime.position.y) * i / (timeDiff)) + firstTime.position.y,
@@ -138,8 +131,8 @@ class Dancer {
         }
       }
     }
-    console.log('after positions: ', this.positions);
-    console.log("CURRENT TIME: ", t);
+    // console.log('after positions: ', this.positions);
+    // console.log("CURRENT TIME: ", t);
     return;
   }
   //
@@ -337,22 +330,23 @@ class Dancer {
   async clone() {
     var cloneDancer = new Dancer(this.name, this.mesh);
     cloneDancer.positions = await this.positions.slice(0);
+    cloneDancer.keyframePositions = await this.keyframePositions.slice(0);
     cloneDancer.potentialPos = this.potentialPose;
     return cloneDancer;
   }
 
-  addPositionsForNewDancer(maxTime, position) {
-    for (var i = 0; i <= maxTime; i++) {
-      if (this.positions[i]) {
-        this.positions[i].x = position.x;
-        this.positions[i].y = position.y;
-        this.positions[i].z = position.z;
-      } else {
-        this.positions.push(position);
-      }
-    }
-    return;
-  }
+  // addPositionsForNewDancer(maxTime, position) {
+  //   for (var i = 0; i <= maxTime; i++) {
+  //     if (this.positions[i]) {
+  //       this.positions[i].x = position.x;
+  //       this.positions[i].y = position.y;
+  //       this.positions[i].z = position.z;
+  //     } else {
+  //       this.positions.push(position);
+  //     }
+  //   }
+  //   return;
+  // }
 
   computePositions(keyframes) {
     if (keyframes.length == 1) {
@@ -361,8 +355,6 @@ class Dancer {
     for (var i = 0; i < keyframes.length - 1; i++) {
       var firstTime = keyframes[i];
       var secondTime = keyframes[i + 1];
-      console.log("FIRST TIME: ", firstTime);
-      console.log("SECOND TIME: ", secondTime);
       var timeDiff = secondTime - firstTime;
       for (var j = 0; j < timeDiff; j++) {
         this.positions[firstTime + j].x = ((this.positions[secondTime].x - this.positions[firstTime].x) * j / (timeDiff)) + this.positions[firstTime].x;
@@ -805,14 +797,11 @@ var danceDesigner = {
           (Math.abs(danceDesigner.s.dancers[i].positions[tempT].y - intersects[0].object.position.y) < 1) &&
           (Math.abs(danceDesigner.s.dancers[i].positions[tempT].z - intersects[0].object.position.z) < 1)) {
             danceDesigner.movingDancer = danceDesigner.s.dancers[i];
-            // console.log(danceDesigner.movingDancer);
           }
         }
         // Calculate the offset
         var intersects = danceDesigner.raycaster.intersectObject(danceDesigner.plane);
         danceDesigner.offset.copy(intersects[0].point).sub(danceDesigner.plane.position);
-      } else {
-        // console.log("on stage");
       }
     }
   },
@@ -841,7 +830,6 @@ var danceDesigner = {
       // Find the dancer based on the initial pose
       if (danceDesigner.movingDancer) {
         if (newPosThreeVector) {
-          //console.log("FIX THIS");
           // Clamp the position to within the boundaries of the stage
           if (danceDesigner.selection.position.x > danceDesigner.xMax) {
             newPosThreeVector.x = danceDesigner.xMax;
@@ -1187,7 +1175,6 @@ wavesurfer.toggleInteraction();
 
 function animate() {
   if (hasMusic) {
-    console.log('LINE 1158: has music');
     currentTime = Math.round(wavesurfer.getCurrentTime());
     if (play) {
       t = realTimeToKeyframeTime(wavesurfer.getCurrentTime());
@@ -1208,16 +1195,10 @@ function animate() {
       }
     }
   } else {
-    // console.log("DOES NOT HAVE MUSIC");
-    // console.log("T: ", t);
-    // console.log("danceDesigner.maxT: ", danceDesigner.maxT);
     if (play) {
-      // console.log("danceDesigner.maxT: ", danceDesigner.maxT);
-      // console.log("t: ", t);
       if (danceDesigner.maxT === 0 || t > danceDesigner.maxT) {
         play = false;
       }
-      // console.log(t);
       timeline.changeTimeMarkColor(t, false);
       timeline.updateTimeMark();
       for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
@@ -1400,7 +1381,6 @@ for (let i = 0; i < buttons.length; i++) {
   buttons[i].addEventListener("click", onButtonClick, false);
 };
 var keyframes = 1;
-console.log(currentTimeFormatted(currentTime));
 document.getElementById("Time").innerHTML = "Current Time: " + currentTimeFormatted(t);
 document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes;
 var newPosThreeVector = null;
@@ -1513,15 +1493,18 @@ async function onButtonClick(event) {
 
     var loader = new THREE.TextureLoader();
     var geometry = new THREE.BoxGeometry(1, 2, 1);
-    geometry.name = "Eunice" + newDancerNumber;
+    geometry.name = "Dancer" + newDancerNumber;
     var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: loader.load('static/files/janet.jpg')});
     var newMesh = new THREE.Mesh(geometry, material);
-    var newDancer = new Dancer("Eunice" + newDancerNumber, newMesh);
-    newDancer.updateColor(0xffc0cb);
+    var newDancer = new Dancer("Dancer" + newDancerNumber, newMesh);
+    // '#'+(Math.random()*0xFFFFFF<<0).toString(16);
+    newDancer.updateColor('#'+(Math.random()*0xFFFFFF<<0).toString(16));
     var posDefault = new THREE.Vector3(-15, 0, -20);
-    newDancer.addPotentialPos(posDefault);
-    newDancer.updateOnlyPosition();
-    newDancer.addPositionsForNewDancer(danceDesigner.maxT, posDefault);
+    // newDancer.addPotentialPos(posDefault);
+    newDancer.addInitPosition(posDefault);
+    newDancer.addKFPosition(0, posDefault);
+    newDancer.addKFPosition(t, posDefault);
+    newDancer.updatePositions();
     newDancer.mesh.position.x = posDefault.x;
     newDancer.mesh.position.y = posDefault.y;
     newDancer.mesh.position.z = posDefault.z;
@@ -1556,6 +1539,7 @@ async function onButtonClick(event) {
     for (var i = 0; i < oldState.dancers.length; i++) {
       const oldDancer = await oldState.dancers[i].clone();
       danceDesigner.s.dancers.push(oldDancer);
+      // danceDesigner.s.dancers[i].updatePositions();
       danceDesigner.s.dancers[i].computePositions(oldState.keyframes);
     }
     // danceDesigner.s.dancers = oldState.dancers;
@@ -1607,13 +1591,9 @@ async function onButtonClick(event) {
         // Cannot remove the first keyframe
         return;
       } else if (keyframeIndex == (danceDesigner.s.keyframes.length - 1)) {
-        danceDesigner.s.dancers[i].removeKeyFrame(t);
-        // danceDesigner.s.dancers[i].removeLastKeyframe(danceDesigner.s.keyframes[keyframeIndex - 1], danceDesigner.s.keyframes[keyframeIndex]);
         danceDesigner.maxT = danceDesigner.s.keyframes[keyframeIndex - 1];
-      } else {
-        danceDesigner.s.dancers[i].removeKeyFrame(t);
-        // danceDesigner.s.dancers[i].removeMiddleKeyframe(danceDesigner.s.keyframes[keyframeIndex - 1], danceDesigner.s.keyframes[keyframeIndex + 1]);
       }
+      danceDesigner.s.dancers[i].removeKeyFrame(t);
 
     }
 
