@@ -215,18 +215,38 @@ class Dancer {
   //   this.positions.push(newPos);
   // }
 
-  removeLastKeyframe(secondToLastT, lastKeyframeT) {
-    this.positions.length = secondToLastT + 1;
+  // removeLastKeyframe(secondToLastT, lastKeyframeT) {
+  //   this.positions.length = secondToLastT + 1;
+  // }
+
+  removeKeyFrame(time) {
+    // Filter existing positions to make sure each time has only one position
+    this.keyframePositions = this.keyframePositions.filter(function(position, index, arr){
+        return position.time !== time;
+    });
+    return;
   }
 
-  removeMiddleKeyframe(beforeT, afterT) {
-    var timeDiff = afterT - beforeT;
-    for (var i = 1; i < timeDiff; i++) {
-      this.positions[beforeT + i].x = ((this.positions[afterT].x - this.positions[beforeT].x) * i / (timeDiff)) + this.positions[beforeT].x;
-      this.positions[beforeT + i].y = ((this.positions[afterT].y - this.positions[beforeT].y) * i / (timeDiff)) + this.positions[beforeT].y;
-      this.positions[beforeT + i].z = ((this.positions[afterT].z - this.positions[beforeT].z) * i / (timeDiff)) + this.positions[beforeT].z;
+  updateKeyFrame(oldT, newT) {
+    var pos;
+    for (var i = 0; i < this.keyframePositions.length; i++) {
+        if (this.keyframePositions[i].time === oldT) {
+            pos = this.keyframePositions[i].position;
+        }
     }
+    this.removeKeyFrame(oldT);
+    this.addKFPosition(newT, pos);
+    return;
   }
+
+  // removeMiddleKeyframe(beforeT, afterT) {
+  //   var timeDiff = afterT - beforeT;
+  //   for (var i = 1; i < timeDiff; i++) {
+  //     this.positions[beforeT + i].x = ((this.positions[afterT].x - this.positions[beforeT].x) * i / (timeDiff)) + this.positions[beforeT].x;
+  //     this.positions[beforeT + i].y = ((this.positions[afterT].y - this.positions[beforeT].y) * i / (timeDiff)) + this.positions[beforeT].y;
+  //     this.positions[beforeT + i].z = ((this.positions[afterT].z - this.positions[beforeT].z) * i / (timeDiff)) + this.positions[beforeT].z;
+  //   }
+  // }
 
   extendLastPosition(secondToLastT, newLastKeyframeT) {
     var copyPosArray = this.positions.slice(this.positions.length - 1);
@@ -659,44 +679,45 @@ var danceDesigner = {
 
           // Adjust all of the dancers' positions appropriately.
           for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+            danceDesigner.s.dancers[i].updateKeyFrame(lastKeyframeT, t);
+            await danceDesigner.s.dancers[i].updatePositions();
             // Case where the keyframe moved was previously the last keyframe in the routine.
             if (lastKeyframeIndex == danceDesigner.s.keyframes.length - 1) {
               if (t > lastKeyframeT) {
                 danceDesigner.maxT = t;
-                await danceDesigner.s.dancers[i].extendLastPosition(danceDesigner.s.keyframes[lastKeyframeIndex - 1], t);
+                // await danceDesigner.s.dancers[i].extendLastPosition(danceDesigner.s.keyframes[lastKeyframeIndex - 1], t);
                 // danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 1] = t;
                 keyframeAdjust = "Move Last Extend Routine";
               } else {
                 // Determine where to move the old position
-                var beforeFrame = danceDesigner.s.keyframes[currentTimeLessIndex];
+                // var beforeFrame = danceDesigner.s.keyframes[currentTimeLessIndex];
                 // Case where old last position is moving between two other positions
                 if (t < secondToLastT) {
                   danceDesigner.maxT = secondToLastT;
-                  var afterFrame = danceDesigner.s.keyframes[currentTimeLessIndex + 1];
-                  await danceDesigner.s.dancers[i].moveLastPosition(t, danceDesigner.s.keyframes[lastKeyframeIndex - 1], beforeFrame, afterFrame);
+                  // var afterFrame = danceDesigner.s.keyframes[currentTimeLessIndex + 1];
+                  // await danceDesigner.s.dancers[i].moveLastPosition(t, danceDesigner.s.keyframes[lastKeyframeIndex - 1], beforeFrame, afterFrame);
                   keyframeAdjust = "Move Last New Order";
                 }
                 // Case where the last position is still the last posiition
                 else {
                   danceDesigner.maxT = t;
-                  await danceDesigner.s.dancers[i].moveLastPositionKeepOrder(t, beforeFrame, danceDesigner.s.keyframes[lastKeyframeIndex]);
+                  // await danceDesigner.s.dancers[i].moveLastPositionKeepOrder(t, beforeFrame, danceDesigner.s.keyframes[lastKeyframeIndex]);
                   keyframeAdjust = "Move Last Keep Order";
                 }
               }
             } else {
               // Case where the keyframe being moved was previously not the last keyframe in the routine.
-              var disruptedBeforeFrame = danceDesigner.s.keyframes[lastKeyframeIndex - 1];
-              var disruptedAfterFrame = danceDesigner.s.keyframes[lastKeyframeIndex + 1];
+              // var disruptedBeforeFrame = danceDesigner.s.keyframes[lastKeyframeIndex - 1];
+              // var disruptedAfterFrame = danceDesigner.s.keyframes[lastKeyframeIndex + 1];
               if (t > danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 1]) {
                 danceDesigner.maxT = t;
                 // Move the position to a new ending position in the routine
-                await danceDesigner.s.dancers[i].movePositionToNewEnd(lastKeyframeT, disruptedBeforeFrame, disruptedAfterFrame, t, danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 1]);
+                // await danceDesigner.s.dancers[i].movePositionToNewEnd(lastKeyframeT, disruptedBeforeFrame, disruptedAfterFrame, t, danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 1]);
                 keyframeAdjust = "Move Middle Position To New End";
               } else {
-                // var beforeFrame = danceDesigner.s.keyframes[currentTimeLessIndex];
-                var beforeFrame = danceDesigner.s.keyframes[lastKeyframeIndex - 1];
-                var afterFrame = danceDesigner.s.keyframes[lastKeyframeIndex + 1];
-                await danceDesigner.s.dancers[i].movePositionToNewMiddle(lastKeyframeT, disruptedBeforeFrame, disruptedAfterFrame, beforeFrame, t, afterFrame);
+                // var beforeFrame = danceDesigner.s.keyframes[lastKeyframeIndex - 1];
+                // var afterFrame = danceDesigner.s.keyframes[lastKeyframeIndex + 1];
+                // await danceDesigner.s.dancers[i].movePositionToNewMiddle(lastKeyframeT, disruptedBeforeFrame, disruptedAfterFrame, beforeFrame, t, afterFrame);
                 keyframeAdjust = "Move Middle Position To New Middle";
               }
             }
@@ -1586,10 +1607,12 @@ async function onButtonClick(event) {
         // Cannot remove the first keyframe
         return;
       } else if (keyframeIndex == (danceDesigner.s.keyframes.length - 1)) {
-        danceDesigner.s.dancers[i].removeLastKeyframe(danceDesigner.s.keyframes[keyframeIndex - 1], danceDesigner.s.keyframes[keyframeIndex]);
+        danceDesigner.s.dancers[i].removeKeyFrame(t);
+        // danceDesigner.s.dancers[i].removeLastKeyframe(danceDesigner.s.keyframes[keyframeIndex - 1], danceDesigner.s.keyframes[keyframeIndex]);
         danceDesigner.maxT = danceDesigner.s.keyframes[keyframeIndex - 1];
       } else {
-        danceDesigner.s.dancers[i].removeMiddleKeyframe(danceDesigner.s.keyframes[keyframeIndex - 1], danceDesigner.s.keyframes[keyframeIndex + 1]);
+        danceDesigner.s.dancers[i].removeKeyFrame(t);
+        // danceDesigner.s.dancers[i].removeMiddleKeyframe(danceDesigner.s.keyframes[keyframeIndex - 1], danceDesigner.s.keyframes[keyframeIndex + 1]);
       }
 
     }
