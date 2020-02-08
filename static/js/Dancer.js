@@ -64,17 +64,20 @@ class Dancer {
     this.keyframePositions.sort(function(a, b) {return a.time - b.time});
   }
 
-  updatePositions() {
-    console.log('positions: ', this.positions);
+  async updatePositions() {
+    console.log('before positions: ', this.positions);
     console.log('keyframePositions: ', this.keyframePositions)
     this.positions[0].x = this.keyframePositions[0].position.x;
     this.positions[0].y = this.keyframePositions[0].position.y;
     this.positions[0].z = this.keyframePositions[0].position.z;
-    for (var j = 0; j < this.keyframePositions.length - 1; j++) {
-      var firstTime = this.keyframePositions[j];
-      var secondTime = this.keyframePositions[j+1];
-      for (var i = firstTime; i < secondTime; i++) {
+    if (this.keyframePositions.length == 2) {
+      console.log("KF POSITION LENGTH IS 2");
+      var firstTime = this.keyframePositions[0];
+      var secondTime = this.keyframePositions[1];
+      for (var i = 0; i < secondTime.time; i++) {
+        console.log("i: ", i);
         if (this.positions[i]) {
+          console.log("POSITION ALREADY EXISTS");
           this.positions[i].x = ((secondTime.position.x - firstTime.position.x) * i / (secondTime.time)) + firstTime.position.x;
           this.positions[i].y = ((secondTime.position.y - firstTime.position.y) * i / (secondTime.time)) + firstTime.position.y;
           this.positions[i].z = ((secondTime.position.z - firstTime.position.z) * i / (secondTime.time)) + firstTime.position.z;
@@ -84,23 +87,57 @@ class Dancer {
             ((secondTime.position.y - firstTime.position.y) * i / (secondTime.time)) + firstTime.position.y,
             ((secondTime.position.z - firstTime.position.z) * i / (secondTime.time)) + firstTime.position.z
           );
-          this.positions.push(newPos);
+          this.positions[i] = newPos;
+          // this.positions.push(newPos);
         }
       }
-      if (j == this.keyframePositions.length - 2) {
-        if (this.positions[secondTime.time]) {
-          this.positions[secondTime.time].x = secondTime.position.x;
-          this.positions[secondTime.time].y = secondTime.position.y;
-          this.positions[secondTime.time].z = secondTime.position.z;
-        } else {
-          var newPos = new THREE.Vector3(secondTime.position.x, secondTime.position.y, secondTime.position.z);
-          this.positions.push(newPos);
+      if (this.positions[secondTime.time]) {
+        this.positions[secondTime.time].x = secondTime.position.x;
+        this.positions[secondTime.time].y = secondTime.position.y;
+        this.positions[secondTime.time].z = secondTime.position.z;
+      } else {
+        var newPos = new THREE.Vector3(secondTime.position.x, secondTime.position.y, secondTime.position.z);
+        this.positions[secondTime.time] = newPos;
+        // this.positions.push(newPos);
+      }
+    } else {
+      console.log("KF POSITION LENGTH IS NOT 2");
+      for (var j = 0; j < this.keyframePositions.length - 1; j++) {
+        var firstTime = this.keyframePositions[j];
+        var secondTime = this.keyframePositions[j+1];
+        for (var i = firstTime; i < secondTime.time; i++) {
+          if (this.positions[i]) {
+            this.positions[i].x = ((secondTime.position.x - firstTime.position.x) * i / (secondTime.time)) + firstTime.position.x;
+            this.positions[i].y = ((secondTime.position.y - firstTime.position.y) * i / (secondTime.time)) + firstTime.position.y;
+            this.positions[i].z = ((secondTime.position.z - firstTime.position.z) * i / (secondTime.time)) + firstTime.position.z;
+          } else {
+            var newPos = new THREE.Vector3(
+              ((secondTime.position.x - firstTime.position.x) * i / (secondTime.time)) + firstTime.position.x,
+              ((secondTime.position.y - firstTime.position.y) * i / (secondTime.time)) + firstTime.position.y,
+              ((secondTime.position.z - firstTime.position.z) * i / (secondTime.time)) + firstTime.position.z
+            );
+            this.positions[i] = newPos;
+            // this.positions.push(newPos);
+          }
+        }
+        if (j == this.keyframePositions.length - 2) {
+          if (this.positions[secondTime.time]) {
+            this.positions[secondTime.time].x = secondTime.position.x;
+            this.positions[secondTime.time].y = secondTime.position.y;
+            this.positions[secondTime.time].z = secondTime.position.z;
+          } else {
+            var newPos = new THREE.Vector3(secondTime.position.x, secondTime.position.y, secondTime.position.z);
+            this.positions[secondTime.time] = newPos;
+            // this.positions.push(newPos);
+          }
         }
       }
     }
+    console.log('after positions: ', this.positions);
+    console.log("CURRENT TIME: ", t);
     return;
   }
-  // 
+  //
   // // Update the position when there is only one keyframe at t = 0
   // async updateOnlyPosition() {
   //   this.positions[0] = await this.getPotentialPose();
@@ -407,7 +444,7 @@ var danceDesigner = {
     janet.addPotentialPos(j1);
     janet.addInitPosition(j1);
     janet.addKFPosition(0, j1);
-    console.log(janet.keyframePositions);
+    console.log("INITIAL JANET positions: ", janet.keyframePositions);
     janet.updatePositions();
     // janet.updateOnlyPosition();
     janet.mesh.position.x = j1.x;
@@ -795,7 +832,7 @@ var danceDesigner = {
             danceDesigner.selection.position.z = danceDesigner.zMin;
           }
           var newPos = new THREE.Vector3(newPosThreeVector.x, newPosThreeVector.y, newPosThreeVector.z);
-          danceDesigner.movingDancer.addPotentialPos(newPos);
+          // danceDesigner.movingDancer.addPotentialPos(newPos);
           // set the new position
           danceDesigner.movingDancer.positions[t] = newPos;
         }
@@ -823,9 +860,9 @@ var danceDesigner = {
       addToUndoBuffer();
       justHitUndo = false;
     }
-    for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-      danceDesigner.s.dancers[i].potentialPose = null;
-    }
+    // for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+    //   danceDesigner.s.dancers[i].potentialPose = null;
+    // }
     danceDesigner.movingDancer = null;
     // Enable the controls
     danceDesigner.controls.enabled = true;
@@ -1124,6 +1161,7 @@ wavesurfer.toggleInteraction();
 
 function animate() {
   if (hasMusic) {
+    console.log('LINE 1158: has music');
     currentTime = Math.round(wavesurfer.getCurrentTime());
     if (play) {
       t = realTimeToKeyframeTime(wavesurfer.getCurrentTime());
@@ -1132,7 +1170,8 @@ function animate() {
     }
     var closestT = Math.round(t);
     if (closestT > danceDesigner.maxT) {
-      closestT = danceDesigner.maxT - 1;
+      closestT = danceDesigner.maxT;
+      // closestT = danceDesigner.maxT - 1;
     }
     for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
       var d = danceDesigner.s.dancers[i];
@@ -1143,6 +1182,9 @@ function animate() {
       }
     }
   } else {
+    console.log("DOES NOT HAVE MUSIC");
+    console.log("T: ", t);
+    console.log("danceDesigner.maxT: ", danceDesigner.maxT);
     if (play) {
       // console.log("danceDesigner.maxT: ", danceDesigner.maxT);
       // console.log("t: ", t);
@@ -1315,12 +1357,10 @@ var currentTime = Math.round(wavesurfer.getCurrentTime());
 // Update controls and stats
 function update() {
   if (hasMusic) {
-    console.log(currentTimeFormatted(currentTime));
     document.getElementById("Time").innerHTML = "Current Time: " + currentTimeFormatted(currentTime);
     play = wavesurfer.isPlaying();
   } else {
     document.getElementById("Time").innerHTML = "Current Time: " + currentTimeFormatted(Math.round(keyframeTimeToRealTime(t)));
-    console.log(currentTimeFormatted(Math.round(keyframeTimeToRealTime(t))));
   }
   document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes;
   keyframes = danceDesigner.s.keyframes.length;
@@ -1347,7 +1387,7 @@ async function addNewKeyFrame(t) {
     var dancerMesh = dancer.mesh;
     var newPos = new THREE.Vector3(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z);
     dancer.addKFPosition(t, newPos);
-    dancer.updatePositions();
+    await dancer.updatePositions();
     // if (dancer.potentialPose == null) {
     //   var newPos = new THREE.Vector3(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z);
     //   danceDesigner.s.dancers[i].addPotentialPos(newPos);
@@ -1393,6 +1433,7 @@ async function addNewKeyFrame(t) {
     danceDesigner.s.addKeyFrame(t);
     timeline.addTimeMark(t);
     timeline.changeTimeMarkColor(t, true);
+    danceDesigner.maxT = t;
     // if (t > danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 2]) {
     //   // Adding a new keyframe at the end of the routine
     //   danceDesigner.maxT = t;

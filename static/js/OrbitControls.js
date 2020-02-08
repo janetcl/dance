@@ -464,10 +464,6 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 		rotateStart.set( event.clientX, event.clientY );
 
-		console.log("event.clientX ", event.clientX);
-
-		console.log("event.clientY", event.clientY);
-
 	}
 
 	function handleMouseDownDolly( event ) {
@@ -754,8 +750,6 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 	function onMouseDown( event ) {
 
-		console.log(scope);
-
 		if ( scope.enabled === false ) return;
 
 		// Prevent the browser from scrolling.
@@ -781,8 +775,6 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 							handleMouseDownPan( event );
 
-							console.log("HANDLE MOUSE DOWN PAN ", event);
-
 							state = STATE.PAN;
 
 						} else {
@@ -790,8 +782,6 @@ THREE.OrbitControls = function ( object, domElement ) {
 							if ( scope.enableRotate === false ) return;
 
 							handleMouseDownRotate( event );
-
-							console.log("HANDLE MOUSE DOWN ROTATE ", event);
 
 							state = STATE.ROTATE;
 
@@ -807,8 +797,6 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 							handleMouseDownRotate( event );
 
-							console.log("HANDLE MOUSE DOWN ROTATE ", event);
-
 							state = STATE.ROTATE;
 
 						} else {
@@ -816,8 +804,6 @@ THREE.OrbitControls = function ( object, domElement ) {
 							if ( scope.enablePan === false ) return;
 
 							handleMouseDownPan( event );
-
-							console.log("HANDLE MOUSE DOWN PAN ", event);
 
 							state = STATE.PAN;
 
@@ -844,8 +830,6 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 						handleMouseDownDolly( event );
 
-						console.log("HANDLE MOUSE DOWN DOLLY ", event);
-
 						state = STATE.DOLLY;
 
 						break;
@@ -869,8 +853,6 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 						handleMouseDownRotate( event );
 
-						console.log("HANDLE MOUSE DOWN ROTATE ", event);
-
 						state = STATE.ROTATE;
 
 						break;
@@ -880,8 +862,6 @@ THREE.OrbitControls = function ( object, domElement ) {
 						if ( scope.enablePan === false ) return;
 
 						handleMouseDownPan( event );
-
-						console.log("HANDLE MOUSE DOWN PAN ", event);
 
 						state = STATE.PAN;
 
@@ -909,8 +889,6 @@ THREE.OrbitControls = function ( object, domElement ) {
 	}
 
 	function onMouseMove( event ) {
-
-		console.log("scope: ", scope.enabled);
 
 		if ( scope.enabled === false ) return;
 
@@ -948,7 +926,7 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 	function onMouseUp( event ) {
 
-		console.log(scope.enabled);
+		// console.log(scope.enabled);
 
 		if ( scope.enabled === false ) return;
 
@@ -988,7 +966,7 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 	function onTouchStart( event ) {
 
-		console.log(scope);
+		// console.log(scope);
 
 		if ( scope.enabled === false ) return;
 
@@ -1076,7 +1054,7 @@ THREE.OrbitControls = function ( object, domElement ) {
 
 	function onTouchMove( event ) {
 
-		console.log(scope);
+		// console.log(scope);
 
 		if ( scope.enabled === false ) return;
 
