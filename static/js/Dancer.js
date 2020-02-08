@@ -105,19 +105,22 @@ class Dancer {
       for (var j = 0; j < this.keyframePositions.length - 1; j++) {
         var firstTime = this.keyframePositions[j];
         var secondTime = this.keyframePositions[j+1];
-        for (var i = firstTime; i < secondTime.time; i++) {
-          if (this.positions[i]) {
-            this.positions[i].x = ((secondTime.position.x - firstTime.position.x) * i / (secondTime.time)) + firstTime.position.x;
-            this.positions[i].y = ((secondTime.position.y - firstTime.position.y) * i / (secondTime.time)) + firstTime.position.y;
-            this.positions[i].z = ((secondTime.position.z - firstTime.position.z) * i / (secondTime.time)) + firstTime.position.z;
+        console.log("first time: ", firstTime.time);
+        console.log("second time: ", secondTime.time);
+        var timeDiff = secondTime - firstTime;
+        for (var i = 0; i < timeDiff; i++) {
+          if (this.positions[firstTime.time]) {
+            this.positions[firstTime.time + i].x = ((secondTime.position.x - firstTime.position.x) * i / (timeDiff)) + firstTime.position.x;
+            this.positions[firstTime.time + i].y = ((secondTime.position.y - firstTime.position.y) * i / (timeDiff)) + firstTime.position.y;
+            this.positions[firstTime.time + i].z = ((secondTime.position.z - firstTime.position.z) * i / (timeDiff)) + firstTime.position.z;
           } else {
             var newPos = new THREE.Vector3(
-              ((secondTime.position.x - firstTime.position.x) * i / (secondTime.time)) + firstTime.position.x,
-              ((secondTime.position.y - firstTime.position.y) * i / (secondTime.time)) + firstTime.position.y,
-              ((secondTime.position.z - firstTime.position.z) * i / (secondTime.time)) + firstTime.position.z
+              ((secondTime.position.x - firstTime.position.x) * i / (timeDiff)) + firstTime.position.x,
+              ((secondTime.position.y - firstTime.position.y) * i / (timeDiff)) + firstTime.position.y,
+              ((secondTime.position.z - firstTime.position.z) * i / (timeDiff)) + firstTime.position.z
             );
-            this.positions[i] = newPos;
-            // this.positions.push(newPos);
+            // this.positions[firstTime.time + i] = newPos;
+            this.positions.push(newPos);
           }
         }
         if (j == this.keyframePositions.length - 2) {
@@ -1182,9 +1185,9 @@ function animate() {
       }
     }
   } else {
-    console.log("DOES NOT HAVE MUSIC");
-    console.log("T: ", t);
-    console.log("danceDesigner.maxT: ", danceDesigner.maxT);
+    // console.log("DOES NOT HAVE MUSIC");
+    // console.log("T: ", t);
+    // console.log("danceDesigner.maxT: ", danceDesigner.maxT);
     if (play) {
       // console.log("danceDesigner.maxT: ", danceDesigner.maxT);
       // console.log("t: ", t);
