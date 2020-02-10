@@ -11,10 +11,10 @@ import requests_oauthlib
 from requests_oauthlib.compliance_fixes import facebook_compliance_fix
 
 from sys import argv
-# from db import Database
 from flask import Flask, request, make_response, redirect, url_for
-from flask import render_template
+from flask import render_template, jsonify
 from flask_heroku import Heroku
+from sqlalchemy.dialects import postgresql
 
 # From https://realpython.com/flask-google-login/
 import sqlite3
@@ -55,8 +55,61 @@ class User(db.Model, UserMixin):
         self.email = email
         self.profile_pic = profile_pic
 
+    @property
+    def is_authenticated(self):
+        return True
+    @property
+    def is_active(self):
+        return True
+    # @property
+    # def get_id(self):
+    #     return self.id
+    # @property
+    # def get_name(self):
+    #     return self.name
+
     def __repr__(self):
         return '<E-mail %r>' % self.email
+
+# Create our dance database model
+class Dance(db.Model):
+    __tablename__ = "dances"
+    id = db.Column(db.Integer(), primary_key=True, unique=True)
+    user_id = db.Column(db.String(120), primary_key=True)
+    user_email = db.Column(db.String(120))
+    dance_name = db.Column(db.String(120))
+    dancers = db.Column(db.PickleType())
+    keyframes = db.Column(db.PickleType())
+    number_of_keyframes = db.Column(db.Integer)
+    audio = db.Column(db.PickleType())
+
+    def __init__(self, id, user_id, user_email, dance_name, dancers, keyframes, number_of_keyframes, audio):
+        self.id = id
+        self.user_id = user_id
+        self.user_email = user_email
+        self.dance_name = dance_name
+        self.dancers = dancers
+        self.keyframes = keyframes
+        self.number_of_keyframes = number_of_keyframes
+        self.audio = audio
+
+    def __repr__(self):
+        return '<Dancers %r>' % self.dancers
+
+# INSERT INTO dances VALUES (1, '1', 'myeh@princeton.edu', '{"dancers": [{"dancer": "Janet"}, {"dancer": "Matthew"}]}', '{"keyframes": [{"time": 0, "position": "(2, 3, 4)"}, {"time": 1, "position": "(3, 2, 1)"}]}', 2, '{}');
+
+# userId:
+# userEmail:
+# id: id (not from JS)
+# dancers: [{dancer: {positions: [], keyframes: [], etc. }, dancer: { }, dancer: { }}]
+# keyframes: [{}]
+# number_of_keyframes:
+# audio: []
+
+# // do not store undo buffer
+# // do not store current time
+# // need to set max time when loading in a dance - no need to save to database
+
 
 # Facebook Login
 FB_CLIENT_ID = os.environ.get("FB_CLIENT_ID")
@@ -266,6 +319,38 @@ def googleCallback():
         name=users_name,
         email=users_email,
         avatar_url=picture)
+
+@app.route("/saveDance", methods = ["POST"])
+# @login_required
+def save_dance():
+
+    # user = User(id, name, email, profile_pic)
+    #
+    # print("\n")
+    # print("USER: ", user)
+    # print("\n")
+    id = db.session.query(Dance).count() - 1
+    user_id = request.json['user_id']
+    user_email = request.json['user_email']
+    dance_name = request.json['dance_name']
+    dancers = request.json['dancers']
+    keyframes = request.json['keyframes']
+    number_of_keyframes = request.json['number_of_keyframes']
+    audio = request.json['audio']
+
+    dance = Dance(id, user_id, user_email, dance_name, dancers, keyframes, number_of_keyframes, audio)
+
+    print('\ndance: ', dance)
+
+    db.session.add(dance)
+    db.session.commit()
+
+    # # Doesn't exist? Add it to the database.
+    # if not db.session.query(Dance).filter(Dance.id == id).count():
+    #     db.session.add(user)
+    #     db.session.commit()
+
+    return jsonify({"success": "Nicely done."})
 
 @app.route("/logout")
 @login_required

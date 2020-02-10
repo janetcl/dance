@@ -21,7 +21,7 @@ class Dancer {
     this.keyframePositions = []; // [ { time: position } ] eg: [ {0: (0,0,0)}, { 20: (0, 1, 10)}]
     this.positions = []; // all positions where the index is the time
     this.name = name;
-    this.potentialPose = null;
+    // this.potentialPose = null;
     this.mesh = mesh;
     this.mesh.position.x = 0;
     this.mesh.position.y = 0;
@@ -40,17 +40,17 @@ class Dancer {
     this.positions = [];
   }
 
-  addPotentialPos(pos) {
-    this.potentialPose = pos;
-  }
+  // addPotentialPos(pos) {
+  //   this.potentialPose = pos;
+  // }
 
   addInitPosition(pos) {
     this.positions.push(pos);
   }
 
-  async getPotentialPose() {
-    return this.potentialPose;
-  }
+  // async getPotentialPose() {
+  //   return this.potentialPose;
+  // }
 
   addKFPosition(time, pos) {
     // Filter existing positions to make sure each time has only one position
@@ -160,7 +160,7 @@ class Dancer {
     var cloneDancer = new Dancer(this.name, this.mesh);
     cloneDancer.positions = await this.positions.slice(0);
     cloneDancer.keyframePositions = await this.keyframePositions.slice(0);
-    cloneDancer.potentialPos = this.potentialPose;
+    // cloneDancer.potentialPos = this.potentialPose;
     return cloneDancer;
   }
 
@@ -274,7 +274,7 @@ var danceDesigner = {
     var janet = new Dancer("Janet", janetMesh);
     janet.updateColor(0x00c969);
     var j1 = new THREE.Vector3(-2, 0, -5);
-    janet.addPotentialPos(j1);
+    // janet.addPotentialPos(j1);
     janet.addInitPosition(j1);
     janet.addKFPosition(0, j1);
     console.log("INITIAL JANET positions: ", janet.keyframePositions);
@@ -292,7 +292,7 @@ var danceDesigner = {
     var phillip = new Dancer("Phillip", phillipMesh);
     phillip.updateColor(0xf8f833);
     var p1 = new THREE.Vector3(2, 0, -3);
-    phillip.addPotentialPos(p1);
+    // phillip.addPotentialPos(p1);
     phillip.addInitPosition(p1);
     phillip.addKFPosition(0, p1);
     phillip.updatePositions();
@@ -945,10 +945,11 @@ var wavesurfer = WaveSurfer.create({
 
 // Set default silent audio
 wavesurfer.load('/static/files/default.mp3');
+var file = '/static/files/default.mp3';
 
 // Once the user loads a file in the fileinput, the file should be loaded into waveform
 document.getElementById("fileinput").addEventListener('change', function(e){
-    var file = this.files[0];
+    file = this.files[0];
 
     if (file) {
         hasMusic = true;
@@ -1273,22 +1274,61 @@ var newDancerNumber = 1;
 async function onButtonClick(event) {
   if (event.target.id == "saveDance") {
     // TODO: Implement a method here that will save the danceDesigner object
-    const data = { danceDesigner: danceDesigner };
-  //
-  // fetch('', {
-  //   method: 'POST', // or 'PUT'
-  //   headers: {
-  //     'Content-Type': 'application/json',
-  //   },
-  //   body: JSON.stringify(data),
-  // })
-  // .then((response) => response.json())
-  // .then((data) => {
-  //   console.log('Success:', data);
-  // })
-  // .catch((error) => {
-  //   console.error('Error:', error);
-  // });
+    // var theseDancers = {
+    //
+    // }
+    // this.keyframePositions = []; // [ { time: position } ] eg: [ {0: (0,0,0)}, { 20: (0, 1, 10)}]
+    // this.positions = []; // all positions where the index is the time
+    // this.name = name;
+    // this.mesh = mesh;
+    // this.mesh.position.x = 0;
+    // this.mesh.position.y = 0;
+    // this.mesh.position.z = 0;
+
+    // theseDancers = JSON.stringify(danceDesigner.s.dancers);
+    // theseKeyframes = JSON.stringify(danceDesigner.s.keyFrames);
+    // audio = JSON.stringify(file);
+    // console.log("theseDancers: ", theseDancers);
+    // console.log("theseKeyframes: ", theseKeyframes);
+    // console.log("audio: ", audio);
+    // const data = {
+    //   "dancers": theseDancers,
+    //   "keyframes": theseKeyframes,
+    //   "numberOfKeyframes": danceDesigner.s.keyFrames.length,
+    //   "audioFile": audio
+    //  };
+
+    var theseDancers = JSON.stringify(danceDesigner.s.dancers);
+    var theseKeyframes = JSON.stringify(danceDesigner.s.keyframes);
+    var audio = JSON.stringify(file);
+
+     const data = {
+       "user_id": "329039",
+       "user_email": "JanetLee@gmail.com",
+       "dance_name": "Six14 Trailer Video",
+       "dancers": theseDancers,
+       "keyframes": theseKeyframes,
+       "number_of_keyframes": danceDesigner.s.keyframes.length,
+       "audio": audio,
+      };
+
+      console.log(data);
+
+  fetch('/saveDance', {
+    method: 'POST', // or 'PUT'
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
+  .then((response) => response.json())
+  .then((data) => {
+    console.log('Success:', data);
+    return;
+  })
+  .catch((error) => {
+    console.error('Error:', error);
+  });
 
   } else if (event.target.id === "addDancer") {
 
@@ -1457,6 +1497,36 @@ async function onButtonClick(event) {
 //   }
 // }
 
+$(document).ready(function() {
+
+	$('form').on('submit', function(event) {
+
+		$.ajax({
+			data : {
+				name : $('#nameInput').val(),
+				email : $('#emailInput').val()
+			},
+			type : 'POST',
+			url : '/process'
+		})
+		.done(function(data) {
+
+			if (data.error) {
+				$('#errorAlert').text(data.error).show();
+				$('#successAlert').hide();
+			}
+			else {
+				$('#successAlert').text(data.name).show();
+				$('#errorAlert').hide();
+			}
+
+		});
+
+		event.preventDefault();
+
+	});
+
+});
 
 // Initialize lesson on page load
 function initializeLesson() {
