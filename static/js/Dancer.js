@@ -1211,8 +1211,6 @@ async function onButtonClick(event) {
     var audio = JSON.stringify(file);
 
      const data = {
-       "user_id": "329039",
-       "user_email": "JanetLee@gmail.com",
        "dance_name": "Six14 Trailer Video",
        "dancers": theseDancers,
        "keyframes": theseKeyframes,

@@ -14,7 +14,6 @@ from sys import argv
 from flask import Flask, request, make_response, redirect, url_for
 from flask import render_template, jsonify
 from flask_heroku import Heroku
-from sqlalchemy.dialects import postgresql
 
 # From https://realpython.com/flask-google-login/
 import sqlite3
@@ -54,19 +53,6 @@ class User(db.Model, UserMixin):
         self.name = name
         self.email = email
         self.profile_pic = profile_pic
-
-    @property
-    def is_authenticated(self):
-        return True
-    @property
-    def is_active(self):
-        return True
-    # @property
-    # def get_id(self):
-    #     return self.id
-    # @property
-    # def get_name(self):
-    #     return self.name
 
     def __repr__(self):
         return '<E-mail %r>' % self.email
@@ -144,7 +130,7 @@ client = WebApplicationClient(GOOGLE_CLIENT_ID)
 # Flask-Login helper to retrieve a user from our db
 @login_manager.user_loader
 def load_user(user_id):
-    return db.session.query(User).filter(User.id == user_id)
+    return db.session.query(User).get(user_id)
 
 #-----------------------------------------------------------------------
 
@@ -321,17 +307,20 @@ def googleCallback():
         avatar_url=picture)
 
 @app.route("/saveDance", methods = ["POST"])
-# @login_required
+@login_required
 def save_dance():
 
-    # user = User(id, name, email, profile_pic)
-    #
+    # print(current_user)
     # print("\n")
-    # print("USER: ", user)
+    # print(current_user.id)
     # print("\n")
+    # print(current_user.name)
+    # print("\n")
+    # print(current_user.email)
+
     id = db.session.query(Dance).count()
-    user_id = request.json['user_id']
-    user_email = request.json['user_email']
+    user_id = current_user.id
+    user_email = current_user.email
     dance_name = request.json['dance_name']
     dancers = request.json['dancers']
     keyframes = request.json['keyframes']
@@ -340,7 +329,7 @@ def save_dance():
 
     dance = Dance(id, user_id, user_email, dance_name, dancers, keyframes, number_of_keyframes, audio)
 
-    print('\ndance: ', dance)
+    # print('\ndance: ', dance)
 
     db.session.add(dance)
     db.session.commit()
