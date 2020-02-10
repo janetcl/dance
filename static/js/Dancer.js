@@ -9,19 +9,12 @@ class Position {
   }
 }
 
-// make an ajax request to the python server
-// when the user clicks a button for example (save)
-// express the data as json
-
-// use https with heroku
-
 class Dancer {
 
   constructor(name, mesh) {
     this.keyframePositions = []; // [ { time: position } ] eg: [ {0: (0,0,0)}, { 20: (0, 1, 10)}]
     this.positions = []; // all positions where the index is the time
     this.name = name;
-    // this.potentialPose = null;
     this.mesh = mesh;
     this.mesh.position.x = 0;
     this.mesh.position.y = 0;
@@ -40,17 +33,9 @@ class Dancer {
     this.positions = [];
   }
 
-  // addPotentialPos(pos) {
-  //   this.potentialPose = pos;
-  // }
-
   addInitPosition(pos) {
     this.positions.push(pos);
   }
-
-  // async getPotentialPose() {
-  //   return this.potentialPose;
-  // }
 
   addKFPosition(time, pos) {
     // Filter existing positions to make sure each time has only one position
@@ -58,20 +43,16 @@ class Dancer {
         return position.time !== time;
     });
     var keyframePosition = {time: time, position: pos}
-    // var keyframePosition = {[time]: pos};
     this.keyframePositions.push(keyframePosition);
     // Sort all positions in time order
     this.keyframePositions.sort(function(a, b) {return a.time - b.time});
   }
 
   async updatePositions() {
-    // console.log('before positions: ', this.positions);
-    // console.log('keyframePositions: ', this.keyframePositions)
     this.positions[0].x = this.keyframePositions[0].position.x;
     this.positions[0].y = this.keyframePositions[0].position.y;
     this.positions[0].z = this.keyframePositions[0].position.z;
     if (this.keyframePositions.length == 2) {
-      // console.log("KF POSITION LENGTH IS 2");
       var firstTime = this.keyframePositions[0];
       var secondTime = this.keyframePositions[1];
       for (var i = 0; i < secondTime.time; i++) {
@@ -86,7 +67,6 @@ class Dancer {
             ((secondTime.position.z - firstTime.position.z) * i / (secondTime.time)) + firstTime.position.z
           );
           this.positions[i] = newPos;
-          // this.positions.push(newPos);
         }
       }
       if (this.positions[secondTime.time]) {
@@ -96,7 +76,6 @@ class Dancer {
       } else {
         var newPos = new THREE.Vector3(secondTime.position.x, secondTime.position.y, secondTime.position.z);
         this.positions[secondTime.time] = newPos;
-        // this.positions.push(newPos);
       }
     } else {
       for (var j = 0; j < this.keyframePositions.length - 1; j++) {
@@ -115,7 +94,6 @@ class Dancer {
               ((secondTime.position.z - firstTime.position.z) * i / (timeDiff)) + firstTime.position.z
             );
             this.positions[firstTime.time + i] = newPos;
-            // this.positions.push(newPos);
           }
         }
         if (j == this.keyframePositions.length - 2) {
@@ -126,13 +104,10 @@ class Dancer {
           } else {
             var newPos = new THREE.Vector3(secondTime.position.x, secondTime.position.y, secondTime.position.z);
             this.positions[secondTime.time] = newPos;
-            // this.positions.push(newPos);
           }
         }
       }
     }
-    // console.log('after positions: ', this.positions);
-    // console.log("CURRENT TIME: ", t);
     return;
   }
 
@@ -160,7 +135,6 @@ class Dancer {
     var cloneDancer = new Dancer(this.name, this.mesh);
     cloneDancer.positions = await this.positions.slice(0);
     cloneDancer.keyframePositions = await this.keyframePositions.slice(0);
-    // cloneDancer.potentialPos = this.potentialPose;
     return cloneDancer;
   }
 
@@ -274,12 +248,10 @@ var danceDesigner = {
     var janet = new Dancer("Janet", janetMesh);
     janet.updateColor(0x00c969);
     var j1 = new THREE.Vector3(-2, 0, -5);
-    // janet.addPotentialPos(j1);
     janet.addInitPosition(j1);
     janet.addKFPosition(0, j1);
     console.log("INITIAL JANET positions: ", janet.keyframePositions);
     janet.updatePositions();
-    // janet.updateOnlyPosition();
     janet.mesh.position.x = j1.x;
     janet.mesh.position.y = j1.y;
     janet.mesh.position.z = j1.z;
@@ -292,11 +264,9 @@ var danceDesigner = {
     var phillip = new Dancer("Phillip", phillipMesh);
     phillip.updateColor(0xf8f833);
     var p1 = new THREE.Vector3(2, 0, -3);
-    // phillip.addPotentialPos(p1);
     phillip.addInitPosition(p1);
     phillip.addKFPosition(0, p1);
     phillip.updatePositions();
-    // phillip.updateOnlyPosition();
     phillip.mesh.position.x = p1.x;
     phillip.mesh.position.y = p1.y;
     phillip.mesh.position.z = p1.z;
@@ -647,8 +617,7 @@ var danceDesigner = {
             danceDesigner.selection.position.z = danceDesigner.zMin;
           }
           var newPos = new THREE.Vector3(newPosThreeVector.x, newPosThreeVector.y, newPosThreeVector.z);
-          // danceDesigner.movingDancer.addPotentialPos(newPos);
-          // set the new position
+          // Set the new position
           danceDesigner.movingDancer.positions[t] = newPos;
         }
 
@@ -675,9 +644,6 @@ var danceDesigner = {
       addToUndoBuffer();
       justHitUndo = false;
     }
-    // for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-    //   danceDesigner.s.dancers[i].potentialPose = null;
-    // }
     danceDesigner.movingDancer = null;
     // Enable the controls
     danceDesigner.controls.enabled = true;
@@ -1196,74 +1162,16 @@ async function addNewKeyFrame(t) {
     var newPos = new THREE.Vector3(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z);
     dancer.addKFPosition(t, newPos);
     await dancer.updatePositions();
-    // if (dancer.potentialPose == null) {
-    //   var newPos = new THREE.Vector3(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z);
-    //   danceDesigner.s.dancers[i].addPotentialPos(newPos);
-    // } else {
-    //   danceDesigner.s.dancers[i].addPotentialPos(danceDesigner.s.dancers[i].potentialPose);
-    // }
   }
 
-  // for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
-  //    var dancer = danceDesigner.s.dancers[j];
-  //    console.log("POTENTIAL POSE: ", dancer.potentialPos);
-  //    dancer.addKFPosition(t, dancer.potentialPos);
-  //    dancer.updatePositions();
-  // }
-
-  if (danceDesigner.s.keyframes.includes(t)) {
-    // var keyframeIndex = 0;
-    // // Determine where the current time is in the keyframes[] array if it exists
-    // for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
-    //   if (danceDesigner.s.keyframes[i] == t) {
-    //     keyframeIndex = i;
-    //   }
-    // }
-    // for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
-    //    var dancer = danceDesigner.s.dancers[j];
-    //    if (keyframeIndex == 0) {
-    //     // Case when we are updating the initial position at t = 0
-    //     if (danceDesigner.s.keyframes.length == 1) {
-    //       dancer.updateOnlyPosition();
-    //     } else {
-    //       dancer.updateFirstPosition(danceDesigner.s.keyframes[1]);
-    //     }
-    //   } else if (keyframeIndex == (danceDesigner.s.keyframes.length - 1)) {
-    //     // Case when we are updating the last position
-    //     dancer.updateLastPosition(danceDesigner.s.keyframes[keyframeIndex - 1], danceDesigner.s.keyframes[keyframeIndex]);
-    //   } else {
-    //     // Case when we are updating a middle position
-    //     dancer.updateMiddlePosition(danceDesigner.s.keyframes[keyframeIndex - 1], danceDesigner.s.keyframes[keyframeIndex], danceDesigner.s.keyframes[keyframeIndex + 1]);
-    //   }
-    // }
-  } else {
+  if (!danceDesigner.s.keyframes.includes(t)) {
     // Adding a new keyframe
     danceDesigner.s.addKeyFrame(t);
     timeline.addTimeMark(t);
     timeline.changeTimeMarkColor(t, true);
     danceDesigner.maxT = t;
-    // if (t > danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 2]) {
-    //   // Adding a new keyframe at the end of the routine
-    //   danceDesigner.maxT = t;
-    //   for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
-    //     danceDesigner.s.dancers[j].addNewLastPosition(
-    //       danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 2], t);
-    //   }
-    // } else {
-    //   // Adding a new keyframe in the middle of the routine
-    //   var keyframeIndex = 0;
-    //   // Determine where the current time is in the keyframes[] array if it exists
-    //   for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
-    //     if (danceDesigner.s.keyframes[i] == t) {
-    //       keyframeIndex = i;
-    //     }
-    //   }
-    //   for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
-    //     danceDesigner.s.dancers[j].updateMiddlePosition(danceDesigner.s.keyframes[keyframeIndex- 1],
-    //       danceDesigner.s.keyframes[keyframeIndex], danceDesigner.s.keyframes[keyframeIndex + 1]);
-    //   }
-    // }
   }
+
   return;
 }
 
@@ -1338,10 +1246,8 @@ async function onButtonClick(event) {
     var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: loader.load('static/files/janet.jpg')});
     var newMesh = new THREE.Mesh(geometry, material);
     var newDancer = new Dancer("Dancer" + newDancerNumber, newMesh);
-    // '#'+(Math.random()*0xFFFFFF<<0).toString(16);
     newDancer.updateColor('#'+(Math.random()*0xFFFFFF<<0).toString(16));
     var posDefault = new THREE.Vector3(-15, 0, -20);
-    // newDancer.addPotentialPos(posDefault);
     newDancer.addInitPosition(posDefault);
     newDancer.addKFPosition(0, posDefault);
     newDancer.addKFPosition(t, posDefault);

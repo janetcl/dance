@@ -329,7 +329,7 @@ def save_dance():
     # print("\n")
     # print("USER: ", user)
     # print("\n")
-    id = db.session.query(Dance).count() - 1
+    id = db.session.query(Dance).count()
     user_id = request.json['user_id']
     user_email = request.json['user_email']
     dance_name = request.json['dance_name']
