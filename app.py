@@ -330,15 +330,7 @@ def googleCallback():
 @app.route("/saveDance", methods = ["POST"])
 @login_required
 def save_dance():
-
-    # print(current_user)
-    # print("\n")
-    # print(current_user.id)
-    # print("\n")
-    # print(current_user.name)
-    # print("\n")
-    # print(current_user.email)
-
+    
     id = request.json['dance_id']
     user_id = current_user.id
     user_email = current_user.email
@@ -357,7 +349,7 @@ def save_dance():
     else:
         print("\nAlready in database\n")
 
-    return jsonify({"success": "Nicely done."})
+    return jsonify(dance)
 
 @app.route("/logout")
 @login_required
