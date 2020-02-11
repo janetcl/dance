@@ -1181,44 +1181,23 @@ var newDancerNumber = 1;
 // Handle button clicking
 async function onButtonClick(event) {
   if (event.target.id == "saveDance") {
-    // TODO: Implement a method here that will save the danceDesigner object
-    // var theseDancers = {
-    //
-    // }
-    // this.keyframePositions = []; // [ { time: position } ] eg: [ {0: (0,0,0)}, { 20: (0, 1, 10)}]
-    // this.positions = []; // all positions where the index is the time
-    // this.name = name;
-    // this.mesh = mesh;
-    // this.mesh.position.x = 0;
-    // this.mesh.position.y = 0;
-    // this.mesh.position.z = 0;
-
-    // theseDancers = JSON.stringify(danceDesigner.s.dancers);
-    // theseKeyframes = JSON.stringify(danceDesigner.s.keyFrames);
-    // audio = JSON.stringify(file);
-    // console.log("theseDancers: ", theseDancers);
-    // console.log("theseKeyframes: ", theseKeyframes);
-    // console.log("audio: ", audio);
-    // const data = {
-    //   "dancers": theseDancers,
-    //   "keyframes": theseKeyframes,
-    //   "numberOfKeyframes": danceDesigner.s.keyFrames.length,
-    //   "audioFile": audio
-    //  };
-
+    // TODO: Create a modal/selection screen upon login so they can choose
+    // to create a dance.
     var theseDancers = JSON.stringify(danceDesigner.s.dancers);
     var theseKeyframes = JSON.stringify(danceDesigner.s.keyframes);
     var audio = JSON.stringify(file);
+    var danceId = "0";
 
-     const data = {
-       "dance_name": "Six14 Trailer Video",
-       "dancers": theseDancers,
-       "keyframes": theseKeyframes,
-       "number_of_keyframes": danceDesigner.s.keyframes.length,
-       "audio": audio,
-      };
+   const data = {
+     "dance_id": danceId,
+     "dance_name": "Six14 Trailer Video",
+     "dancers": theseDancers,
+     "keyframes": theseKeyframes,
+     "number_of_keyframes": danceDesigner.s.keyframes.length,
+     "audio": audio,
+    };
 
-      console.log(data);
+    console.log(data);
 
   fetch('/saveDance', {
     method: 'POST', // or 'PUT'

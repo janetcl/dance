@@ -137,15 +137,36 @@ def load_user(user_id):
 @app.route("/")
 def index():
     if current_user.is_authenticated:
-        return (
-            "<p>Hello, {}! You're logged in! Email: {}</p>"
-            "<div><p>Google Profile Picture:</p>"
-            '<img src="{}" alt="Google profile pic"></img></div>'
-            '<div><p>Your dances: </p>'
-            '<a class="button" href="/logout">Logout</a>'.format(
-                current_user.name, current_user.email, current_user.profile_pic
-            )
-        )
+
+
+        # Practice getting the dances for the given user
+        if db.session.query(Dance).filter(Dance.user_id == current_user.id).count():
+            dances = db.session.query(Dance).filter(Dance.user_id == current_user.id).all()
+            for dance in dances:
+                print ("\n", dance.dance_name)
+                print ("\n", dance.id)
+                print ("\n", dance.number_of_keyframes)
+                print ("\n", dance.keyframes)
+                print ("\n")
+        # else:
+        #     print("\nAlready in database\n")
+
+        # Send user to dance page
+        return render_template('dance.html',
+            name=current_user.name,
+            email=current_user.email,
+            avatar_url=current_user.profile_pic)
+
+
+        # return (
+        #     "<p>Hello, {}! You're logged in! Email: {}</p>"
+        #     "<div><p>Google Profile Picture:</p>"
+        #     '<img src="{}" alt="Google profile pic"></img></div>'
+        #     '<div><p>Your dances: </p>'
+        #     '<a class="button" href="/logout">Logout</a>'.format(
+        #         current_user.name, current_user.email, current_user.profile_pic
+        #     )
+        # )
     else:
         return render_template('index.html')
 
@@ -318,7 +339,7 @@ def save_dance():
     # print("\n")
     # print(current_user.email)
 
-    id = db.session.query(Dance).count()
+    id = request.json['dance_id']
     user_id = current_user.id
     user_email = current_user.email
     dance_name = request.json['dance_name']
@@ -327,17 +348,14 @@ def save_dance():
     number_of_keyframes = request.json['number_of_keyframes']
     audio = request.json['audio']
 
-    dance = Dance(id, user_id, user_email, dance_name, dancers, keyframes, number_of_keyframes, audio)
-
-    # print('\ndance: ', dance)
-
-    db.session.add(dance)
-    db.session.commit()
-
     # # Doesn't exist? Add it to the database.
-    # if not db.session.query(Dance).filter(Dance.id == id).count():
-    #     db.session.add(user)
-    #     db.session.commit()
+    if not db.session.query(Dance).filter(Dance.id == id).count():
+        id = db.session.query(Dance).count()
+        dance = Dance(id, user_id, user_email, dance_name, dancers, keyframes, number_of_keyframes, audio)
+        db.session.add(dance)
+        db.session.commit()
+    else:
+        print("\nAlready in database\n")
 
     return jsonify({"success": "Nicely done."})
 
