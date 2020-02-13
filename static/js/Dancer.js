@@ -1374,22 +1374,23 @@ async function onButtonClick(event) {
 }
 
 function initNewDance(numDancers) {
-  // var loader = new THREE.TextureLoader();
-  // var geometry = new THREE.BoxGeometry(1, 2, 1);
+  var loader = new THREE.TextureLoader();
 
   var defaultZValue = -20;
   var offset = 2;
 
   for (var i = 0; i < numDancers; i++) {
-    var loader = new THREE.TextureLoader();
     var geometry = new THREE.BoxGeometry(1, 2, 1);
     geometry.name = "Dancer" + newDancerNumber;
     var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: loader.load('static/files/janet.jpg')});
     var newMesh = new THREE.Mesh(geometry, material);
     var newDancer = new Dancer("Dancer" + newDancerNumber, newMesh);
-    console.log("new Dancer: ", newDancer);
     newDancer.updateColor('#'+(Math.random()*0xFFFFFF<<0).toString(16));
-    var posDefault = new THREE.Vector3(-15, 0, defaultZValue + (offset * i));
+    if (i < 10) {
+      var posDefault = new THREE.Vector3(-15, 0, defaultZValue + (offset * i));
+    } else {
+      var posDefault = new THREE.Vector3(15, 0, defaultZValue + (offset * (i - 10)));
+    }
     newDancer.addInitPosition(posDefault);
     newDancer.addKFPosition(0, posDefault);
     newDancer.addKFPosition(t, posDefault);
@@ -1455,11 +1456,11 @@ $(document).on('click', '.createNewDance', function() {
     else {
         for (var i = 0; i < usersDances.length; i++) {
         innerHTML +=
-        `<div class="col-6 text-center" style="justify-content: center;">
-          <img src=${usersDances[i].image} />
-          <button type="button" id="${usersDances[i].id}" class="danceBtn btn btn-primary">
+        `<div class="col-6 text-center danceBtn" style="justify-content: center;">
+          <button type="button" id="${usersDances[i].id}" class="btn btn-light">
             ${usersDances[i].dance_name} ${usersDances[i].id}
           </button>
+          <img src=${usersDances[i].image} />
         </div>`;
       }
     }
@@ -1477,9 +1478,12 @@ $(document).on('click', '.createNewDance', function() {
 
 $(document).on('click', '.danceBtn', function(){
     console.log('clicked');
-    console.log(this.id);
-    var selectedDance = usersDances[this.id];
-    console.log(selectedDance);
+    console.log(this.children[0].id);
+    var selectedDance = usersDances[this.children[0].id];
+    console.log("SELECTED DANCE: ", selectedDance);
+
+    console.log("NAME: ", selectedDance.dance_name);
+    console.log("ID: ", selectedDance.id);
     danceDesigner.s.dancers = [];
 
     var newDancers = JSON.parse(selectedDance.dancers);
@@ -1612,9 +1616,9 @@ function loadInitModal() {
     else {
         for (var i = 0; i < usersDances.length; i++) {
         innerHTML +=
-        `<div class="col-6 text-center" style="justify-content: center;">
-          <button type="button" id="${usersDances[i].id}" class="danceBtn btn btn-light">
-            ${usersDances[i].dance_name}
+        `<div class="col-6 text-center danceBtn" style="justify-content: center;">
+          <button type="button" id="${usersDances[i].id}" class="btn btn-light">
+            ${usersDances[i].dance_name} ${usersDances[i].id}
           </button>
           <img src=${usersDances[i].image} />
         </div>`;
