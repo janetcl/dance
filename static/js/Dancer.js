@@ -203,7 +203,7 @@ var danceDesigner = {
   xMax: null, xMin: null, zMax: null, zMin: null,
   camera1: null, renderer1: null, camera2: null, renderer2: null,
   scene2: null, renderers: [], dragControls: null,
-  // dancerPos: [], dancers: {},
+  // janet: null, phillip: null,
   init: function() {
     this.scene = new THREE.Scene();
     // this.rendererWidth = window.innerWidth * 8 / 10;
@@ -1180,14 +1180,15 @@ async function addNewKeyFrame(t) {
 
 var justHitUndo = false;
 var newDancerNumber = 1;
+var usersDances = [];
 
 // Handle button clicking
 async function onButtonClick(event) {
   if (event.target.id == "saveDance") {
-    // TODO: Create a modal/selection screen upon login so they can choose
-    // to create a dance.
+
     var theseDancers = JSON.stringify(danceDesigner.s.dancers);
-    var theseKeyframes = JSON.stringify(danceDesigner.s.keyframes);
+    var theseKeyframes = {"keyframes": danceDesigner.s.keyframes}
+    theseKeyframes = JSON.stringify(theseKeyframes);
     var audio = JSON.stringify(file);
     console.log("AUDIO: ", audio);
     var dance_name= document.getElementById("dance_name").value;
@@ -1230,7 +1231,28 @@ async function onButtonClick(event) {
   })
   .then((response) => response.json())
   .then((myBlob) => {
+    usersDances = myBlob;
     console.log(myBlob);
+    var innerHTML = "";
+    for (var i = 0; i < myBlob.length; i++) {
+      innerHTML +=
+      `<div class="row">
+        <p style="color: black;">${myBlob[i].dance_name}, </p>
+        <p style="color: black;">${myBlob[i].dance_name}, </p>
+        </br>
+        <p style="color: black;">Keyframes: ${myBlob[i].number_of_keyframes}, </p>
+        </br>
+        <p style="color: black;">Id: ${myBlob[i].id}, </p>
+        </br>
+        <p style="color: black;">Audio: ${myBlob[i].audio}</p>
+        <button type="button" id="${myBlob[i].id}" class="danceBtn btn btn-primary">
+          Select ${myBlob[i].dance_name}
+        </button>
+      </div>`;
+    }
+    document.getElementById("modal-body").innerHTML = innerHTML;
+
+    $('#dancesModal').modal('show');
   })
   .catch((error) => {
     console.error('Error:', error);
@@ -1380,6 +1402,65 @@ async function onButtonClick(event) {
   }
 }
 
+$(document).on('click', '.danceBtn', function(){
+    console.log('clicked');
+    console.log(this.id);
+    var selectedDance = usersDances[this.id];
+    console.log(selectedDance);
+    // danceDesigner.scene.remove(danceDesigner.janet.mesh);
+    // danceDesigner.scene.remove(danceDesigner.phillip.mesh);
+    danceDesigner.s.dancers = [];
+
+    // Load in the dancers
+    // TODO: you need to initialize the dancers completely new here.
+
+    var newDancers = JSON.parse(selectedDance.dancers);
+    for (var j = 0; j < newDancers.length; j++) {
+      var thisDancer = newDancers[j];
+      console.log(thisDancer);
+      var loader = new THREE.TextureLoader();
+      var geometry = new THREE.BoxGeometry(1, 2, 1);
+      geometry.name = thisDancer.name;
+      var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: loader.load('static/files/janet.jpg')});
+
+      var newMesh = new THREE.Mesh(geometry, material);
+      var newDancer = new Dancer(thisDancer.name, newMesh);
+      newDancer.updateColor(thisDancer.mesh.materials[0].color);
+      var posDefault = thisDancer.positions[0];
+      newDancer.addInitPosition(posDefault);
+      newDancer.addKFPosition(0, posDefault);
+      newDancer.updatePositions();
+      newDancer.mesh.position.x = posDefault.x;
+      newDancer.mesh.position.y = posDefault.y;
+      newDancer.mesh.position.z = posDefault.z;
+
+      // Add the new dancer to the scene
+      danceDesigner.scene.add(newDancer.mesh);
+      danceDesigner.dancersArr.push(newMesh);
+      danceDesigner.s.addDancer(newDancer);
+
+      // Increment new dancer count
+      newDancerNumber++;
+    }
+    // console.log('new dancers: ',newDancers);
+    // danceDesigner.s.dancers = newDancers;
+    var newKeyframes = JSON.parse(danceDesigner.s.keyframes);
+    console.log("PINEAPPLE");
+    console.log(newKeyframes);
+    console.log(typeof newKeyframes);
+    // TODO: Fix the bug. For some reason, the number of keyframes is not being loaded properly.
+    danceDesigner.s.keyframes = newKeyframes.keyframes;
+    console.log("new keyframes: ", newKeyframes);
+    danceDesigner.maxT = newKeyframes[newKeyframes.length - 1];
+
+    // TODO: modify the audio, number of keyframes displayed
+    // danceDesigner.s.audio;
+
+    // Close the modal
+    $('#dancesModal').modal('hide');
+
+});
+
 // // Volume controls
 // var volume = document.getElementById("volume");
 // // volume.innerHTML = slider({
@@ -1404,34 +1485,6 @@ async function onButtonClick(event) {
 $(document).ready(function() {
 
   $('#dancesModal').modal('show');
-
-	// $('form').on('submit', function(event) {
-  //
-	// 	$.ajax({
-	// 		data : {
-	// 			name : $('#nameInput').val(),
-	// 			email : $('#emailInput').val()
-	// 		},
-	// 		type : 'POST',
-	// 		url : '/process'
-	// 	})
-	// 	.done(function(data) {
-  //
-	// 		if (data.error) {
-	// 			$('#errorAlert').text(data.error).show();
-	// 			$('#successAlert').hide();
-	// 		}
-	// 		else {
-	// 			$('#successAlert').text(data.name).show();
-	// 			$('#errorAlert').hide();
-	// 		}
-  //
-	// 	});
-  //
-	// 	event.preventDefault();
-  //
-	// });
-
 });
 
 // Initialize lesson on page load

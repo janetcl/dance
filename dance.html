@@ -54,7 +54,7 @@
            </div>
          </div>
          <!-- Button trigger modal -->
-        <button type="button" id="launchModal" class="btn btn-primary" data-toggle="modal" data-target="#dancesModal">
+        <button type="button" id="launchModal" class="btn btn-primary">
           Launch demo modal
         </button>
 
@@ -68,8 +68,7 @@
                   <span aria-hidden="true">&times;</span>
                 </button>
               </div>
-              <div class="modal-body">
-                <!-- <p style="color: black;">Hello person. </p> -->
+              <div id="modal-body" class="modal-body">
                 {% for dance in dances %}
                   <div class="row">
                     <p style="color: black;">{{dance.dance_name}}, </p>
@@ -88,6 +87,8 @@
             </div>
           </div>
         </div>
+
+
          <div class="row ml-1 mt-2">
            <canvas id="0">
             </canvas>
@@ -123,6 +124,8 @@
            </div>
          </div>
        </div>
+     </div>
+     <div class="danceBtn" style="visible: hidden; position: absolute;">
      </div>
 
      <div class="row timelineBar">
