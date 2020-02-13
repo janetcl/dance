@@ -1186,11 +1186,12 @@ async function onButtonClick(event) {
     var theseDancers = JSON.stringify(danceDesigner.s.dancers);
     var theseKeyframes = JSON.stringify(danceDesigner.s.keyframes);
     var audio = JSON.stringify(file);
-    var danceId = "0";
+    console.log("AUDIO: ", audio);
+    var danceId = "1";
 
    const data = {
      "dance_id": danceId,
-     "dance_name": "Six14 Trailer Video",
+     "dance_name": "Not Andy Mineo",
      "dancers": theseDancers,
      "keyframes": theseKeyframes,
      "number_of_keyframes": danceDesigner.s.keyframes.length,
@@ -1382,32 +1383,34 @@ async function onButtonClick(event) {
 
 $(document).ready(function() {
 
-	$('form').on('submit', function(event) {
+  $('#dancesModal').modal('show');
 
-		$.ajax({
-			data : {
-				name : $('#nameInput').val(),
-				email : $('#emailInput').val()
-			},
-			type : 'POST',
-			url : '/process'
-		})
-		.done(function(data) {
-
-			if (data.error) {
-				$('#errorAlert').text(data.error).show();
-				$('#successAlert').hide();
-			}
-			else {
-				$('#successAlert').text(data.name).show();
-				$('#errorAlert').hide();
-			}
-
-		});
-
-		event.preventDefault();
-
-	});
+	// $('form').on('submit', function(event) {
+  //
+	// 	$.ajax({
+	// 		data : {
+	// 			name : $('#nameInput').val(),
+	// 			email : $('#emailInput').val()
+	// 		},
+	// 		type : 'POST',
+	// 		url : '/process'
+	// 	})
+	// 	.done(function(data) {
+  //
+	// 		if (data.error) {
+	// 			$('#errorAlert').text(data.error).show();
+	// 			$('#successAlert').hide();
+	// 		}
+	// 		else {
+	// 			$('#successAlert').text(data.name).show();
+	// 			$('#errorAlert').hide();
+	// 		}
+  //
+	// 	});
+  //
+	// 	event.preventDefault();
+  //
+	// });
 
 });
 
