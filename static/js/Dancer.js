@@ -541,6 +541,7 @@ var danceDesigner = {
   		document.addEventListener( 'mouseup', onMouseUp, false );
 
     } else if (event.clientX > danceDesigner.rendererHeight || event.clientY > (danceDesigner.rendererHeight + 32)) {
+      danceDesigner.controls.enabled = false;
       return;
     } else {
       var mouseX = (event.clientX / danceDesigner.rendererWidth) * 2 - 1;
@@ -579,6 +580,7 @@ var danceDesigner = {
   onDocumentMouseMove: function (event) {
     event.preventDefault();
     if (event.clientX > danceDesigner.rendererWidth || event.clientY > danceDesigner.rendererWidth) {
+      danceDesigner.controls.enabled = false;
       return;
     }
     // Get mouse position
@@ -634,6 +636,7 @@ var danceDesigner = {
   onDocumentMouseUp: async function (event) {
     event.preventDefault();
     if (event.clientX > danceDesigner.rendererWidth || event.clientY > danceDesigner.rendererWidth) {
+      danceDesigner.controls.enabled = false;
       return;
     }
     if (danceDesigner.selection) {
@@ -1187,11 +1190,13 @@ async function onButtonClick(event) {
     var theseKeyframes = JSON.stringify(danceDesigner.s.keyframes);
     var audio = JSON.stringify(file);
     console.log("AUDIO: ", audio);
+    var dance_name= document.getElementById("dance_name").value;
+    console.log("DANCE NAME: ", dance_name);
     var danceId = "1";
 
    const data = {
      "dance_id": danceId,
-     "dance_name": "Not Andy Mineo",
+     "dance_name": dance_name,
      "dancers": theseDancers,
      "keyframes": theseKeyframes,
      "number_of_keyframes": danceDesigner.s.keyframes.length,
@@ -1215,8 +1220,22 @@ async function onButtonClick(event) {
   .catch((error) => {
     console.error('Error:', error);
   });
+} else if (event.target.id === "launchModal") {
 
-  } else if (event.target.id === "addDancer") {
+  fetch('/getDances', {
+    method: 'GET', // or 'PUT'
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+  .then((response) => response.json())
+  .then((myBlob) => {
+    console.log(myBlob);
+  })
+  .catch((error) => {
+    console.error('Error:', error);
+  });
+} else if (event.target.id === "addDancer") {
 
     var loader = new THREE.TextureLoader();
     var geometry = new THREE.BoxGeometry(1, 2, 1);
@@ -1380,6 +1399,7 @@ async function onButtonClick(event) {
 //     wavesurfer.setVolume(volume.value / 100);
 //   }
 // }
+
 
 $(document).ready(function() {
 

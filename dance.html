@@ -54,7 +54,7 @@
            </div>
          </div>
          <!-- Button trigger modal -->
-        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#dancesModal">
+        <button type="button" id="launchModal" class="btn btn-primary" data-toggle="modal" data-target="#dancesModal">
           Launch demo modal
         </button>
 
@@ -69,16 +69,16 @@
                 </button>
               </div>
               <div class="modal-body">
-                <p style="color: black;">Hello person. </p>
+                <!-- <p style="color: black;">Hello person. </p> -->
                 {% for dance in dances %}
                   <div class="row">
-                    <p style="color: black;">{{dance.dance_name}}</p>
+                    <p style="color: black;">{{dance.dance_name}}, </p>
                     </br>
-                    <p style="color: black;">{{dance.number_of_keyframes}}</p>
+                    <p style="color: black;">Keyframes: {{dance.number_of_keyframes}}, </p>
                     </br>
-                    <p style="color: black;">{{dance.id}}</p>
+                    <p style="color: black;">Id: {{dance.id}}, </p>
                     </br>
-                    <p style="color: black;">{{dance.audio}}</p>
+                    <p style="color: black;">Audio: {{dance.audio}}</p>
                   </div>
                 {% endfor %}
               </div>
@@ -91,6 +91,9 @@
          <div class="row ml-1 mt-2">
            <canvas id="0">
             </canvas>
+         </div>
+         <div class="row ml-1 mt-2">
+           <input type="text" style="color: black;" id="dance_name" value="Dance Name">
          </div>
          <div class="row ml-1 mt-5" style="align-self: flex-end; align-items: flex-end;">
            <!-- <div id="player">

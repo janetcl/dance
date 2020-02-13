@@ -14,6 +14,7 @@ from sys import argv
 from flask import Flask, request, make_response, redirect, url_for
 from flask import render_template, jsonify
 from flask_heroku import Heroku
+from dataclasses import dataclass
 
 # From https://realpython.com/flask-google-login/
 import sqlite3
@@ -35,14 +36,20 @@ app = Flask(__name__, template_folder='.')
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 
 # Toggle between these two to switch between local testing and Heroku
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/dancer'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/dance'
 # heroku = Heroku(app)
 
 db = SQLAlchemy(app)
 
 # Create our database model
+@dataclass
 class User(db.Model, UserMixin):
     __tablename__ = "users"
+    id: str
+    name: str
+    email: str
+    profile_pic: str
+
     id = db.Column(db.String(120), primary_key=True, unique=True)
     name = db.Column(db.String(120))
     email = db.Column(db.String(120))
@@ -58,9 +65,21 @@ class User(db.Model, UserMixin):
         return '<E-mail %r>' % self.email
 
 # Create our dance database model
+@dataclass
 class Dance(db.Model):
     __tablename__ = "dances"
+    id: int
+    user_id: str
+    user_email: str
+    dance_name: str
+    dancers: 'typing.Any'
+    keyframes: 'typing.Any'
+    number_of_keyframes: int
+    audio: 'typing.Any'
+
+
     id = db.Column(db.Integer(), primary_key=True, unique=True)
+    # user = db.relationship(User)
     user_id = db.Column(db.String(120), primary_key=True)
     user_email = db.Column(db.String(120))
     dance_name = db.Column(db.String(120))
@@ -81,7 +100,6 @@ class Dance(db.Model):
 
     def __repr__(self):
         return '<Dancers %r>' % self.dancers
-
 # Facebook Login
 FB_CLIENT_ID = os.environ.get("FB_CLIENT_ID")
 FB_CLIENT_SECRET = os.environ.get("FB_CLIENT_SECRET")
@@ -122,11 +140,11 @@ def load_user(user_id):
 @app.route("/")
 def index():
     if current_user.is_authenticated:
-
+        dances = db.session.query(Dance).filter(Dance.user_id == current_user.id).all()
         # users_dances = []
         # Practice getting the dances for the given user
         if db.session.query(Dance).filter(Dance.user_id == current_user.id).count():
-            dances = db.session.query(Dance).filter(Dance.user_id == current_user.id).all()
+            # dances = db.session.query(Dance).filter(Dance.user_id == current_user.id).all()
             for dance in dances:
                 print ("\n", dance.dance_name)
                 print ("\n", dance.id)
@@ -294,11 +312,23 @@ def googleCallback():
     # Begin user session by logging the user in
     login_user(user)
 
+    dances = db.session.query(Dance).filter(Dance.user_id == current_user.id).all()
+    # users_dances = []
+    # Practice getting the dances for the given user
+    if db.session.query(Dance).filter(Dance.user_id == current_user.id).count():
+        # dances = db.session.query(Dance).filter(Dance.user_id == current_user.id).all()
+        for dance in dances:
+            print ("\n", dance.dance_name)
+            print ("\n", dance.id)
+            print ("\n", dance.number_of_keyframes)
+            print ("\n", dance.keyframes)
+            print ("\n")
     # Send user to dance page
     return render_template('dance.html',
-        name=users_name,
-        email=users_email,
-        avatar_url=picture)
+        name=current_user.name,
+        email=current_user.email,
+        avatar_url=current_user.profile_pic,
+        dances=dances)
 
 @app.route("/saveDance", methods = ["POST"])
 @login_required
@@ -333,20 +363,17 @@ def save_dance():
 
     return jsonify({"Success": "Nicely done"})
 
+@app.route("/getDances", methods = ["GET"])
 @login_required
 def get_dances():
     # Practice getting the dances for the given user
+    dances = db.session.query(Dance).filter(Dance.user_id == current_user.id).all()
+    jsonify(dances)
     if db.session.query(Dance).filter(Dance.user_id == current_user.id).count():
-        dances = db.session.query(Dance).filter(Dance.user_id == current_user.id).all()
-        for dance in dances:
-            print ("\n", dance.dance_name)
-            print ("\n", dance.id)
-            print ("\n", dance.number_of_keyframes)
-            print ("\n", dance.keyframes)
-            print ("\n")
-        return
+        return jsonify(dances)
     else:
-        return jsonify({})
+        print("No dances")
+        return jsonify(dances)
 
 @app.route("/logout")
 @login_required
@@ -355,14 +382,6 @@ def logout():
     return redirect(url_for("index"))
 
 #-----------------------------------------------------------------------
-
-# if __name__ == '__main__':
-#     app.debug = True
-#     app.run()
-
-# if __name__ == "__main__":
-#     # app.run(ssl_context="adhoc")
-#     app.run(port=6000, ssl_context=('cert.pem', 'key.pem'))
 
 if __name__ == '__main__':
     if len(argv) != 2:
