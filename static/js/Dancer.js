@@ -1414,6 +1414,8 @@ $(document).on('click', '.createNewDance', function() {
 
   // TODO: Guide to a new modal to specify the number of dancers in the routine*, stage dimensions(stretch goal), and audio.
 
+  // TODO: Check modal scrollability
+
   var innerHTML =
   `<div class="container">
     <div class="row">
@@ -1611,10 +1613,10 @@ function loadInitModal() {
         for (var i = 0; i < usersDances.length; i++) {
         innerHTML +=
         `<div class="col-6 text-center" style="justify-content: center;">
-          <img src=${usersDances[i].image} />
-          <button type="button" id="${usersDances[i].id}" class="danceBtn btn btn-primary">
-            ${usersDances[i].dance_name} ${usersDances[i].id}
+          <button type="button" id="${usersDances[i].id}" class="danceBtn btn btn-light">
+            ${usersDances[i].dance_name}
           </button>
+          <img src=${usersDances[i].image} />
         </div>`;
       }
     }
