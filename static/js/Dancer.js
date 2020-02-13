@@ -1183,6 +1183,7 @@ var newDancerNumber = 1;
 var usersDances = [];
 var dance_id = 0;
 var next_available_id = 0;
+var userData;
 
 // Handle button clicking
 async function onButtonClick(event) {
@@ -1224,71 +1225,8 @@ async function onButtonClick(event) {
     console.error('Error:', error);
   });
 } else if (event.target.id === "launchModal") {
-
-  fetch('/getDances', {
-    method: 'GET', // or 'PUT'
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  })
-  .then((response) => response.json())
-  .then((myBlob) => {
-    next_available_id = myBlob.next_available_id;
-    usersDances = myBlob.dances;
-    console.log(myBlob);
-    console.log(usersDances);
-    var innerHTML = '<div class="container"><div class="row">';
-    for (var i = 0; i < usersDances.length; i++) {
-      innerHTML +=
-      `<div class="col-6 text-center" style="justify-content: center;">
-        <img src=${usersDances[i].image} />
-        <button type="button" id="${usersDances[i].id}" class="danceBtn btn btn-primary">
-          ${usersDances[i].dance_name} ${usersDances[i].id}
-        </button>
-      </div>`;
-    }
-    innerHTML += '</div></div>';
-    document.getElementById("modal-body").innerHTML = innerHTML;
-
-    $('#dancesModal').modal('show');
-  })
-  .catch((error) => {
-    console.error('Error:', error);
-  });
-} else if (event.target.id === "createNewDance") {
-  dance_id = next_available_id;
-
-  // TODO: Guide to a new modal to specify the number of dancers in the routine*, stage dimensions(stretch goal), and audio.
-
-  var innerHTML =
-  `<div class="container">
-    <div class="row">
-      <p style="color: black;">
-        Number of Dancers:
-        <input type="number" id="quantity" name="quantity" min="1" max="20" value="2" style="color: black; width: 100px;">
-      </p>
-    </div>
-  </div>`;
-  document.getElementById("modal-body").innerHTML = innerHTML;
-
-  var footerHTML =
-  `<div class="container" style="justify-content: space-between;">
-    <div class="row" style="justify-content: space-between;">
-      <button type="button" id="launchModal" class="btn btn-primary" data-dismiss="modal">Go back</button>
-      <button type="button" id="createNewDance" class="btn btn-success" data-dismiss="modal">Create!</button>
-    </div>
-  </div>`;
-
-  document.getElementById("modal-footer").innerHTML = footerHTML;
-
-  document.getElementById("createNewDance").addEventListener("click", function() {
-    console.log("NEW DANCE WITH: ", document.getElementById("quantity").value);
-
-    var numDancers = document.getElementById("quantity").value;
-    console.log("numDancers in 1293: " , numDancers);
-    initNewDance(numDancers);
-  });
-
+  loadInitModal();
+// } else if (event.target.id === "createNewDance") {
 
 } else if (event.target.id === "addDancer") {
 
@@ -1471,18 +1409,76 @@ function initNewDance(numDancers) {
 
 }
 
+$(document).on('click', '.createNewDance', function() {
+  dance_id = next_available_id;
+
+  // TODO: Guide to a new modal to specify the number of dancers in the routine*, stage dimensions(stretch goal), and audio.
+
+  var innerHTML =
+  `<div class="container">
+    <div class="row">
+      <p style="color: black;">
+        Number of Dancers:
+        <input type="number" id="quantity" name="quantity" min="1" max="20" value="2" style="color: black; width: 100px;">
+      </p>
+    </div>
+  </div>`;
+  document.getElementById("modal-body").innerHTML = innerHTML;
+
+  var footerHTML =
+  `<div class="container" style="justify-content: space-between;">
+    <div class="row" style="justify-content: space-between;">
+      <button type="button" id="goBack" class="btn btn-primary">Go back</button>
+      <button type="button" id="createFinal" class="btn btn-success" data-dismiss="modal">Create!</button>
+    </div>
+  </div>`;
+
+  document.getElementById("modal-footer").innerHTML = footerHTML;
+
+  document.getElementById("createFinal").addEventListener("click", function() {
+    var numDancers = document.getElementById("quantity").value;
+    initNewDance(numDancers);
+  });
+
+  document.getElementById("goBack").addEventListener("click", function(userData) {
+    console.log('GO BACK');
+    var userDances = userData.dances;
+    var innerHTML = '<div class="container"><div class="row">';
+    if (usersDances.length == 0) {
+      innerHTML +=
+      `<div class="col">
+        <p style="color: black;">You haven't created any dances yet.</p>
+        </div>`;
+    }
+    else {
+        for (var i = 0; i < usersDances.length; i++) {
+        innerHTML +=
+        `<div class="col-6 text-center" style="justify-content: center;">
+          <img src=${usersDances[i].image} />
+          <button type="button" id="${usersDances[i].id}" class="danceBtn btn btn-primary">
+            ${usersDances[i].dance_name} ${usersDances[i].id}
+          </button>
+        </div>`;
+      }
+    }
+    innerHTML += '</div></div>';
+    document.getElementById("modal-body").innerHTML = innerHTML;
+
+    var footerHTML =
+    `<button type="button" id="createNewDance" class="createNewDance btn btn-primary">Create new dance</button>`;
+
+    document.getElementById("modal-footer").innerHTML = footerHTML;
+
+  });
+});
+
+
 $(document).on('click', '.danceBtn', function(){
     console.log('clicked');
     console.log(this.id);
     var selectedDance = usersDances[this.id];
     console.log(selectedDance);
-    // danceDesigner.scene.remove(danceDesigner.janet.mesh);
-    // danceDesigner.scene.remove(danceDesigner.phillip.mesh);
     danceDesigner.s.dancers = [];
-
-    // Load in the dancers
-    // TODO: Steamline the way that dancers are loaded into the program.
-    // Don't start with Phillip and Janet on default.
 
     var newDancers = JSON.parse(selectedDance.dancers);
     for (var j = 0; j < newDancers.length; j++) {
@@ -1590,9 +1586,10 @@ function saveAsImage() {
 
 
 $(document).ready(function() {
-  // TODO: Fix the dance name attribute so it is editable.
-  document.getElementById("dance_name").contentEditable = true;
+  loadInitModal();
+});
 
+function loadInitModal() {
   fetch('/getDances', {
     method: 'GET', // or 'PUT'
     headers: {
@@ -1603,18 +1600,25 @@ $(document).ready(function() {
   .then((myBlob) => {
     next_available_id = myBlob.next_available_id;
     usersDances = myBlob.dances;
-    var innerHTML = '<div class="row justify-content-center">';
-    for (var i = 0; i < usersDances.length; i++) {
+    var innerHTML = '<div class="container"><div class="row">';
+    if (usersDances.length == 0) {
       innerHTML +=
-      `<div class="col-6 justify-content-center">
-        <button type="button" id="${usersDances[i].id}" class="danceBtn btn btn-light">
-          ${usersDances[i].dance_name}
-        </button>
-        <img src=${usersDances[i].image} id="${usersDances[i].id}" class="danceBtn"/>
-
-      </div>`;
+      `<div class="col">
+        <p style="color: black;">You haven't created any dances yet.</p>
+        </div>`;
     }
-    innerHTML += '</div>';
+    else {
+        for (var i = 0; i < usersDances.length; i++) {
+        innerHTML +=
+        `<div class="col-6 text-center" style="justify-content: center;">
+          <img src=${usersDances[i].image} />
+          <button type="button" id="${usersDances[i].id}" class="danceBtn btn btn-primary">
+            ${usersDances[i].dance_name} ${usersDances[i].id}
+          </button>
+        </div>`;
+      }
+    }
+    innerHTML += '</div></div>';
     document.getElementById("modal-body").innerHTML = innerHTML;
 
     $('#dancesModal').modal('show');
@@ -1622,7 +1626,7 @@ $(document).ready(function() {
   .catch((error) => {
     console.error('Error:', error);
   });
-});
+}
 
 // Initialize lesson on page load
 function initializeLesson() {

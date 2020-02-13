@@ -53,10 +53,12 @@
              <button class="btn btn-light" id="saveDance">Save Dance</button>
            </div>
          </div>
-         <!-- Button trigger modal -->
-        <button type="button" id="launchModal" class="btn btn-primary">
-          Edit other dances
-        </button>
+         <div class="row ml-1 mt-0">
+            <!-- Button trigger modal -->
+            <button type="button" id="launchModal" class="btn btn-primary">
+              Launch modal
+            </button>
+          </div>
 
         <!-- Modal -->
         <div class="modal fade" id="dancesModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -69,20 +71,9 @@
                 </button>
               </div>
               <div id="modal-body" class="modal-body">
-                {% for dance in dances %}
-                  <div class="row">
-                    <p style="color: black;">{{dance.dance_name}}, </p>
-                    </br>
-                    <p style="color: black;">Keyframes: {{dance.number_of_keyframes}}, </p>
-                    </br>
-                    <p style="color: black;">Id: {{dance.id}}, </p>
-                    </br>
-                    <p style="color: black;">Audio: {{dance.audio}}</p>
-                  </div>
-                {% endfor %}
               </div>
               <div id="modal-footer" class="modal-footer">
-                <button type="button" id="createNewDance" class="btn btn-primary" data-dismiss="modal">Create new dance</button>
+                <button type="button" id="createNewDance" class="createNewDance btn btn-primary">Create new dance</button>
               </div>
             </div>
           </div>
