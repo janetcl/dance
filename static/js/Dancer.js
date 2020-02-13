@@ -236,7 +236,7 @@ var danceDesigner = {
     this.camera1.lookAt(new THREE.Vector3(0, 0, -10));
 
     // Events
-    document.addEventListener('mousedown', this.onDocumentMouseDown, false);
+    document.addEventListener('mousedown', this.onDocumentMouseDown, true);
     document.addEventListener('mousemove', this.onDocumentMouseMove, false);
     document.addEventListener('mouseup', this.onDocumentMouseUp, false);
 
@@ -250,7 +250,6 @@ var danceDesigner = {
     var j1 = new THREE.Vector3(-2, 0, -5);
     janet.addInitPosition(j1);
     janet.addKFPosition(0, j1);
-    console.log("INITIAL JANET positions: ", janet.keyframePositions);
     janet.updatePositions();
     janet.mesh.position.x = j1.x;
     janet.mesh.position.y = j1.y;
@@ -542,7 +541,7 @@ var danceDesigner = {
 
     } else if (event.clientX > danceDesigner.rendererHeight || event.clientY > (danceDesigner.rendererHeight + 32)) {
       danceDesigner.controls.enabled = false;
-      return;
+      // return;
     } else {
       var mouseX = (event.clientX / danceDesigner.rendererWidth) * 2 - 1;
       var mouseY = -(event.clientY / danceDesigner.rendererHeight) * 2 + 1;
@@ -581,7 +580,7 @@ var danceDesigner = {
     event.preventDefault();
     if (event.clientX > danceDesigner.rendererWidth || event.clientY > danceDesigner.rendererWidth) {
       danceDesigner.controls.enabled = false;
-      return;
+      // return;
     }
     // Get mouse position
     var mouseX = (event.clientX / danceDesigner.rendererWidth) * 2 - 1;
@@ -637,7 +636,7 @@ var danceDesigner = {
     event.preventDefault();
     if (event.clientX > danceDesigner.rendererWidth || event.clientY > danceDesigner.rendererWidth) {
       danceDesigner.controls.enabled = false;
-      return;
+      // return;
     }
     if (danceDesigner.selection) {
       console.log("ADDING A NEW KEYFRAME");
@@ -1188,7 +1187,7 @@ var next_available_id = 0;
 async function onButtonClick(event) {
   if (event.target.id == "saveDance") {
 
-    saveAsImage();
+    var image = saveAsImage();
     var theseDancers = JSON.stringify(danceDesigner.s.dancers);
     var theseKeyframes = {"keyframes": danceDesigner.s.keyframes}
     theseKeyframes = JSON.stringify(theseKeyframes);
@@ -1196,6 +1195,7 @@ async function onButtonClick(event) {
     console.log("AUDIO: ", audio);
     var dance_name= document.getElementById("dance_name").value;
     console.log("DANCE NAME: ", dance_name);
+    console.log("IMAGE: ", image);
 
    const data = {
      "dance_id": dance_id,
@@ -1203,6 +1203,7 @@ async function onButtonClick(event) {
      "dancers": theseDancers,
      "keyframes": theseKeyframes,
      "number_of_keyframes": danceDesigner.s.keyframes.length,
+     "image": image,
      "audio": audio,
     };
 
@@ -1247,6 +1248,8 @@ async function onButtonClick(event) {
         <p style="color: black;">Keyframes: ${usersDances[i].number_of_keyframes}, </p>
         </br>
         <p style="color: black;">Id: ${usersDances[i].id}, </p>
+        </br>
+        <img src=${usersDances[i].image} />
         </br>
         <p style="color: black;">Audio: ${usersDances[i].audio}</p>
         <button type="button" id="${usersDances[i].id}" class="danceBtn btn btn-primary">
@@ -1483,8 +1486,9 @@ function saveAsImage() {
             var strMime = "image/jpeg";
             imgData = danceDesigner.renderer1.domElement.toDataURL(strMime);
             var strDownloadMime = "image/octet-stream";
-            saveFile(imgData.replace(strMime, strDownloadMime), "test.jpg");
-
+            var danceImgName = dance_id + ".jpg";
+            saveFile(imgData.replace(strMime, strDownloadMime), danceImgName);
+            return imgData.replace(strMime, strDownloadMime);
         } catch (e) {
             console.log(e);
             return;
@@ -1526,6 +1530,7 @@ var saveFile = function (strData, filename) {
 
 
 $(document).ready(function() {
+  document.getElementById("dance_name").contentEditable = true;
 
   fetch('/getDances', {
     method: 'GET', // or 'PUT'
@@ -1539,23 +1544,17 @@ $(document).ready(function() {
     usersDances = myBlob.dances;
     console.log(myBlob);
     console.log(usersDances);
-    var innerHTML = "";
+    var innerHTML = '<div class="row">';
     for (var i = 0; i < usersDances.length; i++) {
       innerHTML +=
-      `<div class="row">
-        <p style="color: black;">${usersDances[i].dance_name}, </p>
-        <p style="color: black;">${usersDances[i].dance_name}, </p>
-        </br>
-        <p style="color: black;">Keyframes: ${usersDances[i].number_of_keyframes}, </p>
-        </br>
-        <p style="color: black;">Id: ${usersDances[i].id}, </p>
-        </br>
-        <p style="color: black;">Audio: ${usersDances[i].audio}</p>
+      `<div class="col-6" style="justify-content: center;">
+        <img src=${usersDances[i].image} />
         <button type="button" id="${usersDances[i].id}" class="danceBtn btn btn-primary">
-          Select ${usersDances[i].dance_name}
+          ${usersDances[i].dance_name} ${usersDances[i].id}
         </button>
       </div>`;
     }
+    innerHTML += '</div>';
     document.getElementById("modal-body").innerHTML = innerHTML;
 
     $('#dancesModal').modal('show');

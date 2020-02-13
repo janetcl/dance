@@ -75,6 +75,7 @@ class Dance(db.Model):
     dancers: 'typing.Any'
     keyframes: 'typing.Any'
     number_of_keyframes: int
+    image: 'typing.Any'
     audio: 'typing.Any'
 
 
@@ -86,9 +87,10 @@ class Dance(db.Model):
     dancers = db.Column(db.PickleType())
     keyframes = db.Column(db.PickleType())
     number_of_keyframes = db.Column(db.Integer)
+    image = db.Column(db.PickleType())
     audio = db.Column(db.PickleType())
 
-    def __init__(self, id, user_id, user_email, dance_name, dancers, keyframes, number_of_keyframes, audio):
+    def __init__(self, id, user_id, user_email, dance_name, dancers, keyframes, number_of_keyframes, image, audio):
         self.id = id
         self.user_id = user_id
         self.user_email = user_email
@@ -96,6 +98,7 @@ class Dance(db.Model):
         self.dancers = dancers
         self.keyframes = keyframes
         self.number_of_keyframes = number_of_keyframes
+        self.image = image
         self.audio = audio
 
     def __repr__(self):
@@ -341,12 +344,13 @@ def save_dance():
     dancers = request.json['dancers']
     keyframes = request.json['keyframes']
     number_of_keyframes = request.json['number_of_keyframes']
+    image = request.json['image']
     audio = request.json['audio']
 
     # # Doesn't exist? Add it to the database.
     if not db.session.query(Dance).filter(Dance.id == id).count():
         id = db.session.query(Dance).count()
-        dance = Dance(id, user_id, user_email, dance_name, dancers, keyframes, number_of_keyframes, audio)
+        dance = Dance(id, user_id, user_email, dance_name, dancers, keyframes, number_of_keyframes, image, audio)
         db.session.add(dance)
         db.session.commit()
     else:
