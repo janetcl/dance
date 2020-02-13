@@ -55,7 +55,7 @@
          </div>
          <!-- Button trigger modal -->
         <button type="button" id="launchModal" class="btn btn-primary">
-          Launch demo modal
+          Edit other dances
         </button>
 
         <!-- Modal -->
@@ -63,7 +63,7 @@
           <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
               <div class="modal-header">
-                <h5 class="modal-title" style="color: black;" id="exampleModalLabel">Welcome, {{name}}! Check out your dances here:</h5>
+                <h5 class="modal-title" style="color: black;" id="exampleModalLabel">Welcome, {{name}}!</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                   <span aria-hidden="true">&times;</span>
                 </button>
@@ -81,7 +81,7 @@
                   </div>
                 {% endfor %}
               </div>
-              <div class="modal-footer">
+              <div id="modal-footer" class="modal-footer">
                 <button type="button" id="createNewDance" class="btn btn-primary" data-dismiss="modal">Create new dance</button>
               </div>
             </div>

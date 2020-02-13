@@ -241,63 +241,64 @@ var danceDesigner = {
     document.addEventListener('mouseup', this.onDocumentMouseUp, false);
 
     this.loader = new THREE.TextureLoader();
-    var geometry = new THREE.BoxGeometry(1, 2, 1);
-    geometry.name = "Janet";
-    var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: this.loader.load('static/files/janet.jpg')});
-    var janetMesh = new THREE.Mesh(geometry, material);
-    var janet = new Dancer("Janet", janetMesh);
-    janet.updateColor(0x00c969);
-    var j1 = new THREE.Vector3(-2, 0, -5);
-    janet.addInitPosition(j1);
-    janet.addKFPosition(0, j1);
-    janet.updatePositions();
-    janet.mesh.position.x = j1.x;
-    janet.mesh.position.y = j1.y;
-    janet.mesh.position.z = j1.z;
-    this.scene.add(janet.mesh);
+    // var geometry = new THREE.BoxGeometry(1, 2, 1);
+    // geometry.name = "Janet";
+    // var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: this.loader.load('static/files/janet.jpg')});
+    // var janetMesh = new THREE.Mesh(geometry, material);
+    // var janet = new Dancer("Janet", janetMesh);
+    // janet.updateColor(0x00c969);
+    // var j1 = new THREE.Vector3(-2, 0, -5);
+    // janet.addInitPosition(j1);
+    // janet.addKFPosition(0, j1);
+    // janet.updatePositions();
+    // janet.mesh.position.x = j1.x;
+    // janet.mesh.position.y = j1.y;
+    // janet.mesh.position.z = j1.z;
+    // this.scene.add(janet.mesh);
 
-    var geometry = new THREE.BoxGeometry(1, 2, 1);
-    geometry.name = "Phillip";
-    var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: this.loader.load('static/files/yoon.jpg')});
-    var phillipMesh = new THREE.Mesh(geometry, material);
-    var phillip = new Dancer("Phillip", phillipMesh);
-    phillip.updateColor(0xf8f833);
-    var p1 = new THREE.Vector3(2, 0, -3);
-    phillip.addInitPosition(p1);
-    phillip.addKFPosition(0, p1);
-    phillip.updatePositions();
-    phillip.mesh.position.x = p1.x;
-    phillip.mesh.position.y = p1.y;
-    phillip.mesh.position.z = p1.z;
-    this.scene.add(phillip.mesh);
+    // var geometry = new THREE.BoxGeometry(1, 2, 1);
+    // geometry.name = "Phillip";
+    // var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: this.loader.load('static/files/yoon.jpg')});
+    // var phillipMesh = new THREE.Mesh(geometry, material);
+    // var phillip = new Dancer("Phillip", phillipMesh);
+    // phillip.updateColor(0xf8f833);
+    // var p1 = new THREE.Vector3(2, 0, -3);
+    // phillip.addInitPosition(p1);
+    // phillip.addKFPosition(0, p1);
+    // phillip.updatePositions();
+    // phillip.mesh.position.x = p1.x;
+    // phillip.mesh.position.y = p1.y;
+    // phillip.mesh.position.z = p1.z;
+    // this.scene.add(phillip.mesh);
 
     this.s = new Stage();
-    this.s.addDancer(janet);
-    this.s.addDancer(phillip);
+    // this.s.addDancer(janet);
+    // this.s.addDancer(phillip);
     this.maxT = 0;
-    this.dancersArr = [janetMesh, phillipMesh];
+    this.dancersArr = [];
+    // this.dancersArr = [janetMesh, phillipMesh];
 
-    var spotLight = new THREE.SpotLight( {color: 0xffffff, intensity: 0.1});
-    spotLight.position.set( -1, 60, 20 );
-    spotLight.castShadow = true;
-    spotLight.shadow.mapSize.width = 1024;
-    spotLight.shadow.mapSize.height = 1024;
-    spotLight.shadow.camera.near = 500;
-    spotLight.shadow.camera.far = 4000;
-    spotLight.shadow.camera.fov = 30;
-    spotLight.target = phillipMesh;
-    this.scene.add( spotLight );
+    // var spotLight = new THREE.SpotLight( {color: 0xffffff, intensity: 0.1});
+    // spotLight.position.set( -1, 60, 20 );
+    // spotLight.castShadow = true;
+    // spotLight.shadow.mapSize.width = 1024;
+    // spotLight.shadow.mapSize.height = 1024;
+    // spotLight.shadow.camera.near = 500;
+    // spotLight.shadow.camera.far = 4000;
+    // spotLight.shadow.camera.fov = 30;
+    // spotLight.target = phillipMesh;
+    // this.scene.add( spotLight );
 
-    var spotLightJanet = new THREE.SpotLight( {color: 0xffffff, intensity: 0.1});
-    spotLightJanet.position.set( -3, 50, 20 );
-    spotLightJanet.castShadow = true;
-    spotLightJanet.shadow.mapSize.width = 1024;
-    spotLightJanet.shadow.mapSize.height = 1024;
-    spotLightJanet.shadow.camera.near = 500;
-    spotLightJanet.shadow.camera.far = 4000;
-    spotLightJanet.shadow.camera.fov = 30;
-    spotLightJanet.target = janetMesh;
-    this.scene.add( spotLightJanet );
+    // var spotLightJanet = new THREE.SpotLight( {color: 0xffffff, intensity: 0.1});
+    // spotLightJanet.position.set( -3, 50, 20 );
+    // spotLightJanet.castShadow = true;
+    // spotLightJanet.shadow.mapSize.width = 1024;
+    // spotLightJanet.shadow.mapSize.height = 1024;
+    // spotLightJanet.shadow.camera.near = 500;
+    // spotLightJanet.shadow.camera.far = 4000;
+    // spotLightJanet.shadow.camera.fov = 30;
+    // spotLightJanet.target = janetMesh;
+    // this.scene.add( spotLightJanet );
 
     this.light = new THREE.PointLight(0xFFFFFF);
     this.light.position.x = 0;
@@ -390,7 +391,7 @@ var danceDesigner = {
     // this.renderers.push({renderer: this.renderer2, scene: this.scene.clone(), time: 0});
   },
   onDocumentMouseDown: function (event) {
-    event.preventDefault();
+    // event.preventDefault();
     if (event.clientY > (danceDesigner.rendererHeight) && event.clientY < ((danceDesigner.rendererHeight) + 32)) {
       if (moveNumber == 0) {
         // console.log("adding initial move");
@@ -541,7 +542,7 @@ var danceDesigner = {
 
     } else if (event.clientX > danceDesigner.rendererHeight || event.clientY > (danceDesigner.rendererHeight + 32)) {
       danceDesigner.controls.enabled = false;
-      // return;
+      return;
     } else {
       var mouseX = (event.clientX / danceDesigner.rendererWidth) * 2 - 1;
       var mouseY = -(event.clientY / danceDesigner.rendererHeight) * 2 + 1;
@@ -577,10 +578,10 @@ var danceDesigner = {
     }
   },
   onDocumentMouseMove: function (event) {
-    event.preventDefault();
+    // event.preventDefault();
     if (event.clientX > danceDesigner.rendererWidth || event.clientY > danceDesigner.rendererWidth) {
       danceDesigner.controls.enabled = false;
-      // return;
+      return;
     }
     // Get mouse position
     var mouseX = (event.clientX / danceDesigner.rendererWidth) * 2 - 1;
@@ -633,10 +634,10 @@ var danceDesigner = {
     }
   },
   onDocumentMouseUp: async function (event) {
-    event.preventDefault();
+    // event.preventDefault();
     if (event.clientX > danceDesigner.rendererWidth || event.clientY > danceDesigner.rendererWidth) {
       danceDesigner.controls.enabled = false;
-      // return;
+      return;
     }
     if (danceDesigner.selection) {
       console.log("ADDING A NEW KEYFRAME");
@@ -1194,8 +1195,6 @@ async function onButtonClick(event) {
     var audio = JSON.stringify(file);
     console.log("AUDIO: ", audio);
     var dance_name= document.getElementById("dance_name").value;
-    console.log("DANCE NAME: ", dance_name);
-    console.log("IMAGE: ", image);
 
    const data = {
      "dance_id": dance_id,
@@ -1238,25 +1237,17 @@ async function onButtonClick(event) {
     usersDances = myBlob.dances;
     console.log(myBlob);
     console.log(usersDances);
-    var innerHTML = "";
+    var innerHTML = '<div class="container"><div class="row">';
     for (var i = 0; i < usersDances.length; i++) {
       innerHTML +=
-      `<div class="row">
-        <p style="color: black;">${usersDances[i].dance_name}, </p>
-        <p style="color: black;">${usersDances[i].dance_name}, </p>
-        </br>
-        <p style="color: black;">Keyframes: ${usersDances[i].number_of_keyframes}, </p>
-        </br>
-        <p style="color: black;">Id: ${usersDances[i].id}, </p>
-        </br>
+      `<div class="col-6 text-center" style="justify-content: center;">
         <img src=${usersDances[i].image} />
-        </br>
-        <p style="color: black;">Audio: ${usersDances[i].audio}</p>
         <button type="button" id="${usersDances[i].id}" class="danceBtn btn btn-primary">
-          Select ${usersDances[i].dance_name}
+          ${usersDances[i].dance_name} ${usersDances[i].id}
         </button>
       </div>`;
     }
+    innerHTML += '</div></div>';
     document.getElementById("modal-body").innerHTML = innerHTML;
 
     $('#dancesModal').modal('show');
@@ -1266,6 +1257,39 @@ async function onButtonClick(event) {
   });
 } else if (event.target.id === "createNewDance") {
   dance_id = next_available_id;
+
+  // TODO: Guide to a new modal to specify the number of dancers in the routine*, stage dimensions(stretch goal), and audio.
+
+  var innerHTML =
+  `<div class="container">
+    <div class="row">
+      <p style="color: black;">
+        Number of Dancers:
+        <input type="number" id="quantity" name="quantity" min="1" max="20" value="2" style="color: black; width: 100px;">
+      </p>
+    </div>
+  </div>`;
+  document.getElementById("modal-body").innerHTML = innerHTML;
+
+  var footerHTML =
+  `<div class="container" style="justify-content: space-between;">
+    <div class="row" style="justify-content: space-between;">
+      <button type="button" id="launchModal" class="btn btn-primary" data-dismiss="modal">Go back</button>
+      <button type="button" id="createNewDance" class="btn btn-success" data-dismiss="modal">Create!</button>
+    </div>
+  </div>`;
+
+  document.getElementById("modal-footer").innerHTML = footerHTML;
+
+  document.getElementById("createNewDance").addEventListener("click", function() {
+    console.log("NEW DANCE WITH: ", document.getElementById("quantity").value);
+
+    var numDancers = document.getElementById("quantity").value;
+    console.log("numDancers in 1293: " , numDancers);
+    initNewDance(numDancers);
+  });
+
+
 } else if (event.target.id === "addDancer") {
 
     var loader = new THREE.TextureLoader();
@@ -1411,6 +1435,42 @@ async function onButtonClick(event) {
   }
 }
 
+function initNewDance(numDancers) {
+  // var loader = new THREE.TextureLoader();
+  // var geometry = new THREE.BoxGeometry(1, 2, 1);
+
+  var defaultZValue = -20;
+  var offset = 2;
+
+  for (var i = 0; i < numDancers; i++) {
+    var loader = new THREE.TextureLoader();
+    var geometry = new THREE.BoxGeometry(1, 2, 1);
+    geometry.name = "Dancer" + newDancerNumber;
+    var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: loader.load('static/files/janet.jpg')});
+    var newMesh = new THREE.Mesh(geometry, material);
+    var newDancer = new Dancer("Dancer" + newDancerNumber, newMesh);
+    console.log("new Dancer: ", newDancer);
+    newDancer.updateColor('#'+(Math.random()*0xFFFFFF<<0).toString(16));
+    var posDefault = new THREE.Vector3(-15, 0, defaultZValue + (offset * i));
+    newDancer.addInitPosition(posDefault);
+    newDancer.addKFPosition(0, posDefault);
+    newDancer.addKFPosition(t, posDefault);
+    newDancer.updatePositions();
+    newDancer.mesh.position.x = posDefault.x;
+    newDancer.mesh.position.y = posDefault.y;
+    newDancer.mesh.position.z = posDefault.z;
+
+    // Add the new dancer to the scene
+    danceDesigner.scene.add(newDancer.mesh);
+    danceDesigner.dancersArr.push(newMesh);
+    danceDesigner.s.addDancer(newDancer);
+
+    // Increment new dancer count
+    newDancerNumber++;
+  }
+
+}
+
 $(document).on('click', '.danceBtn', function(){
     console.log('clicked');
     console.log(this.id);
@@ -1487,7 +1547,7 @@ function saveAsImage() {
             imgData = danceDesigner.renderer1.domElement.toDataURL(strMime);
             var strDownloadMime = "image/octet-stream";
             var danceImgName = dance_id + ".jpg";
-            saveFile(imgData.replace(strMime, strDownloadMime), danceImgName);
+            // saveFile(imgData.replace(strMime, strDownloadMime), danceImgName);
             return imgData.replace(strMime, strDownloadMime);
         } catch (e) {
             console.log(e);
@@ -1495,18 +1555,18 @@ function saveAsImage() {
         }
 }
 
-var saveFile = function (strData, filename) {
-        var link = document.createElement('a');
-        if (typeof link.download === 'string') {
-            document.body.appendChild(link); //Firefox requires the link to be in the body
-            link.download = filename;
-            link.href = strData;
-            link.click();
-            document.body.removeChild(link); //remove the link when done
-        } else {
-            location.replace(uri);
-        }
-    }
+// var saveFile = function (strData, filename) {
+//         var link = document.createElement('a');
+//         if (typeof link.download === 'string') {
+//             document.body.appendChild(link); //Firefox requires the link to be in the body
+//             link.download = filename;
+//             link.href = strData;
+//             link.click();
+//             document.body.removeChild(link); //remove the link when done
+//         } else {
+//             location.replace(uri);
+//         }
+//     }
 
 // // Volume controls
 // var volume = document.getElementById("volume");
@@ -1530,6 +1590,7 @@ var saveFile = function (strData, filename) {
 
 
 $(document).ready(function() {
+  // TODO: Fix the dance name attribute so it is editable.
   document.getElementById("dance_name").contentEditable = true;
 
   fetch('/getDances', {
@@ -1542,16 +1603,15 @@ $(document).ready(function() {
   .then((myBlob) => {
     next_available_id = myBlob.next_available_id;
     usersDances = myBlob.dances;
-    console.log(myBlob);
-    console.log(usersDances);
-    var innerHTML = '<div class="row">';
+    var innerHTML = '<div class="row justify-content-center">';
     for (var i = 0; i < usersDances.length; i++) {
       innerHTML +=
-      `<div class="col-6" style="justify-content: center;">
-        <img src=${usersDances[i].image} />
-        <button type="button" id="${usersDances[i].id}" class="danceBtn btn btn-primary">
-          ${usersDances[i].dance_name} ${usersDances[i].id}
+      `<div class="col-6 justify-content-center">
+        <button type="button" id="${usersDances[i].id}" class="danceBtn btn btn-light">
+          ${usersDances[i].dance_name}
         </button>
+        <img src=${usersDances[i].image} id="${usersDances[i].id}" class="danceBtn"/>
+
       </div>`;
     }
     innerHTML += '</div>';
