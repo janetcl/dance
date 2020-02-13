@@ -224,7 +224,7 @@ var danceDesigner = {
     var height1 = 190;
     var viewAngle1 = 45;
     this.camera1 = new THREE.PerspectiveCamera( viewAngle1, width1 / height1, nearClipping, farClipping );
-    this.renderer1 = new THREE.WebGLRenderer({canvas: document.getElementById("0")});
+    this.renderer1 = new THREE.WebGLRenderer({canvas: document.getElementById("0"), preserveDrawingBuffer: true});
     // document.getElementById("0").addEventListener('click', function() {
     //   t = 0;
     //   timeline.updateTimeMark();
@@ -1188,6 +1188,7 @@ var next_available_id = 0;
 async function onButtonClick(event) {
   if (event.target.id == "saveDance") {
 
+    saveAsImage();
     var theseDancers = JSON.stringify(danceDesigner.s.dancers);
     var theseKeyframes = {"keyframes": danceDesigner.s.keyframes}
     theseKeyframes = JSON.stringify(theseKeyframes);
@@ -1474,6 +1475,34 @@ $(document).on('click', '.danceBtn', function(){
     $('#dancesModal').modal('hide');
 
 });
+
+function saveAsImage() {
+  var imgData, imgNode;
+
+        try {
+            var strMime = "image/jpeg";
+            imgData = danceDesigner.renderer1.domElement.toDataURL(strMime);
+            var strDownloadMime = "image/octet-stream";
+            saveFile(imgData.replace(strMime, strDownloadMime), "test.jpg");
+
+        } catch (e) {
+            console.log(e);
+            return;
+        }
+}
+
+var saveFile = function (strData, filename) {
+        var link = document.createElement('a');
+        if (typeof link.download === 'string') {
+            document.body.appendChild(link); //Firefox requires the link to be in the body
+            link.download = filename;
+            link.href = strData;
+            link.click();
+            document.body.removeChild(link); //remove the link when done
+        } else {
+            location.replace(uri);
+        }
+    }
 
 // // Volume controls
 // var volume = document.getElementById("volume");
