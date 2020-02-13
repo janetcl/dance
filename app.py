@@ -366,14 +366,15 @@ def save_dance():
 @app.route("/getDances", methods = ["GET"])
 @login_required
 def get_dances():
+    next_available_id = db.session.query(Dance).count()
     # Practice getting the dances for the given user
     dances = db.session.query(Dance).filter(Dance.user_id == current_user.id).all()
     jsonify(dances)
     if db.session.query(Dance).filter(Dance.user_id == current_user.id).count():
-        return jsonify(dances)
+        return jsonify({"dances": dances, "next_available_id": next_available_id})
     else:
         print("No dances")
-        return jsonify(dances)
+        return jsonify({"dances": dances, "next_available_id": next_available_id})
 
 @app.route("/logout")
 @login_required

@@ -1181,6 +1181,8 @@ async function addNewKeyFrame(t) {
 var justHitUndo = false;
 var newDancerNumber = 1;
 var usersDances = [];
+var dance_id = 0;
+var next_available_id = 0;
 
 // Handle button clicking
 async function onButtonClick(event) {
@@ -1193,10 +1195,9 @@ async function onButtonClick(event) {
     console.log("AUDIO: ", audio);
     var dance_name= document.getElementById("dance_name").value;
     console.log("DANCE NAME: ", dance_name);
-    var danceId = "1";
 
    const data = {
-     "dance_id": danceId,
+     "dance_id": dance_id,
      "dance_name": dance_name,
      "dancers": theseDancers,
      "keyframes": theseKeyframes,
@@ -1231,22 +1232,24 @@ async function onButtonClick(event) {
   })
   .then((response) => response.json())
   .then((myBlob) => {
-    usersDances = myBlob;
+    next_available_id = myBlob.next_available_id;
+    usersDances = myBlob.dances;
     console.log(myBlob);
+    console.log(usersDances);
     var innerHTML = "";
-    for (var i = 0; i < myBlob.length; i++) {
+    for (var i = 0; i < usersDances.length; i++) {
       innerHTML +=
       `<div class="row">
-        <p style="color: black;">${myBlob[i].dance_name}, </p>
-        <p style="color: black;">${myBlob[i].dance_name}, </p>
+        <p style="color: black;">${usersDances[i].dance_name}, </p>
+        <p style="color: black;">${usersDances[i].dance_name}, </p>
         </br>
-        <p style="color: black;">Keyframes: ${myBlob[i].number_of_keyframes}, </p>
+        <p style="color: black;">Keyframes: ${usersDances[i].number_of_keyframes}, </p>
         </br>
-        <p style="color: black;">Id: ${myBlob[i].id}, </p>
+        <p style="color: black;">Id: ${usersDances[i].id}, </p>
         </br>
-        <p style="color: black;">Audio: ${myBlob[i].audio}</p>
-        <button type="button" id="${myBlob[i].id}" class="danceBtn btn btn-primary">
-          Select ${myBlob[i].dance_name}
+        <p style="color: black;">Audio: ${usersDances[i].audio}</p>
+        <button type="button" id="${usersDances[i].id}" class="danceBtn btn btn-primary">
+          Select ${usersDances[i].dance_name}
         </button>
       </div>`;
     }
@@ -1257,6 +1260,8 @@ async function onButtonClick(event) {
   .catch((error) => {
     console.error('Error:', error);
   });
+} else if (event.target.id === "createNewDance") {
+  dance_id = next_available_id;
 } else if (event.target.id === "addDancer") {
 
     var loader = new THREE.TextureLoader();
@@ -1412,7 +1417,8 @@ $(document).on('click', '.danceBtn', function(){
     danceDesigner.s.dancers = [];
 
     // Load in the dancers
-    // TODO: you need to initialize the dancers completely new here.
+    // TODO: Steamline the way that dancers are loaded into the program.
+    // Don't start with Phillip and Janet on default.
 
     var newDancers = JSON.parse(selectedDance.dancers);
     for (var j = 0; j < newDancers.length; j++) {
@@ -1429,6 +1435,11 @@ $(document).on('click', '.danceBtn', function(){
       var posDefault = thisDancer.positions[0];
       newDancer.addInitPosition(posDefault);
       newDancer.addKFPosition(0, posDefault);
+
+      for (var k = 0; k < thisDancer.keyframePositions.length; k++) {
+        newDancer.addKFPosition(thisDancer.keyframePositions[k].time, thisDancer.keyframePositions[k].position);
+      }
+
       newDancer.updatePositions();
       newDancer.mesh.position.x = posDefault.x;
       newDancer.mesh.position.y = posDefault.y;
@@ -1442,15 +1453,18 @@ $(document).on('click', '.danceBtn', function(){
       // Increment new dancer count
       newDancerNumber++;
     }
-    // console.log('new dancers: ',newDancers);
-    // danceDesigner.s.dancers = newDancers;
-    var newKeyframes = JSON.parse(danceDesigner.s.keyframes);
+
+
+    var newKeyframes = JSON.parse(selectedDance.keyframes);
     console.log("PINEAPPLE");
-    console.log(newKeyframes);
-    console.log(typeof newKeyframes);
-    // TODO: Fix the bug. For some reason, the number of keyframes is not being loaded properly.
-    danceDesigner.s.keyframes = newKeyframes.keyframes;
+    // Unpack the object the keyframes is stored in
+    newKeyframes = newKeyframes.keyframes;
+    danceDesigner.s.keyframes = newKeyframes;
     console.log("new keyframes: ", newKeyframes);
+
+    for (var i = 0; i < newKeyframes.length; i++) {
+      timeline.addTimeMark(newKeyframes[i]);
+    }
     danceDesigner.maxT = newKeyframes[newKeyframes.length - 1];
 
     // TODO: modify the audio, number of keyframes displayed
@@ -1484,7 +1498,42 @@ $(document).on('click', '.danceBtn', function(){
 
 $(document).ready(function() {
 
-  $('#dancesModal').modal('show');
+  fetch('/getDances', {
+    method: 'GET', // or 'PUT'
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+  .then((response) => response.json())
+  .then((myBlob) => {
+    next_available_id = myBlob.next_available_id;
+    usersDances = myBlob.dances;
+    console.log(myBlob);
+    console.log(usersDances);
+    var innerHTML = "";
+    for (var i = 0; i < usersDances.length; i++) {
+      innerHTML +=
+      `<div class="row">
+        <p style="color: black;">${usersDances[i].dance_name}, </p>
+        <p style="color: black;">${usersDances[i].dance_name}, </p>
+        </br>
+        <p style="color: black;">Keyframes: ${usersDances[i].number_of_keyframes}, </p>
+        </br>
+        <p style="color: black;">Id: ${usersDances[i].id}, </p>
+        </br>
+        <p style="color: black;">Audio: ${usersDances[i].audio}</p>
+        <button type="button" id="${usersDances[i].id}" class="danceBtn btn btn-primary">
+          Select ${usersDances[i].dance_name}
+        </button>
+      </div>`;
+    }
+    document.getElementById("modal-body").innerHTML = innerHTML;
+
+    $('#dancesModal').modal('show');
+  })
+  .catch((error) => {
+    console.error('Error:', error);
+  });
 });
 
 // Initialize lesson on page load
