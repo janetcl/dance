@@ -1237,9 +1237,9 @@ async function onButtonClick(event) {
 
     var loader = new THREE.TextureLoader();
     var geometry = new THREE.BoxGeometry(1, 2, 1);
-    geometry.name = "Dancer" + newDancerNumber;
     var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: loader.load('static/files/janet.jpg')});
     var newMesh = new THREE.Mesh(geometry, material);
+    newMesh.name = "Dancer";
     var newDancer = new Dancer("Dancer" + newDancerNumber, newMesh);
     newDancer.updateColor('#'+(Math.random()*0xFFFFFF<<0).toString(16));
     var posDefault = new THREE.Vector3(-15, 0, -20 + inc);
@@ -1291,6 +1291,7 @@ async function onButtonClick(event) {
 
     // Clean up the timeline
     timeline.removeTimeMarks();
+
     for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
       timeline.addTimeMark(danceDesigner.s.keyframes[i]);
     }
@@ -1379,17 +1380,20 @@ async function onButtonClick(event) {
   }
 }
 
-function initNewDance(numDancers) {
+async function initNewDance(numDancers) {
+
+  await clearTheStage();
   var loader = new THREE.TextureLoader();
+  newDancerNumber = 0;
 
   var defaultZValue = -20;
   var offset = 2;
 
   for (var i = 0; i < numDancers; i++) {
     var geometry = new THREE.BoxGeometry(1, 2, 1);
-    geometry.name = "Dancer" + newDancerNumber;
     var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: loader.load('static/files/janet.jpg')});
     var newMesh = new THREE.Mesh(geometry, material);
+    newMesh.name = "Dancer";
     var newDancer = new Dancer("Dancer" + newDancerNumber, newMesh);
     newDancer.updateColor('#'+(Math.random()*0xFFFFFF<<0).toString(16));
     if (i < 10) {
@@ -1413,6 +1417,8 @@ function initNewDance(numDancers) {
     // Increment new dancer count
     newDancerNumber++;
   }
+
+  danceDesigner.maxT = 0;
 
 }
 
@@ -1444,13 +1450,12 @@ $(document).on('click', '.createNewDance', function() {
 
   document.getElementById("modal-footer").innerHTML = footerHTML;
 
-  document.getElementById("createFinal").addEventListener("click", function() {
+  document.getElementById("createFinal").addEventListener("click", async function() {
     var numDancers = document.getElementById("quantity").value;
-    initNewDance(numDancers);
+    await initNewDance(numDancers);
   });
 
   document.getElementById("goBack").addEventListener("click", function(userData) {
-    // console.log('GO BACK');
     var userDances = userData.dances;
     var innerHTML = '<div class="container"><div class="row">';
     if (usersDances.length == 0) {
@@ -1482,87 +1487,80 @@ $(document).on('click', '.createNewDance', function() {
 });
 
 
-$(document).on('click', '.danceBtn', function(){
+$(document).on('click', '.danceBtn', async function(){
 
   // TODO: Clear the stage of the existing dance.
-    clearTheStage();
-    // console.log(this.children[0].id);
+  await clearTheStage();
 
-    var selectedDance = usersDances[this.children[0].id];
-    document.getElementById("dance_name").value = selectedDance.dance_name;
-    danceDesigner.s.dancers = [];
+  var selectedDance = usersDances[this.children[0].id];
+  document.getElementById("dance_name").value = selectedDance.dance_name;
+  danceDesigner.s.dancers = [];
 
-    var newDancers = JSON.parse(selectedDance.dancers);
-    for (var j = 0; j < newDancers.length; j++) {
-      var thisDancer = newDancers[j];
-      // console.log(thisDancer);
-      var loader = new THREE.TextureLoader();
-      var geometry = new THREE.BoxGeometry(1, 2, 1);
-      geometry.name = thisDancer.name;
-      var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: loader.load('static/files/janet.jpg')});
+  // Load in the new dance
+  var newDancers = JSON.parse(selectedDance.dancers);
+  for (var j = 0; j < newDancers.length; j++) {
+    var thisDancer = newDancers[j];
+    // console.log(thisDancer);
+    var loader = new THREE.TextureLoader();
+    var geometry = new THREE.BoxGeometry(1, 2, 1);
+    var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: loader.load('static/files/janet.jpg')});
 
-      var newMesh = new THREE.Mesh(geometry, material);
-      var newDancer = new Dancer(thisDancer.name, newMesh);
-      newDancer.updateColor(thisDancer.color);
-      var posDefault = thisDancer.positions[0];
-      newDancer.addInitPosition(posDefault);
-      newDancer.addKFPosition(0, posDefault);
+    var newMesh = new THREE.Mesh(geometry, material);
 
-      for (var k = 0; k < thisDancer.keyframePositions.length; k++) {
-        newDancer.addKFPosition(thisDancer.keyframePositions[k].time, thisDancer.keyframePositions[k].position);
-      }
+    newMesh.name = "Dancer";
+    var newDancer = new Dancer(thisDancer.name, newMesh);
+    newDancer.updateColor(thisDancer.color);
+    var posDefault = thisDancer.positions[0];
+    newDancer.addInitPosition(posDefault);
+    newDancer.addKFPosition(0, posDefault);
 
-      newDancer.updatePositions();
-      newDancer.mesh.position.x = posDefault.x;
-      newDancer.mesh.position.y = posDefault.y;
-      newDancer.mesh.position.z = posDefault.z;
-
-      // Add the new dancer to the scene
-      danceDesigner.scene.add(newDancer.mesh);
-      danceDesigner.dancersArr.push(newMesh);
-      danceDesigner.s.addDancer(newDancer);
-
-      // Increment new dancer count
-      newDancerNumber++;
+    for (var k = 0; k < thisDancer.keyframePositions.length; k++) {
+      newDancer.addKFPosition(thisDancer.keyframePositions[k].time, thisDancer.keyframePositions[k].position);
     }
 
+    newDancer.updatePositions();
+    newDancer.mesh.position.x = posDefault.x;
+    newDancer.mesh.position.y = posDefault.y;
+    newDancer.mesh.position.z = posDefault.z;
 
-    var newKeyframes = JSON.parse(selectedDance.keyframes);
-    danceDesigner.s.keyframes = newKeyframes;
+    // Add the new dancer to the scene
+    danceDesigner.scene.add(newDancer.mesh);
+    danceDesigner.dancersArr.push(newMesh);
+    danceDesigner.s.addDancer(newDancer);
 
-    for (var i = 0; i < newKeyframes.length; i++) {
-      timeline.addTimeMark(newKeyframes[i]);
-    }
-    danceDesigner.maxT = newKeyframes[newKeyframes.length - 1];
+    // Increment new dancer count
+    newDancerNumber++;
+  }
 
-    // TODO: modify the audio, number of keyframes displayed
-    audioFile = selectedDance.audio;
-    // console.log("AUDIO FILE: ", audioFile);
 
-    // Close the modal
-    $('#dancesModal').modal('hide');
+  var newKeyframes = JSON.parse(selectedDance.keyframes);
+  danceDesigner.s.keyframes = newKeyframes;
+
+  for (var i = 0; i < newKeyframes.length; i++) {
+    timeline.addTimeMark(newKeyframes[i]);
+  }
+  danceDesigner.maxT = newKeyframes[newKeyframes.length - 1];
+
+  // TODO: modify the audio, number of keyframes displayed
+  audioFile = selectedDance.audio;
+  // console.log("AUDIO FILE: ", audioFile);
+
+  // Close the modal
+  $('#dancesModal').modal('hide');
 
 });
 
-function clearTheStage() {
-  // danceDesigner.scene.remove();
-  for (let i = 0; i < danceDesigner.scene.children.length; i ++) {
-    if (danceDesigner.scene.children[i].type == "Mesh" && danceDesigner.scene.children[i].geometry.type == "BoxGeometry") {
+async function clearTheStage() {
 
-      console.log("removed ", danceDesigner.scene.children[i]);
-      danceDesigner.scene.remove(danceDesigner.scene.children[i]);
-      // for (let j = 0; j < danceDesigner.dancerPos.length; j++) {
-      //   var d = danceDesigner.dancerPos[i].Dancer;
-      //   if (danceDesigner.dancerPos[i][time] != null) {
-      //     if (d.name == scene.children[i].geometry.name) {
-      //       scene.children[i].position.x = danceDesigner.dancerPos[i][time].x;
-      //       scene.children[i].position.y = danceDesigner.dancerPos[i][time].y;
-      //       scene.children[i].position.z = danceDesigner.dancerPos[i][time].z;
-      //     }
-      //   }
-      // }
-    }
+  while (danceDesigner.scene.getObjectByName("Dancer")) {
+    danceDesigner.scene.remove(danceDesigner.scene.getObjectByName("Dancer"));
   }
+  danceDesigner.dancersArr = [];
+  // Clear the time marks from the timeline
+  timeline.removeTimeMarks();
+  timeline.addTimeMark(0);
+
+  return;
 }
 
 function saveAsImage() {
