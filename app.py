@@ -36,8 +36,8 @@ app = Flask(__name__, template_folder='.')
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 
 # Toggle between these two to switch between local testing and Heroku
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/dance'
-heroku = Heroku(app)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/dance'
+# heroku = Heroku(app)
 
 db = SQLAlchemy(app)
 
@@ -84,11 +84,11 @@ class Dance(db.Model):
     user_id = db.Column(db.String(120), primary_key=True)
     user_email = db.Column(db.String(120))
     dance_name = db.Column(db.String(120))
-    dancers = db.Column(db.PickleType())
-    keyframes = db.Column(db.PickleType())
+    dancers = db.Column(db.String())
+    keyframes = db.Column(db.String())
     number_of_keyframes = db.Column(db.Integer)
-    image = db.Column(db.PickleType())
-    audio = db.Column(db.PickleType())
+    image = db.Column(db.String())
+    audio = db.Column(db.String())
 
     def __init__(self, id, user_id, user_email, dance_name, dancers, keyframes, number_of_keyframes, image, audio):
         self.id = id
@@ -144,16 +144,7 @@ def load_user(user_id):
 def index():
     if current_user.is_authenticated:
         dances = db.session.query(Dance).filter(Dance.user_id == current_user.id).all()
-        # users_dances = []
-        # Practice getting the dances for the given user
-        if db.session.query(Dance).filter(Dance.user_id == current_user.id).count():
-            # dances = db.session.query(Dance).filter(Dance.user_id == current_user.id).all()
-            for dance in dances:
-                print ("\n", dance.dance_name)
-                print ("\n", dance.id)
-                print ("\n", dance.number_of_keyframes)
-                print ("\n", dance.keyframes)
-                print ("\n")
+
         # Send user to dance page
         return render_template('dance.html',
             name=current_user.name,
@@ -216,10 +207,6 @@ def fbCallback():
     if not db.session.query(User).filter(User.id == id).count():
         db.session.add(user)
         db.session.commit()
-
-    print("\n")
-    print("USER: ", user)
-    print("\n")
 
     # Begin user session by logging the user in
     login_user(user)
@@ -303,10 +290,6 @@ def googleCallback():
 
     user = User(id, name, email, profile_pic)
 
-    print("\n")
-    print("USER: ", user)
-    print("\n")
-
     # Doesn't exist? Add it to the database.
     if not db.session.query(User).filter(User.id == id).count():
         db.session.add(user)
@@ -316,16 +299,7 @@ def googleCallback():
     login_user(user)
 
     dances = db.session.query(Dance).filter(Dance.user_id == current_user.id).all()
-    # users_dances = []
-    # Practice getting the dances for the given user
-    if db.session.query(Dance).filter(Dance.user_id == current_user.id).count():
-        # dances = db.session.query(Dance).filter(Dance.user_id == current_user.id).all()
-        for dance in dances:
-            print ("\n", dance.dance_name)
-            print ("\n", dance.id)
-            print ("\n", dance.number_of_keyframes)
-            print ("\n", dance.keyframes)
-            print ("\n")
+
     # Send user to dance page
     return render_template('dance.html',
         name=current_user.name,
@@ -362,7 +336,6 @@ def save_dance():
         dance.keyframes = keyframes
         dance.number_of_keyframes = number_of_keyframes
         dance.audio = audio
-        print(dance)
         db.session.commit()
 
     return jsonify({"Success": "Nicely done"})
@@ -372,7 +345,7 @@ def save_dance():
 def get_dances():
     next_available_id = db.session.query(Dance).count()
     # Practice getting the dances for the given user
-    dances = db.session.query(Dance).filter(Dance.user_id == current_user.id).all()
+    dances = db.session.query(Dance).filter(Dance.user_id == current_user.id).order_by(Dance.id).all()
     jsonify(dances)
     if db.session.query(Dance).filter(Dance.user_id == current_user.id).count():
         return jsonify({"dances": dances, "next_available_id": next_available_id})

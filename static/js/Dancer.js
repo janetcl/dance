@@ -256,38 +256,11 @@ var danceDesigner = {
     // janet.mesh.position.z = j1.z;
     // this.scene.add(janet.mesh);
 
-    // var geometry = new THREE.BoxGeometry(1, 2, 1);
-    // geometry.name = "Phillip";
-    // var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: this.loader.load('static/files/yoon.jpg')});
-    // var phillipMesh = new THREE.Mesh(geometry, material);
-    // var phillip = new Dancer("Phillip", phillipMesh);
-    // phillip.updateColor(0xf8f833);
-    // var p1 = new THREE.Vector3(2, 0, -3);
-    // phillip.addInitPosition(p1);
-    // phillip.addKFPosition(0, p1);
-    // phillip.updatePositions();
-    // phillip.mesh.position.x = p1.x;
-    // phillip.mesh.position.y = p1.y;
-    // phillip.mesh.position.z = p1.z;
-    // this.scene.add(phillip.mesh);
-
     this.s = new Stage();
     // this.s.addDancer(janet);
-    // this.s.addDancer(phillip);
     this.maxT = 0;
     this.dancersArr = [];
-    // this.dancersArr = [janetMesh, phillipMesh];
-
-    // var spotLight = new THREE.SpotLight( {color: 0xffffff, intensity: 0.1});
-    // spotLight.position.set( -1, 60, 20 );
-    // spotLight.castShadow = true;
-    // spotLight.shadow.mapSize.width = 1024;
-    // spotLight.shadow.mapSize.height = 1024;
-    // spotLight.shadow.camera.near = 500;
-    // spotLight.shadow.camera.far = 4000;
-    // spotLight.shadow.camera.fov = 30;
-    // spotLight.target = phillipMesh;
-    // this.scene.add( spotLight );
+    // this.dancersArr = [janetMesh];
 
     // var spotLightJanet = new THREE.SpotLight( {color: 0xffffff, intensity: 0.1});
     // spotLightJanet.position.set( -3, 50, 20 );
@@ -299,7 +272,6 @@ var danceDesigner = {
     // spotLightJanet.shadow.camera.fov = 30;
     // spotLightJanet.target = janetMesh;
     // this.scene.add( spotLightJanet );
-
     this.light = new THREE.PointLight(0xFFFFFF);
     this.light.position.x = 0;
     this.light.position.y = 10;
@@ -348,14 +320,14 @@ var danceDesigner = {
     this.dragControls = new THREE.DragControls(this.dancersArr, this.camera, this.renderer.domElement);
     this.dragControls.addEventListener( 'dragstart', function ( event ) {
     	event.object.material.emissive.set( 0xaaaaaa );
-      console.log("moving object: ", event.object);
-      console.log("new position: ", event.object.position);
+      // console.log("moving object: ", event.object);
+      // console.log("new position: ", event.object.position);
       danceDesigner.controls.enabled = false;
     } );
 
     this.dragControls.addEventListener( 'dragend', function ( event ) {
     	event.object.material.emissive.set( 0x000000 );
-      console.log("FINAL position: ", event.object.position);
+      // console.log("FINAL position: ", event.object.position);
       danceDesigner.controls.enabled = true;
     } );
 
@@ -640,7 +612,7 @@ var danceDesigner = {
       return;
     }
     if (danceDesigner.selection) {
-      console.log("ADDING A NEW KEYFRAME");
+      // console.log("ADDING A NEW KEYFRAME");
       await addNewKeyFrame(t);
 
       // Push to Undo Buffer
@@ -658,6 +630,8 @@ var t = 0;
 var lightAngle = 0;
 var play = false;
 var hasMusic = false;
+var audioFile;
+var file;
 
 // var sound = document.getElementById('sound');
 
@@ -912,9 +886,18 @@ var wavesurfer = WaveSurfer.create({
     ]
 });
 
-// Set default silent audio
-wavesurfer.load('/static/files/default.mp3');
-var file = '/static/files/default.mp3';
+// // Set audio
+// if (audioFile) {
+//   file = audioFile;
+//   hasMusic = true;
+//   // Load the blob into Wavesurfer
+//   wavesurfer.loadBlob(blob);
+//
+// } else {
+  // Set default silent audio
+  file = '/static/files/default.mp3';
+  wavesurfer.load(file);
+// }
 
 // Once the user loads a file in the fileinput, the file should be loaded into waveform
 document.getElementById("fileinput").addEventListener('change', function(e){
@@ -930,6 +913,7 @@ document.getElementById("fileinput").addEventListener('change', function(e){
 
             // Load the blob into Wavesurfer
             wavesurfer.loadBlob(blob);
+            audioFile = blob;
         };
 
         reader.onerror = function (evt) {
@@ -939,6 +923,8 @@ document.getElementById("fileinput").addEventListener('change', function(e){
         // Read File as an ArrayBuffer
         reader.readAsArrayBuffer(file);
     }
+
+    file = file.name;
 }, false);
 
 wavesurfer.toggleInteraction();
@@ -1184,17 +1170,39 @@ var usersDances = [];
 var dance_id = 0;
 var next_available_id = 0;
 var userData;
+var inc = 0;
 
 // Handle button clicking
 async function onButtonClick(event) {
   if (event.target.id == "saveDance") {
 
     var image = saveAsImage();
-    var theseDancers = JSON.stringify(danceDesigner.s.dancers);
-    var theseKeyframes = {"keyframes": danceDesigner.s.keyframes}
+    var dancersInfo = [];
+    for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+        var dancer = danceDesigner.s.dancers[i];
+        console.log(dancer);
+        // Store the color, name, positions, kfpositions for each dancer
+        var dancerInfo = {
+          "name": dancer.name,
+          "color": dancer.mesh.material.color,
+          "positions": dancer.positions,
+          "keyframePositions": dancer.keyframePositions
+        }
+        dancersInfo.push(dancerInfo);
+    }
+    // var theseDancers = JSON.stringify(danceDesigner.s.dancers);
+    var theseDancers = JSON.stringify(dancersInfo);
+    console.log(theseDancers);
+    var theseKeyframes = danceDesigner.s.keyframes;
     theseKeyframes = JSON.stringify(theseKeyframes);
     var audio = JSON.stringify(file);
-    console.log("AUDIO: ", audio);
+    // var audio;
+    // if (audioFile) {
+    //   audio = JSON.stringify({"hasAudio": true, "audioFile": audioFile})
+    // } else {
+    //   audio = JSON.stringify({"hasAudio": false, "audioFile": {}})
+    // }
+    // console.log(audio);
     var dance_name= document.getElementById("dance_name").value;
 
    const data = {
@@ -1206,8 +1214,7 @@ async function onButtonClick(event) {
      "image": image,
      "audio": audio,
     };
-
-    console.log(data);
+    // console.log(data);
 
   fetch('/saveDance', {
     method: 'POST', // or 'PUT'
@@ -1226,8 +1233,6 @@ async function onButtonClick(event) {
   });
 } else if (event.target.id === "launchModal") {
   loadInitModal();
-// } else if (event.target.id === "createNewDance") {
-
 } else if (event.target.id === "addDancer") {
 
     var loader = new THREE.TextureLoader();
@@ -1237,7 +1242,8 @@ async function onButtonClick(event) {
     var newMesh = new THREE.Mesh(geometry, material);
     var newDancer = new Dancer("Dancer" + newDancerNumber, newMesh);
     newDancer.updateColor('#'+(Math.random()*0xFFFFFF<<0).toString(16));
-    var posDefault = new THREE.Vector3(-15, 0, -20);
+    var posDefault = new THREE.Vector3(-15, 0, -20 + inc);
+    inc += 2;
     newDancer.addInitPosition(posDefault);
     newDancer.addKFPosition(0, posDefault);
     newDancer.addKFPosition(t, posDefault);
@@ -1256,7 +1262,7 @@ async function onButtonClick(event) {
   } else if (event.target.id === "undo") {
 
     if (!justHitUndo) {
-      console.log('DID NOT JUST HIT UNDO');
+      // console.log('DID NOT JUST HIT UNDO');
       var oldState = retrieveUndo();
       if (oldState == null) {
         alert("Cannot undo any further.");
@@ -1269,7 +1275,7 @@ async function onButtonClick(event) {
       return;
     }
 
-    console.log("OLD STATE ", oldState);
+    // console.log("OLD STATE ", oldState);
     t = oldState.time;
     danceDesigner.maxT = oldState.maxT;
     danceDesigner.s.dancers = [];
@@ -1294,7 +1300,7 @@ async function onButtonClick(event) {
 
     // Add the current state to the undo buffer
     if (undoBuffer.length == 0) {
-      console.log("undo buffer length is 0");
+      // console.log("undo buffer length is 0");
       if (!undoBufferFilled) {
         await addToUndoBuffer();
       }
@@ -1444,7 +1450,7 @@ $(document).on('click', '.createNewDance', function() {
   });
 
   document.getElementById("goBack").addEventListener("click", function(userData) {
-    console.log('GO BACK');
+    // console.log('GO BACK');
     var userDances = userData.dances;
     var innerHTML = '<div class="container"><div class="row">';
     if (usersDances.length == 0) {
@@ -1477,19 +1483,19 @@ $(document).on('click', '.createNewDance', function() {
 
 
 $(document).on('click', '.danceBtn', function(){
-    console.log('clicked');
-    console.log(this.children[0].id);
-    var selectedDance = usersDances[this.children[0].id];
-    console.log("SELECTED DANCE: ", selectedDance);
 
-    console.log("NAME: ", selectedDance.dance_name);
-    console.log("ID: ", selectedDance.id);
+  // TODO: Clear the stage of the existing dance.
+    clearTheStage();
+    // console.log(this.children[0].id);
+
+    var selectedDance = usersDances[this.children[0].id];
+    document.getElementById("dance_name").value = selectedDance.dance_name;
     danceDesigner.s.dancers = [];
 
     var newDancers = JSON.parse(selectedDance.dancers);
     for (var j = 0; j < newDancers.length; j++) {
       var thisDancer = newDancers[j];
-      console.log(thisDancer);
+      // console.log(thisDancer);
       var loader = new THREE.TextureLoader();
       var geometry = new THREE.BoxGeometry(1, 2, 1);
       geometry.name = thisDancer.name;
@@ -1497,7 +1503,7 @@ $(document).on('click', '.danceBtn', function(){
 
       var newMesh = new THREE.Mesh(geometry, material);
       var newDancer = new Dancer(thisDancer.name, newMesh);
-      newDancer.updateColor(thisDancer.mesh.materials[0].color);
+      newDancer.updateColor(thisDancer.color);
       var posDefault = thisDancer.positions[0];
       newDancer.addInitPosition(posDefault);
       newDancer.addKFPosition(0, posDefault);
@@ -1522,11 +1528,7 @@ $(document).on('click', '.danceBtn', function(){
 
 
     var newKeyframes = JSON.parse(selectedDance.keyframes);
-    console.log("PINEAPPLE");
-    // Unpack the object the keyframes is stored in
-    newKeyframes = newKeyframes.keyframes;
     danceDesigner.s.keyframes = newKeyframes;
-    console.log("new keyframes: ", newKeyframes);
 
     for (var i = 0; i < newKeyframes.length; i++) {
       timeline.addTimeMark(newKeyframes[i]);
@@ -1534,12 +1536,34 @@ $(document).on('click', '.danceBtn', function(){
     danceDesigner.maxT = newKeyframes[newKeyframes.length - 1];
 
     // TODO: modify the audio, number of keyframes displayed
-    // danceDesigner.s.audio;
+    audioFile = selectedDance.audio;
+    // console.log("AUDIO FILE: ", audioFile);
 
     // Close the modal
     $('#dancesModal').modal('hide');
 
 });
+
+function clearTheStage() {
+  // danceDesigner.scene.remove();
+  for (let i = 0; i < danceDesigner.scene.children.length; i ++) {
+    if (danceDesigner.scene.children[i].type == "Mesh" && danceDesigner.scene.children[i].geometry.type == "BoxGeometry") {
+
+      console.log("removed ", danceDesigner.scene.children[i]);
+      danceDesigner.scene.remove(danceDesigner.scene.children[i]);
+      // for (let j = 0; j < danceDesigner.dancerPos.length; j++) {
+      //   var d = danceDesigner.dancerPos[i].Dancer;
+      //   if (danceDesigner.dancerPos[i][time] != null) {
+      //     if (d.name == scene.children[i].geometry.name) {
+      //       scene.children[i].position.x = danceDesigner.dancerPos[i][time].x;
+      //       scene.children[i].position.y = danceDesigner.dancerPos[i][time].y;
+      //       scene.children[i].position.z = danceDesigner.dancerPos[i][time].z;
+      //     }
+      //   }
+      // }
+    }
+  }
+}
 
 function saveAsImage() {
   var imgData, imgNode;
@@ -1549,26 +1573,12 @@ function saveAsImage() {
             imgData = danceDesigner.renderer1.domElement.toDataURL(strMime);
             var strDownloadMime = "image/octet-stream";
             var danceImgName = dance_id + ".jpg";
-            // saveFile(imgData.replace(strMime, strDownloadMime), danceImgName);
             return imgData.replace(strMime, strDownloadMime);
         } catch (e) {
             console.log(e);
             return;
         }
 }
-
-// var saveFile = function (strData, filename) {
-//         var link = document.createElement('a');
-//         if (typeof link.download === 'string') {
-//             document.body.appendChild(link); //Firefox requires the link to be in the body
-//             link.download = filename;
-//             link.href = strData;
-//             link.click();
-//             document.body.removeChild(link); //remove the link when done
-//         } else {
-//             location.replace(uri);
-//         }
-//     }
 
 // // Volume controls
 // var volume = document.getElementById("volume");
@@ -1618,7 +1628,7 @@ function loadInitModal() {
         innerHTML +=
         `<div class="col-6 text-center danceBtn" style="justify-content: center;">
           <button type="button" id="${usersDances[i].id}" class="btn btn-light">
-            ${usersDances[i].dance_name} ${usersDances[i].id}
+            ${usersDances[i].dance_name}
           </button>
           <img src=${usersDances[i].image} />
         </div>`;
@@ -1626,6 +1636,10 @@ function loadInitModal() {
     }
     innerHTML += '</div></div>';
     document.getElementById("modal-body").innerHTML = innerHTML;
+
+    var footerHTML = '<button type="button" id="createNewDance" class="createNewDance btn btn-primary">Create new dance</button>';
+
+    document.getElementById("modal-footer").innerHTML = footerHTML;
 
     $('#dancesModal').modal('show');
   })
