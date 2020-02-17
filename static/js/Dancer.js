@@ -272,6 +272,7 @@ var danceDesigner = {
     // spotLightJanet.shadow.camera.fov = 30;
     // spotLightJanet.target = janetMesh;
     // this.scene.add( spotLightJanet );
+
     this.light = new THREE.PointLight(0xFFFFFF);
     this.light.position.x = 0;
     this.light.position.y = 10;
@@ -630,8 +631,9 @@ var t = 0;
 var lightAngle = 0;
 var play = false;
 var hasMusic = false;
-var audioFile;
+var audio;
 var file;
+var audioURL = "https://res.cloudinary.com/hdcz0vo9p/video/upload/v1581906149/default_dbabou.mp3";
 
 // var sound = document.getElementById('sound');
 
@@ -886,18 +888,15 @@ var wavesurfer = WaveSurfer.create({
     ]
 });
 
-// // Set audio
-// if (audioFile) {
-//   file = audioFile;
-//   hasMusic = true;
-//   // Load the blob into Wavesurfer
-//   wavesurfer.loadBlob(blob);
-//
-// } else {
-  // Set default silent audio
-  file = '/static/files/default.mp3';
-  wavesurfer.load(file);
-// }
+var audioFileName = "EMPTY";
+
+$(document).on('change', ':file', function() {
+    var input = $(this),
+        label = input.val().replace(/\\/g, '/').replace(/.*\//, '');
+    input.trigger('fileselect', [label]);
+    audioFileName = label;
+    document.getElementById("audioFileName").innerHTML = audioFileName;
+});
 
 // Once the user loads a file in the fileinput, the file should be loaded into waveform
 document.getElementById("fileinput").addEventListener('change', function(e){
@@ -913,7 +912,6 @@ document.getElementById("fileinput").addEventListener('change', function(e){
 
             // Load the blob into Wavesurfer
             wavesurfer.loadBlob(blob);
-            audioFile = blob;
         };
 
         reader.onerror = function (evt) {
@@ -922,9 +920,25 @@ document.getElementById("fileinput").addEventListener('change', function(e){
 
         // Read File as an ArrayBuffer
         reader.readAsArrayBuffer(file);
+        audio = file;
+
+        // Save the new audio to Cloudinary
+        var formData = new FormData();
+        formData.append('audio', audio);
+
+        fetch('/saveAudio', {
+          method: 'POST', // or 'PUT'
+          body: formData,
+        })
+        .then((response) => response.json())
+        .catch(error => console.error('Error:', error))
+        .then((response) => {
+          audioURL = response.audioURL;
+          console.log("AUDIOURL: ", audioURL);
+          console.log('Success:', JSON.stringify(response));
+        });
     }
 
-    file = file.name;
 }, false);
 
 wavesurfer.toggleInteraction();
@@ -1190,19 +1204,8 @@ async function onButtonClick(event) {
         }
         dancersInfo.push(dancerInfo);
     }
-    // var theseDancers = JSON.stringify(danceDesigner.s.dancers);
     var theseDancers = JSON.stringify(dancersInfo);
-    console.log(theseDancers);
-    var theseKeyframes = danceDesigner.s.keyframes;
-    theseKeyframes = JSON.stringify(theseKeyframes);
-    var audio = JSON.stringify(file);
-    // var audio;
-    // if (audioFile) {
-    //   audio = JSON.stringify({"hasAudio": true, "audioFile": audioFile})
-    // } else {
-    //   audio = JSON.stringify({"hasAudio": false, "audioFile": {}})
-    // }
-    // console.log(audio);
+    var theseKeyframes = JSON.stringify(danceDesigner.s.keyframes);
     var dance_name= document.getElementById("dance_name").value;
 
    const data = {
@@ -1212,25 +1215,26 @@ async function onButtonClick(event) {
      "keyframes": theseKeyframes,
      "number_of_keyframes": danceDesigner.s.keyframes.length,
      "image": image,
-     "audio": audio,
+     "audioFileName": audioFileName,
+     "audioURL": audioURL,
     };
-    // console.log(data);
 
-  fetch('/saveDance', {
-    method: 'POST', // or 'PUT'
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  })
-  .then((response) => response.json())
-  .then((data) => {
-    console.log('Success:', data);
-    return;
-  })
-  .catch((error) => {
-    console.error('Error:', error);
-  });
+    fetch('/saveDance', {
+      method: 'POST', // or 'PUT'
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    })
+    .then((response) => response.json())
+    .then((data) => {
+      console.log('Success:', data);
+      return;
+    })
+    .catch((error) => {
+      console.error('Error:', error);
+    });
+
 } else if (event.target.id === "launchModal") {
   loadInitModal();
 } else if (event.target.id === "addDancer") {
@@ -1383,12 +1387,17 @@ async function onButtonClick(event) {
 async function initNewDance(numDancers) {
 
   await clearTheStage();
+
+  // Set default silent audio
+  file = '/static/files/default.mp3';
+  wavesurfer.load(file);
+  document.getElementById("audioFileName").innerHTML = "";
+
+  // Reset the dancers
   var loader = new THREE.TextureLoader();
   newDancerNumber = 0;
-
   var defaultZValue = -20;
   var offset = 2;
-
   for (var i = 0; i < numDancers; i++) {
     var geometry = new THREE.BoxGeometry(1, 2, 1);
     var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: loader.load('static/files/janet.jpg')});
@@ -1496,11 +1505,17 @@ $(document).on('click', '.danceBtn', async function(){
   document.getElementById("dance_name").value = selectedDance.dance_name;
   danceDesigner.s.dancers = [];
 
+  wavesurfer.load(selectedDance.audioURL);
+  if (selectedDance.audioFileName === "EMPTY") {
+    document.getElementById("audioFileName").innerHTML = "";
+  } else {
+    document.getElementById("audioFileName").innerHTML = selectedDance.audioFileName;
+  }
+
   // Load in the new dance
   var newDancers = JSON.parse(selectedDance.dancers);
   for (var j = 0; j < newDancers.length; j++) {
     var thisDancer = newDancers[j];
-    // console.log(thisDancer);
     var loader = new THREE.TextureLoader();
     var geometry = new THREE.BoxGeometry(1, 2, 1);
     var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: loader.load('static/files/janet.jpg')});
@@ -1540,10 +1555,6 @@ $(document).on('click', '.danceBtn', async function(){
     timeline.addTimeMark(newKeyframes[i]);
   }
   danceDesigner.maxT = newKeyframes[newKeyframes.length - 1];
-
-  // TODO: modify the audio, number of keyframes displayed
-  audioFile = selectedDance.audio;
-  // console.log("AUDIO FILE: ", audioFile);
 
   // Close the modal
   $('#dancesModal').modal('hide');

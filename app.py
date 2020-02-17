@@ -30,7 +30,21 @@ from oauthlib.oauth2 import WebApplicationClient
 import requests
 import json
 
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+import cloudinary.utils
 from flask_sqlalchemy import SQLAlchemy
+
+cloudinary.config(
+  cloud_name = "hdcz0vo9p",
+  api_key = "154722578765685",
+  api_secret = "mgwaIcY8F5NRyiI8QXOeDTD33dc"
+)
+
+FB_CLIENT_ID = os.environ.get("FB_CLIENT_ID")
+FB_CLIENT_SECRET = os.environ.get("FB_CLIENT_SECRET")
+
 # Flask app setup
 app = Flask(__name__, template_folder='.')
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
@@ -76,11 +90,10 @@ class Dance(db.Model):
     keyframes: 'typing.Any'
     number_of_keyframes: int
     image: 'typing.Any'
-    audio: 'typing.Any'
-
+    audioFileName: str
+    audioURL: str
 
     id = db.Column(db.Integer(), primary_key=True, unique=True)
-    # user = db.relationship(User)
     user_id = db.Column(db.String(120), primary_key=True)
     user_email = db.Column(db.String(120))
     dance_name = db.Column(db.String(120))
@@ -88,9 +101,10 @@ class Dance(db.Model):
     keyframes = db.Column(db.String())
     number_of_keyframes = db.Column(db.Integer)
     image = db.Column(db.String())
-    audio = db.Column(db.String())
+    audioFileName = db.Column(db.String())
+    audioURL = db.Column(db.String())
 
-    def __init__(self, id, user_id, user_email, dance_name, dancers, keyframes, number_of_keyframes, image, audio):
+    def __init__(self, id, user_id, user_email, dance_name, dancers, keyframes, number_of_keyframes, image, audioFileName, audioURL):
         self.id = id
         self.user_id = user_id
         self.user_email = user_email
@@ -99,7 +113,8 @@ class Dance(db.Model):
         self.keyframes = keyframes
         self.number_of_keyframes = number_of_keyframes
         self.image = image
-        self.audio = audio
+        self.audioFileName = audioFileName
+        self.audioURL = audioURL
 
     def __repr__(self):
         return '<Dancers %r>' % self.dancers
@@ -319,12 +334,13 @@ def save_dance():
     keyframes = request.json['keyframes']
     number_of_keyframes = request.json['number_of_keyframes']
     image = request.json['image']
-    audio = request.json['audio']
+    audioFileName = request.json['audioFileName']
+    audioURL = request.json['audioURL']
 
     # # Doesn't exist? Add it to the database.
     if not db.session.query(Dance).filter(Dance.id == id).count():
         id = db.session.query(Dance).count()
-        dance = Dance(id, user_id, user_email, dance_name, dancers, keyframes, number_of_keyframes, image, audio)
+        dance = Dance(id, user_id, user_email, dance_name, dancers, keyframes, number_of_keyframes, image, audioFileName, audioURL)
         db.session.add(dance)
         db.session.commit()
     else:
@@ -335,10 +351,21 @@ def save_dance():
         dance.dancers = dancers
         dance.keyframes = keyframes
         dance.number_of_keyframes = number_of_keyframes
-        dance.audio = audio
+        dance.image = image
+        dance.audioFileName = audioFileName
+        dance.audioURL = audioURL
         db.session.commit()
 
     return jsonify({"Success": "Nicely done"})
+
+@app.route("/saveAudio", methods = ["POST"])
+@login_required
+def save_audio():
+
+    audio = request.files['audio']
+    response = cloudinary.uploader.upload(audio, resource_type = "video")
+    audioURL, options = cloudinary.utils.cloudinary_url(response['public_id'], resource_type="video")
+    return jsonify({"Success": "Nicely done", "audioURL": audioURL})
 
 @app.route("/getDances", methods = ["GET"])
 @login_required
