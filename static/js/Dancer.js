@@ -1130,22 +1130,6 @@ function currentTimeFormatted(currentTime) {
   } else return "0" + minutes + ":" + secondsString;
 }
 
-var currentTime = Math.round(wavesurfer.getCurrentTime());
-
-// Update controls and stats
-function update() {
-  if (hasMusic) {
-    document.getElementById("Time").innerHTML = "Current Time: " + currentTimeFormatted(currentTime);
-    play = wavesurfer.isPlaying();
-  } else {
-    document.getElementById("Time").innerHTML = "Current Time: " + currentTimeFormatted(Math.round(keyframeTimeToRealTime(t)));
-  }
-  document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes;
-  keyframes = danceDesigner.s.keyframes.length;
-  danceDesigner.controls.update();
-}
-
-
 // Set button controls and events for each button.
 var buttons = document.getElementsByTagName("button");
 for (let i = 0; i < buttons.length; i++) {
@@ -1185,6 +1169,7 @@ var dance_id = 0;
 var next_available_id = 0;
 var userData;
 var inc = 0;
+var txSprites = [];
 
 // Handle button clicking
 async function onButtonClick(event) {
@@ -1408,7 +1393,7 @@ async function initNewDance(numDancers) {
     if (i < 10) {
       var posDefault = new THREE.Vector3(-15, 0, defaultZValue + (offset * i));
     } else {
-      var posDefault = new THREE.Vector3(15, 0, defaultZValue + (offset * (i - 10)));
+      var posDefault = new THREE.Vector3(-15, 0, defaultZValue + (offset * (i - 10)));
     }
     newDancer.addInitPosition(posDefault);
     newDancer.addKFPosition(0, posDefault);
@@ -1417,6 +1402,33 @@ async function initNewDance(numDancers) {
     newDancer.mesh.position.x = posDefault.x;
     newDancer.mesh.position.y = posDefault.y;
     newDancer.mesh.position.z = posDefault.z;
+
+    var txSprite = makeTextSprite( "Dancer" + newDancerNumber,
+    newDancer.mesh.position.x, newDancer.mesh.position.y + 1.4, newDancer.mesh.position.z,
+    { fontsize: 200,
+      fontface: "Roboto",
+      radius:0,
+      textColor: {r:255, g:255, b:255, a:1.0},
+      borderColor: { r:0, g:0, b:0, a:0 },
+    }
+    );
+    txSprites.push({"txSprite": txSprite, "dancerMesh": newDancer.mesh});
+    danceDesigner.scene.add( txSprite );
+
+    // position: (newDancer.mesh.position.x, newDancer.mesh.position.y + 1, newDancer.mesh.position.z)
+
+    // var name = "Dancer" + newDancerNumber;
+    // var canvas = document.createElement('canvas');
+    // var ctx = canvas.getContext("2d");
+    //     ctx.font="20px Georgia";
+    //     ctx.fillText(name,10,50);
+    //
+    // var texture = new THREE.Texture(canvas);
+    //     texture.needsUpdate = true; //just to make sure it's all up to date.
+    //
+    // var label = new THREE.Mesh(new THREE.PlaneGeometry, new THREE.MeshBasicMaterial({map:texture}));
+    // label.lookAt(danceDesigner.camera);
+    // danceDesigner.scene.add(label);
 
     // Add the new dancer to the scene
     danceDesigner.scene.add(newDancer.mesh);
@@ -1431,12 +1443,186 @@ async function initNewDance(numDancers) {
 
 }
 
+/**
+  * convenience for converting JSON color to rgba that canvas wants
+  * Be nice to handle different forms (e.g. no alpha, CSS style, etc.)
+  */
+ function getCanvasColor ( color ) {
+     return "rgba(" + color.r + "," + color.g + "," + color.b + "," + color.a + ")";
+}
+
+/**
+*  function for drawing rounded rectangles
+*/
+function roundRect(ctx, x, y, w, h, r, borderThickness, borderColor, fillColor)
+{
+   // no point in drawing it if it isn't going to be rendered
+   if (fillColor == undefined && borderColor == undefined)
+       return;
+
+   x -= borderThickness + r;
+   y += borderThickness + r;
+   w += borderThickness * 2 + r * 2;
+   h += borderThickness * 2 + r * 2;
+
+   ctx.beginPath();
+   ctx.moveTo(x+r, y);
+   ctx.lineTo(x+w-r, y);
+   ctx.quadraticCurveTo(x+w, y, x+w, y-r);
+   ctx.lineTo(x+w, y-h+r);
+   ctx.quadraticCurveTo(x+w, y-h, x+w-r, y-h);
+   ctx.lineTo(x+r, y-h);
+   ctx.quadraticCurveTo(x, y-h, x, y-h+r);
+   ctx.lineTo(x, y-r);
+   ctx.quadraticCurveTo(x, y, x+r, y);
+   ctx.closePath();
+
+   ctx.lineWidth = borderThickness;
+
+   // background color
+   // border color
+
+   // if the fill color is defined, then fill it
+   if (fillColor != undefined) {
+       ctx.fillStyle = getCanvasColor(fillColor);
+       ctx.fill();
+   }
+
+   if (borderThickness > 0 && borderColor != undefined) {
+       ctx.strokeStyle = getCanvasColor(borderColor);
+       ctx.stroke();
+   }
+}
+
+var DESCENDER_ADJUST = 1.28;
+/**
+* Build a text sprite.  We use canvas to write the label in 2D then create a texture
+* from the canvas.  Three.js extracts the raster from the canvas and composites that
+* into the center of the texture.
+*/
+function makeTextSprite( message, x, y, z, parameters )
+{
+ if ( parameters === undefined ) parameters = {};
+
+ var fontface = parameters.hasOwnProperty("fontface") ?
+     parameters["fontface"] : "Arial";
+
+ var fontsize = parameters.hasOwnProperty("fontsize") ?
+     parameters["fontsize"] : 18;
+
+ var borderThickness = parameters.hasOwnProperty("borderThickness") ?
+     parameters["borderThickness"] : 4;
+
+ var borderColor = parameters.hasOwnProperty("borderColor") ?
+     parameters["borderColor"] : { r:0, g:0, b:0, a:1.0 };
+
+ var fillColor = parameters.hasOwnProperty("fillColor") ?
+     parameters["fillColor"] : undefined;
+
+ var textColor = parameters.hasOwnProperty("textColor") ?
+     parameters["textColor"] : { r:0, g:0, b:255, a:1.0 };
+
+ var radius = parameters.hasOwnProperty("radius") ?
+             parameters["radius"] : 6;
+
+ var vAlign = parameters.hasOwnProperty("vAlign") ?
+                     parameters["vAlign"] : "center";
+
+ var hAlign = parameters.hasOwnProperty("hAlign") ?
+                     parameters["hAlign"] : "center";
+
+ var canvas = document.createElement('canvas');
+ var context = canvas.getContext('2d');
+
+ // set a large-enough fixed-size canvas
+ canvas.width = 1800;
+ canvas.height = 900;
+
+ context.font = fontsize + "px " + fontface;
+ context.textBaseline = "alphabetic";
+ context.textAlign = "left";
+
+ // get size data (height depends only on font size)
+ var metrics = context.measureText( message );
+ var textWidth = metrics.width;
+
+ /*
+ // need to ensure that our canvas is always large enough
+ // to support the borders and justification, if any
+ // Note that this will fail for vertical text (e.g. Japanese)
+ // The other problem with this approach is that the size of the canvas
+ // varies with the length of the text, so 72-point text is different
+ // sizes for different text strings.  There are ways around this
+ // by dynamically adjust the sprite scale etc. but not in this demo...
+ var larger = textWidth > fontsize ? textWidth : fontsize;
+ canvas.width = larger * 4;
+ canvas.height = larger * 2;
+ // need to re-fetch and refresh the context after resizing the canvas
+ context = canvas.getContext('2d');
+ context.font = fontsize + "px " + fontface;
+ context.textBaseline = "alphabetic";
+ context.textAlign = "left";
+  metrics = context.measureText( message );
+ textWidth = metrics.width;
+
+  console.log("canvas: " + canvas.width + ", " + canvas.height + ", texW: " + textWidth);
+ */
+
+ // find the center of the canvas and the half of the font width and height
+ // we do it this way because the sprite's position is the CENTER of the sprite
+ var cx = canvas.width / 2;
+ var cy = canvas.height / 2;
+ var tx = textWidth/ 2.0;
+ var ty = fontsize / 2.0;
+
+ // then adjust for the justification
+ if ( vAlign == "bottom")
+     ty = 0;
+ else if (vAlign == "top")
+     ty = fontsize;
+
+ if (hAlign == "left")
+     tx = textWidth;
+ else if (hAlign == "right")
+     tx = 0;
+
+ // the DESCENDER_ADJUST is extra height factor for text below baseline: g,j,p,q. since we don't know the true bbox
+ roundRect(context, cx - tx , cy + ty + 0.28 * fontsize,
+         textWidth, fontsize * DESCENDER_ADJUST, radius, borderThickness, borderColor, fillColor);
+
+ // text color.  Note that we have to do this AFTER the round-rect as it also uses the "fillstyle" of the canvas
+ context.fillStyle = getCanvasColor(textColor);
+
+ context.fillText( message, cx - tx, cy + ty);
+
+ // draw some visual references - debug only
+ // drawCrossHairs( context, cx, cy );
+ // outlineCanvas(context, canvas);
+ // addSphere(x,y,z);
+
+ // canvas contents will be used for a texture
+ var texture = new THREE.Texture(canvas)
+ texture.needsUpdate = true;
+
+ var spriteMaterial = new THREE.SpriteMaterial( { map: texture } );
+ var sprite = new THREE.Sprite( spriteMaterial );
+ sprite.name = "Sprite";
+
+ // we MUST set the scale to 2:1.  The canvas is already at a 2:1 scale,
+ // but the sprite itself is square: 1.0 by 1.0
+ // Note also that the size of the scale factors controls the actual size of the text-label
+ sprite.scale.set(4,2,1);
+
+ // set the sprite's position.  Note that this position is in the CENTER of the sprite
+ sprite.position.set(x, y, z);
+
+return sprite;
+}
+
 $(document).on('click', '.createNewDance', function() {
   dance_id = next_available_id;
 
   // TODO: Guide to a new modal to specify the number of dancers in the routine*, stage dimensions(stretch goal), and audio.
-
-  // TODO: Check modal scrollability
 
   var innerHTML =
   `<div class="container">
@@ -1543,6 +1729,20 @@ $(document).on('click', '.danceBtn', async function(){
     danceDesigner.dancersArr.push(newMesh);
     danceDesigner.s.addDancer(newDancer);
 
+    // Add in the text sprites
+    var txSprite = makeTextSprite( "Dancer" + newDancerNumber,
+    newDancer.mesh.position.x, newDancer.mesh.position.y + 1.4, newDancer.mesh.position.z,
+    { fontsize: 200,
+      fontface: "Roboto",
+      radius:0,
+      textColor: {r:255, g:255, b:255, a:1.0},
+      borderColor: { r:0, g:0, b:0, a:0 },
+      }
+    );
+    txSprites.push({"txSprite": txSprite, "dancerMesh": newDancer.mesh});
+    console.log(txSprite);
+    danceDesigner.scene.add( txSprite );
+
     // Increment new dancer count
     newDancerNumber++;
   }
@@ -1563,10 +1763,18 @@ $(document).on('click', '.danceBtn', async function(){
 
 async function clearTheStage() {
 
+  // Clear the dancers
   while (danceDesigner.scene.getObjectByName("Dancer")) {
     danceDesigner.scene.remove(danceDesigner.scene.getObjectByName("Dancer"));
   }
   danceDesigner.dancersArr = [];
+
+  // Clear the text sprites
+  while(danceDesigner.scene.getObjectByName("Sprite")) {
+    danceDesigner.scene.remove(danceDesigner.scene.getObjectByName("Sprite"));
+  }
+  txSprites = [];
+
   // Clear the time marks from the timeline
   timeline.removeTimeMarks();
   timeline.addTimeMark(0);
@@ -1609,6 +1817,27 @@ function saveAsImage() {
 //   }
 // }
 
+var currentTime = Math.round(wavesurfer.getCurrentTime());
+
+// Update controls and stats
+function update() {
+  if (hasMusic) {
+    document.getElementById("Time").innerHTML = "Current Time: " + currentTimeFormatted(currentTime);
+    play = wavesurfer.isPlaying();
+  } else {
+    document.getElementById("Time").innerHTML = "Current Time: " + currentTimeFormatted(Math.round(keyframeTimeToRealTime(t)));
+  }
+
+  for (var i = 0; i < txSprites.length; i++) {
+    var txSprite = txSprites[i].txSprite;
+    var dancerMesh = txSprites[i].dancerMesh;
+    txSprite.position.set(dancerMesh.position.x, dancerMesh.position.y + 1.4, dancerMesh.position.z);
+  }
+
+  document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes;
+  keyframes = danceDesigner.s.keyframes.length;
+  danceDesigner.controls.update();
+}
 
 $(document).ready(function() {
   loadInitModal();

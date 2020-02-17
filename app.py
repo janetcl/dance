@@ -42,9 +42,6 @@ cloudinary.config(
   api_secret = "mgwaIcY8F5NRyiI8QXOeDTD33dc"
 )
 
-FB_CLIENT_ID = os.environ.get("FB_CLIENT_ID")
-FB_CLIENT_SECRET = os.environ.get("FB_CLIENT_SECRET")
-
 # Flask app setup
 app = Flask(__name__, template_folder='.')
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
@@ -118,6 +115,7 @@ class Dance(db.Model):
 
     def __repr__(self):
         return '<Dancers %r>' % self.dancers
+
 # Facebook Login
 FB_CLIENT_ID = os.environ.get("FB_CLIENT_ID")
 FB_CLIENT_SECRET = os.environ.get("FB_CLIENT_SECRET")
