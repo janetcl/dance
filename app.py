@@ -47,8 +47,8 @@ app = Flask(__name__, template_folder='.')
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 
 # Toggle between these two to switch between local testing and Heroku
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/dance'
-heroku = Heroku(app)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/dance'
+# heroku = Heroku(app)
 
 db = SQLAlchemy(app)
 
@@ -126,8 +126,11 @@ FB_TOKEN_URL = "https://graph.facebook.com/oauth/access_token"
 FB_SCOPE = ["email"]
 
 # Google Login
-GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
-GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
+# GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
+# GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
+
+GOOGLE_CLIENT_ID = "966768610728-t9b4b1t6gbth733k5el104tgt85edfb1.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET = "ndTjBKN3gSvsxW_zGxgD8Mfw"
 
 GOOGLE_DISCOVERY_URL = (
     "https://accounts.google.com/.well-known/openid-configuration"
