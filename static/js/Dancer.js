@@ -1,4 +1,6 @@
 import TimelinePlugin from './WaveSurferTimeline.js';
+import CursorPlugin from './WaveSurferCursor.js';
+import RegionsPlugin from './WaveSurferRegions.js';
 
 class Position {
   constructor(x, y, z, t) {
@@ -33,9 +35,9 @@ class Dancer {
     this.positions = [];
   }
 
-  addInitPosition(pos) {
-    this.positions.push(pos);
-  }
+  // addInitPosition(pos) {
+  //   this.positions.push(pos);
+  // }
 
   addKFPosition(time, pos) {
     // Filter existing positions to make sure each time has only one position
@@ -48,68 +50,68 @@ class Dancer {
     this.keyframePositions.sort(function(a, b) {return a.time - b.time});
   }
 
-  async updatePositions() {
-    this.positions[0].x = this.keyframePositions[0].position.x;
-    this.positions[0].y = this.keyframePositions[0].position.y;
-    this.positions[0].z = this.keyframePositions[0].position.z;
-    if (this.keyframePositions.length == 2) {
-      var firstTime = this.keyframePositions[0];
-      var secondTime = this.keyframePositions[1];
-      for (var i = 0; i < secondTime.time; i++) {
-        if (this.positions[i]) {
-          this.positions[i].x = ((secondTime.position.x - firstTime.position.x) * i / (secondTime.time)) + firstTime.position.x;
-          this.positions[i].y = ((secondTime.position.y - firstTime.position.y) * i / (secondTime.time)) + firstTime.position.y;
-          this.positions[i].z = ((secondTime.position.z - firstTime.position.z) * i / (secondTime.time)) + firstTime.position.z;
-        } else {
-          var newPos = new THREE.Vector3(
-            ((secondTime.position.x - firstTime.position.x) * i / (secondTime.time)) + firstTime.position.x,
-            ((secondTime.position.y - firstTime.position.y) * i / (secondTime.time)) + firstTime.position.y,
-            ((secondTime.position.z - firstTime.position.z) * i / (secondTime.time)) + firstTime.position.z
-          );
-          this.positions[i] = newPos;
-        }
-      }
-      if (this.positions[secondTime.time]) {
-        this.positions[secondTime.time].x = secondTime.position.x;
-        this.positions[secondTime.time].y = secondTime.position.y;
-        this.positions[secondTime.time].z = secondTime.position.z;
-      } else {
-        var newPos = new THREE.Vector3(secondTime.position.x, secondTime.position.y, secondTime.position.z);
-        this.positions[secondTime.time] = newPos;
-      }
-    } else {
-      for (var j = 0; j < this.keyframePositions.length - 1; j++) {
-        var firstTime = this.keyframePositions[j];
-        var secondTime = this.keyframePositions[j+1];
-        var timeDiff = secondTime.time - firstTime.time;
-        for (var i = 0; i < timeDiff; i++) {
-          if (this.positions[firstTime.time + i]) {
-            this.positions[firstTime.time + i].x = ((secondTime.position.x - firstTime.position.x) * i / (timeDiff)) + firstTime.position.x;
-            this.positions[firstTime.time + i].y = ((secondTime.position.y - firstTime.position.y) * i / (timeDiff)) + firstTime.position.y;
-            this.positions[firstTime.time + i].z = ((secondTime.position.z - firstTime.position.z) * i / (timeDiff)) + firstTime.position.z;
-          } else {
-            var newPos = new THREE.Vector3(
-              ((secondTime.position.x - firstTime.position.x) * i / (timeDiff)) + firstTime.position.x,
-              ((secondTime.position.y - firstTime.position.y) * i / (timeDiff)) + firstTime.position.y,
-              ((secondTime.position.z - firstTime.position.z) * i / (timeDiff)) + firstTime.position.z
-            );
-            this.positions[firstTime.time + i] = newPos;
-          }
-        }
-        if (j == this.keyframePositions.length - 2) {
-          if (this.positions[secondTime.time]) {
-            this.positions[secondTime.time].x = secondTime.position.x;
-            this.positions[secondTime.time].y = secondTime.position.y;
-            this.positions[secondTime.time].z = secondTime.position.z;
-          } else {
-            var newPos = new THREE.Vector3(secondTime.position.x, secondTime.position.y, secondTime.position.z);
-            this.positions[secondTime.time] = newPos;
-          }
-        }
-      }
-    }
-    return;
-  }
+  // async updatePositions() {
+  //   this.positions[0].x = this.keyframePositions[0].position.x;
+  //   this.positions[0].y = this.keyframePositions[0].position.y;
+  //   this.positions[0].z = this.keyframePositions[0].position.z;
+  //   if (this.keyframePositions.length == 2) {
+  //     var firstTime = this.keyframePositions[0];
+  //     var secondTime = this.keyframePositions[1];
+  //     for (var i = 0; i < secondTime.time; i++) {
+  //       if (this.positions[i]) {
+  //         this.positions[i].x = ((secondTime.position.x - firstTime.position.x) * i / (secondTime.time)) + firstTime.position.x;
+  //         this.positions[i].y = ((secondTime.position.y - firstTime.position.y) * i / (secondTime.time)) + firstTime.position.y;
+  //         this.positions[i].z = ((secondTime.position.z - firstTime.position.z) * i / (secondTime.time)) + firstTime.position.z;
+  //       } else {
+  //         var newPos = new THREE.Vector3(
+  //           ((secondTime.position.x - firstTime.position.x) * i / (secondTime.time)) + firstTime.position.x,
+  //           ((secondTime.position.y - firstTime.position.y) * i / (secondTime.time)) + firstTime.position.y,
+  //           ((secondTime.position.z - firstTime.position.z) * i / (secondTime.time)) + firstTime.position.z
+  //         );
+  //         this.positions[i] = newPos;
+  //       }
+  //     }
+  //     if (this.positions[secondTime.time]) {
+  //       this.positions[secondTime.time].x = secondTime.position.x;
+  //       this.positions[secondTime.time].y = secondTime.position.y;
+  //       this.positions[secondTime.time].z = secondTime.position.z;
+  //     } else {
+  //       var newPos = new THREE.Vector3(secondTime.position.x, secondTime.position.y, secondTime.position.z);
+  //       this.positions[secondTime.time] = newPos;
+  //     }
+  //   } else {
+  //     for (var j = 0; j < this.keyframePositions.length - 1; j++) {
+  //       var firstTime = this.keyframePositions[j];
+  //       var secondTime = this.keyframePositions[j+1];
+  //       var timeDiff = secondTime.time - firstTime.time;
+  //       for (var i = 0; i < timeDiff; i++) {
+  //         if (this.positions[firstTime.time + i]) {
+  //           this.positions[firstTime.time + i].x = ((secondTime.position.x - firstTime.position.x) * i / (timeDiff)) + firstTime.position.x;
+  //           this.positions[firstTime.time + i].y = ((secondTime.position.y - firstTime.position.y) * i / (timeDiff)) + firstTime.position.y;
+  //           this.positions[firstTime.time + i].z = ((secondTime.position.z - firstTime.position.z) * i / (timeDiff)) + firstTime.position.z;
+  //         } else {
+  //           var newPos = new THREE.Vector3(
+  //             ((secondTime.position.x - firstTime.position.x) * i / (timeDiff)) + firstTime.position.x,
+  //             ((secondTime.position.y - firstTime.position.y) * i / (timeDiff)) + firstTime.position.y,
+  //             ((secondTime.position.z - firstTime.position.z) * i / (timeDiff)) + firstTime.position.z
+  //           );
+  //           this.positions[firstTime.time + i] = newPos;
+  //         }
+  //       }
+  //       if (j == this.keyframePositions.length - 2) {
+  //         if (this.positions[secondTime.time]) {
+  //           this.positions[secondTime.time].x = secondTime.position.x;
+  //           this.positions[secondTime.time].y = secondTime.position.y;
+  //           this.positions[secondTime.time].z = secondTime.position.z;
+  //         } else {
+  //           var newPos = new THREE.Vector3(secondTime.position.x, secondTime.position.y, secondTime.position.z);
+  //           this.positions[secondTime.time] = newPos;
+  //         }
+  //       }
+  //     }
+  //   }
+  //   return;
+  // }
 
   removeKeyFrame(time) {
     // Filter existing positions to make sure each time has only one position
@@ -376,7 +378,8 @@ var danceDesigner = {
         if (isMovingAKeyFrame) {
           timeline.updateKeyframeTimeMark(lastKeyframeT);
         }
-        t = ((event.offsetX + timeline.scroller.scrollLeft) / timeline.scale);
+        // t = (event.offsetX / wavesurfer.drawer.width) * wavesurfer.getDuration();
+        // t = ((event.offsetX + timeline.scroller.scrollLeft) / timeline.scale);
         var lessT = Math.round(t - 1);
         t = Math.round(t);
         var greaterT = Math.round(t + 1);
@@ -390,9 +393,14 @@ var danceDesigner = {
         } else {
           // Set the dancers' position to the maximum position
           for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-            danceDesigner.s.dancers[i].mesh.position.x = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].x;
-            danceDesigner.s.dancers[i].mesh.position.y = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].y;
-            danceDesigner.s.dancers[i].mesh.position.z = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].z;
+            // danceDesigner.s.dancers[i].mesh.position.x = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].x;
+            // danceDesigner.s.dancers[i].mesh.position.y = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].y;
+            // danceDesigner.s.dancers[i].mesh.position.z = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].z;
+
+            var kLength = danceDesigner.s.dancers[i].keyframePositions.length;
+            danceDesigner.s.dancers[i].mesh.position.x = danceDesigner.s.dancers[i].keyframePositions[kLength-1].position.x;
+            danceDesigner.s.dancers[i].mesh.position.y = danceDesigner.s.dancers[i].keyframePositions[kLength-1].position.y;
+            danceDesigner.s.dancers[i].mesh.position.z = danceDesigner.s.dancers[i].keyframePositions[kLength-1].position.z;
           }
         }
         timeline.updateTimeMark();
@@ -428,7 +436,7 @@ var danceDesigner = {
           // Adjust all of the dancers' positions appropriately.
           for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
             danceDesigner.s.dancers[i].updateKeyFrame(lastKeyframeT, t);
-            await danceDesigner.s.dancers[i].updatePositions();
+            // await danceDesigner.s.dancers[i].updatePositions();
             // Case where the keyframe moved was previously the last keyframe in the routine.
             if (lastKeyframeIndex == danceDesigner.s.keyframes.length - 1) {
               if (t > lastKeyframeT) {
@@ -476,14 +484,14 @@ var danceDesigner = {
           justHitUndo = false;
         }
 
-        t = ((event.offsetX + timeline.scroller.scrollLeft) / timeline.scale);
+        // t = ((event.offsetX + timeline.scroller.scrollLeft) / timeline.scale);
   			onMouseMove( event );
         timeline.updateTimeMark();
   			document.removeEventListener( 'mousemove', onMouseMove );
   			document.removeEventListener( 'mouseup', onMouseUp );
   		}
 
-      t = ((event.offsetX + timeline.scroller.scrollLeft) / timeline.scale);
+      // t = ((event.offsetX + timeline.scroller.scrollLeft) / timeline.scale);
       var lessT = Math.round(t - 1);
       t = Math.round(t);
       var greaterT = Math.round(t + 1);
@@ -500,9 +508,15 @@ var danceDesigner = {
       } else {
         // Set the dancers' position to the maximum position
         for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-          danceDesigner.s.dancers[i].mesh.position.x = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].x;
-          danceDesigner.s.dancers[i].mesh.position.y = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].y;
-          danceDesigner.s.dancers[i].mesh.position.z = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].z;
+          // danceDesigner.s.dancers[i].mesh.position.x = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].x;
+          // danceDesigner.s.dancers[i].mesh.position.y = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].y;
+          // danceDesigner.s.dancers[i].mesh.position.z = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].z;
+
+          var kLength = danceDesigner.s.dancers[i].keyframePositions.length;
+          danceDesigner.s.dancers[i].mesh.position.x = danceDesigner.s.dancers[i].keyframePositions[kLength-1].position.x;
+          danceDesigner.s.dancers[i].mesh.position.y = danceDesigner.s.dancers[i].keyframePositions[kLength-1].position.y;
+          danceDesigner.s.dancers[i].mesh.position.z = danceDesigner.s.dancers[i].keyframePositions[kLength-1].position.z;
+
         }
       }
       timeline.updateTimeMark();
@@ -535,9 +549,15 @@ var danceDesigner = {
             tempT = Math.round(danceDesigner.maxT);
           }
 
-          if ((Math.abs(danceDesigner.s.dancers[i].positions[tempT].x - intersects[0].object.position.x) < 1) &&
-          (Math.abs(danceDesigner.s.dancers[i].positions[tempT].y - intersects[0].object.position.y) < 1) &&
-          (Math.abs(danceDesigner.s.dancers[i].positions[tempT].z - intersects[0].object.position.z) < 1)) {
+          // if ((Math.abs(danceDesigner.s.dancers[i].positions[tempT].x - intersects[0].object.position.x) < 1) &&
+          // (Math.abs(danceDesigner.s.dancers[i].positions[tempT].y - intersects[0].object.position.y) < 1) &&
+          // (Math.abs(danceDesigner.s.dancers[i].positions[tempT].z - intersects[0].object.position.z) < 1)) {
+          //   danceDesigner.movingDancer = danceDesigner.s.dancers[i];
+          // }
+
+          if ((Math.abs(danceDesigner.s.dancers[i].mesh.position.x - intersects[0].object.position.x) < 1) &&
+          (Math.abs(danceDesigner.s.dancers[i].mesh.position.y - intersects[0].object.position.y) < 1) &&
+          (Math.abs(danceDesigner.s.dancers[i].mesh.position.z - intersects[0].object.position.z) < 1)) {
             danceDesigner.movingDancer = danceDesigner.s.dancers[i];
           }
         }
@@ -569,7 +589,6 @@ var danceDesigner = {
         intersects[0].point.sub(danceDesigner.offset),
         danceDesigner.selection.position
       );
-      console.log('updating position');
       // Find the dancer based on the initial pose
       if (danceDesigner.movingDancer) {
         if (newPosThreeVector) {
@@ -590,7 +609,8 @@ var danceDesigner = {
           }
           var newPos = new THREE.Vector3(newPosThreeVector.x, newPosThreeVector.y, newPosThreeVector.z);
           // Set the new position
-          danceDesigner.movingDancer.positions[t] = newPos;
+          // danceDesigner.movingDancer.positions[t] = newPos;
+          danceDesigner.movingDancer.mesh.position.set(newPos.x, newPos.y, newPos.z);
         }
 
       }
@@ -783,9 +803,9 @@ var TimelineEditor = function () {
       }
     }
 
-    if (!play) {
-      wavesurfer.setCurrentTime(keyframeTimeToRealTime(t));
-    }
+    // if (!play) {
+    //   wavesurfer.setCurrentTime(keyframeTimeToRealTime(t));
+    // }
 	}
 
   var timeMarks = [];
@@ -893,7 +913,35 @@ var wavesurfer = WaveSurfer.create({
     plugins: [
       TimelinePlugin.create({
         container: "#waveform"
-      })
+      }),
+      CursorPlugin.create({
+          showTime: true,
+          opacity: 1,
+          customShowTimeStyle: {
+              'background-color': '#000',
+              color: '#fff',
+              padding: '2px',
+              'font-size': '10px'
+          }
+      }),
+      RegionsPlugin.create({
+            // regions: [
+            //     {
+            //         start: 1,
+            //         end: 3,
+            //         loop: false,
+            //         color: 'hsla(400, 100%, 30%, 0.5)'
+            //     }, {
+            //         start: 5,
+            //         end: 7,
+            //         loop: false,
+            //         color: 'hsla(290, 62%, 70%, 0.9)'
+            //     }
+            // ],
+            dragSelection: {
+                slop: 5
+            }
+        })
     ]
 });
 
@@ -950,7 +998,7 @@ document.getElementById("fileinput").addEventListener('change', function(e){
 
 }, false);
 
-wavesurfer.toggleInteraction();
+// wavesurfer.toggleInteraction();
 
 
 wavesurfer.on('scroll', function (e) {
@@ -961,25 +1009,67 @@ wavesurfer.on('scroll', function (e) {
 
 function animate() {
   // if (hasMusic) {
-    currentTime = Math.round(wavesurfer.getCurrentTime());
+  console.log(t);
+    t = wavesurfer.getCurrentTime();
+    // currentTime = Math.round(wavesurfer.getCurrentTime());
     if (play) {
-      t = realTimeToKeyframeTime(wavesurfer.getCurrentTime());
+      // t = wavesurfer.getCurrentTime();
+      // t = realTimeToKeyframeTime(wavesurfer.getCurrentTime());
       timeline.changeTimeMarkColor(t, false);
       timeline.updateTimeMark();
     }
-    var closestT = Math.round(t);
-    if (closestT > danceDesigner.maxT) {
-      closestT = danceDesigner.maxT;
+    // var closestT = Math.round(t);
+    // if (closestT > danceDesigner.maxT) {
+    //   closestT = danceDesigner.maxT;
+    //   // closestT = danceDesigner.maxT - 1;
+    // }
+
+    if (t > danceDesigner.maxT) {
+      // var closestT = danceDesigner.maxT;
       // closestT = danceDesigner.maxT - 1;
-    }
-    for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-      var d = danceDesigner.s.dancers[i];
-      if (d.positions[closestT]) {
-        d.mesh.position.x = d.positions[closestT].x;
-        d.mesh.position.y = d.positions[closestT].y;
-        d.mesh.position.z = d.positions[closestT].z;
+      for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+
+        var d = danceDesigner.s.dancers[i];
+        var lastIndex = d.keyframePositions.length - 1;
+        d.mesh.position.x = d.keyframePositions[lastIndex].position.x;
+        d.mesh.position.y = d.keyframePositions[lastIndex].position.y;
+        d.mesh.position.z = d.keyframePositions[lastIndex].position.z;
+
+      }
+    } else {
+
+      for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+        var d = danceDesigner.s.dancers[i];
+
+        for (var j = 0; j < d.keyframePositions.length - 1; j++) {
+          var currKeyFramePos = d.keyframePositions[j];
+          var nextKeyFramePos = d.keyframePositions[j+1];
+          if (t == currKeyFramePos.time) {
+            d.mesh.position.x = d.currKeyFramePos.position.x;
+            d.mesh.position.y = d.currKeyFramePos.position.y;
+            d.mesh.position.z = d.currKeyFramePos.position.z;
+          } else if (t > currKeyFramePos.time && t < nextKeyFramePos.time) {
+            var diff = nextKeyFramePos.time - currKeyFramePos.time;
+            var frac = (t - currKeyFramePos.time) / diff;
+            d.mesh.position.x = currKeyFramePos.position.x + (frac * (nextKeyFramePos.position.x - currKeyFramePos.position.x));
+            d.mesh.position.y = currKeyFramePos.position.y + (frac * (nextKeyFramePos.position.y - currKeyFramePos.position.y));
+            d.mesh.position.z = currKeyFramePos.position.z + (frac * (nextKeyFramePos.position.z - currKeyFramePos.position.z));
+          } else if (t == nextKeyFramePos.time) {
+            d.mesh.position.x = d.nextKeyFramePos.position.x;
+            d.mesh.position.y = d.nextKeyFramePos.position.y;
+            d.mesh.position.z = d.nextKeyFramePos.position.z;
+          }
+        }
+        // if (d.positions[closestT]) {
+        //   d.mesh.position.x = d.positions[closestT].x;
+        //   d.mesh.position.y = d.positions[closestT].y;
+        //   d.mesh.position.z = d.positions[closestT].z;
+        // }
       }
     }
+
+
+
   // } else {
   //   if (play) {
   //     if (danceDesigner.maxT === 0 || t > danceDesigner.maxT) {
@@ -1121,22 +1211,14 @@ function render() {
   }
 }
 
-function keyframeTimeToRealTime(keyframeTime) {
-  return keyframeTime / 4;
-}
-
-function realTimeToKeyframeTime(realTime) {
-  return Math.round(realTime * 4);
-}
-
 function currentTimeFormatted(currentTime) {
   var minutes = Math.floor(currentTime / 60);
   var seconds = (currentTime % 60);
   var secondsString;
   if (seconds < 10) {
-    secondsString = "0" + seconds;
+    secondsString = "0" + seconds.toFixed(2);
   } else {
-    secondsString = seconds.toString();
+    secondsString = seconds.toFixed(2);
   }
   if (minutes == 0) {
     return "00:" + secondsString;
@@ -1158,12 +1240,13 @@ var newPosThreeVector = null;
 async function addNewKeyFrame(t) {
   t = Math.round(t);
 
+  console.log("t", t);
   for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
     var dancer = danceDesigner.s.dancers[i];
     var dancerMesh = dancer.mesh;
     var newPos = new THREE.Vector3(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z);
     dancer.addKFPosition(t, newPos);
-    await dancer.updatePositions();
+    // await dancer.updatePositions();
   }
 
   if (!danceDesigner.s.keyframes.includes(t)) {
@@ -1173,7 +1256,6 @@ async function addNewKeyFrame(t) {
     timeline.changeTimeMarkColor(t, true);
     danceDesigner.maxT = t;
   }
-
   return;
 }
 
@@ -1248,10 +1330,10 @@ async function onButtonClick(event) {
     newDancer.updateColor('#'+(Math.random()*0xFFFFFF<<0).toString(16));
     var posDefault = new THREE.Vector3(-15, 0, -20 + inc);
     inc += 2;
-    newDancer.addInitPosition(posDefault);
+    // newDancer.addInitPosition(posDefault);
     newDancer.addKFPosition(0, posDefault);
     newDancer.addKFPosition(t, posDefault);
-    newDancer.updatePositions();
+    // newDancer.updatePositions();
     newDancer.mesh.position.x = posDefault.x;
     newDancer.mesh.position.y = posDefault.y;
     newDancer.mesh.position.z = posDefault.z;
@@ -1425,10 +1507,10 @@ async function initNewDance(numDancers) {
     } else {
       var posDefault = new THREE.Vector3(15, 0, defaultZValue + (offset * (i - 10)));
     }
-    newDancer.addInitPosition(posDefault);
+    // newDancer.addInitPosition(posDefault);
     newDancer.addKFPosition(0, posDefault);
     newDancer.addKFPosition(t, posDefault);
-    newDancer.updatePositions();
+    // newDancer.updatePositions();
     newDancer.mesh.position.x = posDefault.x;
     newDancer.mesh.position.y = posDefault.y;
     newDancer.mesh.position.z = posDefault.z;
@@ -1727,14 +1809,14 @@ $(document).on('click', '.danceBtn', async function(){
     var newDancer = new Dancer(thisDancer.name, newMesh);
     newDancer.updateColor(thisDancer.color);
     var posDefault = thisDancer.positions[0];
-    newDancer.addInitPosition(posDefault);
+    // newDancer.addInitPosition(posDefault);
     newDancer.addKFPosition(0, posDefault);
 
     for (var k = 0; k < thisDancer.keyframePositions.length; k++) {
       newDancer.addKFPosition(thisDancer.keyframePositions[k].time, thisDancer.keyframePositions[k].position);
     }
 
-    newDancer.updatePositions();
+    // newDancer.updatePositions();
     newDancer.mesh.position.x = posDefault.x;
     newDancer.mesh.position.y = posDefault.y;
     newDancer.mesh.position.z = posDefault.z;
@@ -1832,12 +1914,10 @@ function saveAsImage() {
 //   }
 // }
 
-var currentTime = Math.round(wavesurfer.getCurrentTime());
-
 // Update controls and stats
 function update() {
   // if (hasMusic) {
-    document.getElementById("Time").innerHTML = "Current Time: " + currentTimeFormatted(currentTime);
+    document.getElementById("Time").innerHTML = "Current Time: " + currentTimeFormatted(t);
     play = wavesurfer.isPlaying();
   // } else {
   //   document.getElementById("Time").innerHTML = "Current Time: " + currentTimeFormatted(Math.round(keyframeTimeToRealTime(t)));
