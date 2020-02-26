@@ -2,20 +2,10 @@ import TimelinePlugin from './WaveSurferTimeline.js';
 import CursorPlugin from './WaveSurferCursor.js';
 import RegionsPlugin from './WaveSurferRegions.js';
 
-class Position {
-  constructor(x, y, z, t) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
-    this.time = t;
-  }
-}
-
 class Dancer {
 
   constructor(name, mesh) {
-    this.keyframePositions = []; // [ { time: position } ] eg: [ {0: (0,0,0)}, { 20: (0, 1, 10)}]
-    this.positions = []; // all positions where the index is the time
+    this.keyframePositions = []; // [ { start: 0, end: 10, position: (0, 0, 0) } ] eg: [ {0: (0,0,0)}, { 20: (0, 1, 10)}]
     this.name = name;
     this.mesh = mesh;
     this.mesh.position.x = 0;
@@ -31,23 +21,23 @@ class Dancer {
     this.mesh.material.color.set(color);
   }
 
-  clearPositions() {
-    this.positions = [];
-  }
+  // clearPositions() {
+  //   this.positions = [];
+  // }
 
   // addInitPosition(pos) {
   //   this.positions.push(pos);
   // }
 
-  addKFPosition(time, pos) {
+  async addKFPosition(start, end, pos) {
     // Filter existing positions to make sure each time has only one position
-    this.keyframePositions = this.keyframePositions.filter(function(position, index, arr){
-        return position.time !== time;
+    this.keyframePositions = this.keyframePositions.filter(function(kfp, index, arr){
+        return kfp.start !== start;
     });
-    var keyframePosition = {time: time, position: pos}
+    var keyframePosition = {start: start, end: end, position: pos}
     this.keyframePositions.push(keyframePosition);
     // Sort all positions in time order
-    this.keyframePositions.sort(function(a, b) {return a.time - b.time});
+    this.keyframePositions.sort(function(a, b) {return a.start - b.start});
   }
 
   // async updatePositions() {
@@ -113,29 +103,29 @@ class Dancer {
   //   return;
   // }
 
-  removeKeyFrame(time) {
+  removeKeyFrame(start) {
     // Filter existing positions to make sure each time has only one position
-    this.keyframePositions = this.keyframePositions.filter(function(position, index, arr){
-        return position.time !== time;
+    this.keyframePositions = this.keyframePositions.filter(function(kfp, index, arr){
+        return kfp.start !== start;
     });
     return;
   }
 
-  updateKeyFrame(oldT, newT) {
+  updateKeyFrame(oldT, newStart, newEnd) {
     var pos;
     for (var i = 0; i < this.keyframePositions.length; i++) {
-        if (this.keyframePositions[i].time === oldT) {
+        if (this.keyframePositions[i].start === oldT) {
             pos = this.keyframePositions[i].position;
         }
     }
     this.removeKeyFrame(oldT);
-    this.addKFPosition(newT, pos);
+    this.addKFPosition(newStart, newEnd, pos);
     return;
   }
 
   async clone() {
     var cloneDancer = new Dancer(this.name, this.mesh);
-    cloneDancer.positions = await this.positions.slice(0);
+    // cloneDancer.positions = await this.positions.slice(0);
     cloneDancer.keyframePositions = await this.keyframePositions.slice(0);
     return cloneDancer;
   }
@@ -204,7 +194,7 @@ var danceDesigner = {
   dancersArr: [], maxT: null, stagePlane: null,
   xMax: null, xMin: null, zMax: null, zMin: null,
   camera1: null, renderer1: null, camera2: null, renderer2: null,
-  scene2: null, renderers: [], dragControls: null,
+  scene2: null, renderers: [], dragControls: null, newPos: null,
   // janet: null, phillip: null,
   init: function() {
     this.scene = new THREE.Scene();
@@ -435,7 +425,7 @@ var danceDesigner = {
 
           // Adjust all of the dancers' positions appropriately.
           for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-            danceDesigner.s.dancers[i].updateKeyFrame(lastKeyframeT, t);
+            danceDesigner.s.dancers[i].updateKeyFrame(lastKeyframeT, t, t + 2);
             // await danceDesigner.s.dancers[i].updatePositions();
             // Case where the keyframe moved was previously the last keyframe in the routine.
             if (lastKeyframeIndex == danceDesigner.s.keyframes.length - 1) {
@@ -609,8 +599,8 @@ var danceDesigner = {
           }
           var newPos = new THREE.Vector3(newPosThreeVector.x, newPosThreeVector.y, newPosThreeVector.z);
           // Set the new position
-          // danceDesigner.movingDancer.positions[t] = newPos;
-          danceDesigner.movingDancer.mesh.position.set(newPos.x, newPos.y, newPos.z);
+          danceDesigner.newPos = newPos;
+          console.log(newPos);
         }
 
       }
@@ -812,6 +802,12 @@ var TimelineEditor = function () {
 
   function addTimeMark( t ) {
 
+    wavesurfer.addRegion({
+      start: t,
+      end: t + 2,
+      color: 'hsla(290, 62%, 70%, 0.9)'
+    });
+
     var newTimeMark = document.createElement( 'div' );
     newTimeMark.style.position = 'absolute';
     newTimeMark.style.top = '0px';
@@ -1009,7 +1005,6 @@ wavesurfer.on('scroll', function (e) {
 
 function animate() {
   // if (hasMusic) {
-  console.log(t);
     t = wavesurfer.getCurrentTime();
     // currentTime = Math.round(wavesurfer.getCurrentTime());
     if (play) {
@@ -1038,26 +1033,48 @@ function animate() {
       }
     } else {
 
+
       for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
         var d = danceDesigner.s.dancers[i];
 
-        for (var j = 0; j < d.keyframePositions.length - 1; j++) {
-          var currKeyFramePos = d.keyframePositions[j];
-          var nextKeyFramePos = d.keyframePositions[j+1];
-          if (t == currKeyFramePos.time) {
-            d.mesh.position.x = d.currKeyFramePos.position.x;
-            d.mesh.position.y = d.currKeyFramePos.position.y;
-            d.mesh.position.z = d.currKeyFramePos.position.z;
-          } else if (t > currKeyFramePos.time && t < nextKeyFramePos.time) {
-            var diff = nextKeyFramePos.time - currKeyFramePos.time;
-            var frac = (t - currKeyFramePos.time) / diff;
-            d.mesh.position.x = currKeyFramePos.position.x + (frac * (nextKeyFramePos.position.x - currKeyFramePos.position.x));
-            d.mesh.position.y = currKeyFramePos.position.y + (frac * (nextKeyFramePos.position.y - currKeyFramePos.position.y));
-            d.mesh.position.z = currKeyFramePos.position.z + (frac * (nextKeyFramePos.position.z - currKeyFramePos.position.z));
-          } else if (t == nextKeyFramePos.time) {
-            d.mesh.position.x = d.nextKeyFramePos.position.x;
-            d.mesh.position.y = d.nextKeyFramePos.position.y;
-            d.mesh.position.z = d.nextKeyFramePos.position.z;
+        if (d == danceDesigner.movingDancer) {
+          console.log("MOVING DANCER IS THIS ONE!");
+          console.log("danceDesigner.newPos", danceDesigner.newPos);
+          if (danceDesigner.newPos) {
+            d.mesh.position.x = danceDesigner.newPos.x;
+            d.mesh.position.y = danceDesigner.newPos.y;
+            d.mesh.position.z = danceDesigner.newPos.z;
+          }
+          continue;
+        }
+        if (d.keyframePositions.length == 1) {
+          var lastIndex = d.keyframePositions.length - 1;
+          d.mesh.position.x = d.keyframePositions[lastIndex].position.x;
+          d.mesh.position.y = d.keyframePositions[lastIndex].position.y;
+          d.mesh.position.z = d.keyframePositions[lastIndex].position.z;
+        } else {
+          for (var j = 0; j < d.keyframePositions.length - 1; j++) {
+            var currKeyFramePos = d.keyframePositions[j];
+            var nextKeyFramePos = d.keyframePositions[j+1];
+            if (t == currKeyFramePos.start ||
+              (t > currKeyFramePos.start && t < currKeyFramePos.end) ||
+            (t == currKeyFramePos.end)) {
+              d.mesh.position.x = currKeyFramePos.position.x;
+              d.mesh.position.y = currKeyFramePos.position.y;
+              d.mesh.position.z = currKeyFramePos.position.z;
+            } else if (t > currKeyFramePos.end && t < nextKeyFramePos.start) {
+              var diff = nextKeyFramePos.start - currKeyFramePos.start;
+              var frac = (t - currKeyFramePos.start) / diff;
+              d.mesh.position.x = currKeyFramePos.position.x + (frac * (nextKeyFramePos.position.x - currKeyFramePos.position.x));
+              d.mesh.position.y = currKeyFramePos.position.y + (frac * (nextKeyFramePos.position.y - currKeyFramePos.position.y));
+              d.mesh.position.z = currKeyFramePos.position.z + (frac * (nextKeyFramePos.position.z - currKeyFramePos.position.z));
+            } else if (t == nextKeyFramePos.start ||
+              (t > nextKeyFramePos.start && t < nextKeyFramePos.end) ||
+            (t == nextKeyFramePos.end)) {
+              d.mesh.position.x = nextKeyFramePos.position.x;
+              d.mesh.position.y = nextKeyFramePos.position.y;
+              d.mesh.position.z = nextKeyFramePos.position.z;
+            }
           }
         }
         // if (d.positions[closestT]) {
@@ -1120,10 +1137,10 @@ async function addToUndoBuffer() {
   // Copy over the dancers
   let oldDancers = [];
   for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-    if (danceDesigner.s.dancers[i].positions.length > 0) {
+    // if (danceDesigner.s.dancers[i].positions.length > 0) {
       const newDancer = await danceDesigner.s.dancers[i].clone();
       oldDancers.push(newDancer);
-    }
+    // }
   }
 
   // Push to the undo buffer
@@ -1238,15 +1255,18 @@ document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes
 var newPosThreeVector = null;
 
 async function addNewKeyFrame(t) {
-  t = Math.round(t);
+  // t = Math.round(t);
 
-  console.log("t", t);
   for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
     var dancer = danceDesigner.s.dancers[i];
-    var dancerMesh = dancer.mesh;
-    var newPos = new THREE.Vector3(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z);
-    dancer.addKFPosition(t, newPos);
-    // await dancer.updatePositions();
+    if (dancer == danceDesigner.movingDancer) {
+      var newPos = new THREE.Vector3(danceDesigner.newPos.x, danceDesigner.newPos.y, danceDesigner.newPos.z);
+      danceDesigner.newPos = null;
+    } else {
+      var dancerMesh = dancer.mesh;
+      var newPos = new THREE.Vector3(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z);
+    }
+    await dancer.addKFPosition(t, t + 2, newPos);
   }
 
   if (!danceDesigner.s.keyframes.includes(t)) {
@@ -1331,8 +1351,8 @@ async function onButtonClick(event) {
     var posDefault = new THREE.Vector3(-15, 0, -20 + inc);
     inc += 2;
     // newDancer.addInitPosition(posDefault);
-    newDancer.addKFPosition(0, posDefault);
-    newDancer.addKFPosition(t, posDefault);
+    newDancer.addKFPosition(0, 2, posDefault);
+    // newDancer.addKFPosition(t, posDefault);
     // newDancer.updatePositions();
     newDancer.mesh.position.x = posDefault.x;
     newDancer.mesh.position.y = posDefault.y;
@@ -1411,6 +1431,10 @@ async function onButtonClick(event) {
     justHitUndo = true;
 
   } else if (event.target.id === "delete") {
+
+    for (var i = 0; i < wavesurfer.regions.list.length; i++) {
+      var i = 0;
+    }
     var keyframeIndex = -1;
 
     var lessT = Math.round(t - 1);
@@ -1508,8 +1532,8 @@ async function initNewDance(numDancers) {
       var posDefault = new THREE.Vector3(15, 0, defaultZValue + (offset * (i - 10)));
     }
     // newDancer.addInitPosition(posDefault);
-    newDancer.addKFPosition(0, posDefault);
-    newDancer.addKFPosition(t, posDefault);
+    newDancer.addKFPosition(0, 2, posDefault);
+  //  newDancer.addKFPosition(t, posDefault);
     // newDancer.updatePositions();
     newDancer.mesh.position.x = posDefault.x;
     newDancer.mesh.position.y = posDefault.y;
@@ -1810,10 +1834,10 @@ $(document).on('click', '.danceBtn', async function(){
     newDancer.updateColor(thisDancer.color);
     var posDefault = thisDancer.positions[0];
     // newDancer.addInitPosition(posDefault);
-    newDancer.addKFPosition(0, posDefault);
+    newDancer.addKFPosition(0, 2, posDefault);
 
     for (var k = 0; k < thisDancer.keyframePositions.length; k++) {
-      newDancer.addKFPosition(thisDancer.keyframePositions[k].time, thisDancer.keyframePositions[k].position);
+      newDancer.addKFPosition(thisDancer.keyframePositions[k].start, thisDancer.keyframePositions[k].end, thisDancer.keyframePositions[k].position);
     }
 
     // newDancer.updatePositions();
