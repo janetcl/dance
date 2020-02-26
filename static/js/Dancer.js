@@ -1423,7 +1423,7 @@ async function initNewDance(numDancers) {
     if (i < 10) {
       var posDefault = new THREE.Vector3(-15, 0, defaultZValue + (offset * i));
     } else {
-      var posDefault = new THREE.Vector3(-15, 0, defaultZValue + (offset * (i - 10)));
+      var posDefault = new THREE.Vector3(15, 0, defaultZValue + (offset * (i - 10)));
     }
     newDancer.addInitPosition(posDefault);
     newDancer.addKFPosition(0, posDefault);
