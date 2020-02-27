@@ -365,114 +365,114 @@ var danceDesigner = {
       var lastKeyframeT = 0;
   		function onMouseMove( event ) {
 
-        if (isMovingAKeyFrame) {
-          timeline.updateKeyframeTimeMark(lastKeyframeT);
-        }
+        // if (isMovingAKeyFrame) {
+        //   timeline.updateKeyframeTimeMark(lastKeyframeT);
+        // }
         // t = (event.offsetX / wavesurfer.drawer.width) * wavesurfer.getDuration();
         // t = ((event.offsetX + timeline.scroller.scrollLeft) / timeline.scale);
         var lessT = Math.round(t - 1);
         t = Math.round(t);
         var greaterT = Math.round(t + 1);
-        if (danceDesigner.s.keyframes.includes(t) || danceDesigner.s.keyframes.includes(lessT) || danceDesigner.s.keyframes.includes(greaterT)) {
-          // Determine where the current time is in the keyframes[] array if it exists
-          for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
-            if (danceDesigner.s.keyframes[i] == t || danceDesigner.s.keyframes[i] == lessT || danceDesigner.s.keyframes[i] == greaterT) {
-              t = danceDesigner.s.keyframes[i];
-            }
-          }
-        } else {
-          // Set the dancers' position to the maximum position
-          for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-            // danceDesigner.s.dancers[i].mesh.position.x = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].x;
-            // danceDesigner.s.dancers[i].mesh.position.y = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].y;
-            // danceDesigner.s.dancers[i].mesh.position.z = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].z;
-
-            var kLength = danceDesigner.s.dancers[i].keyframePositions.length;
-            danceDesigner.s.dancers[i].mesh.position.x = danceDesigner.s.dancers[i].keyframePositions[kLength-1].position.x;
-            danceDesigner.s.dancers[i].mesh.position.y = danceDesigner.s.dancers[i].keyframePositions[kLength-1].position.y;
-            danceDesigner.s.dancers[i].mesh.position.z = danceDesigner.s.dancers[i].keyframePositions[kLength-1].position.z;
-          }
-        }
+        // if (danceDesigner.s.keyframes.includes(t) || danceDesigner.s.keyframes.includes(lessT) || danceDesigner.s.keyframes.includes(greaterT)) {
+        //   // Determine where the current time is in the keyframes[] array if it exists
+        //   for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
+        //     if (danceDesigner.s.keyframes[i] == t || danceDesigner.s.keyframes[i] == lessT || danceDesigner.s.keyframes[i] == greaterT) {
+        //       t = danceDesigner.s.keyframes[i];
+        //     }
+        //   }
+        // } else {
+        //   // Set the dancers' position to the maximum position
+        //   for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+        //     // danceDesigner.s.dancers[i].mesh.position.x = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].x;
+        //     // danceDesigner.s.dancers[i].mesh.position.y = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].y;
+        //     // danceDesigner.s.dancers[i].mesh.position.z = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].z;
+        //
+        //     var kLength = danceDesigner.s.dancers[i].keyframePositions.length;
+        //     danceDesigner.s.dancers[i].mesh.position.x = danceDesigner.s.dancers[i].keyframePositions[kLength-1].position.x;
+        //     danceDesigner.s.dancers[i].mesh.position.y = danceDesigner.s.dancers[i].keyframePositions[kLength-1].position.y;
+        //     danceDesigner.s.dancers[i].mesh.position.z = danceDesigner.s.dancers[i].keyframePositions[kLength-1].position.z;
+        //   }
+        // }
         timeline.updateTimeMark();
   		}
 
   		async function onMouseUp( event ) {
 
-        if (isMovingAKeyFrame) {
-
-          t = Math.round(t);
-
-          if (lastKeyframeT == 0) {
-            // What do you do if the user is moving the first keyframe?
-            // Automatically create a new keyframe at time = 0 to replace it
-            alert("Cannot move first key frame.");
-          }
-
-          var lastKeyframeIndex = 0;
-          var currentTimeLessIndex = 0;
-          // console.log(danceDesigner.s.keyframes);
-          // Determine where the current time is in the keyframes[] array if it exists
-          for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
-            if (danceDesigner.s.keyframes[i] == lastKeyframeT) {
-              lastKeyframeIndex = i;
-            }
-            if (danceDesigner.s.keyframes[i] < t) {
-              currentTimeLessIndex = i;
-            }
-          }
-          var keyframeAdjust = null;
-          var secondToLastT = danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 2];
-
-          // Adjust all of the dancers' positions appropriately.
-          for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-            danceDesigner.s.dancers[i].updateKeyFrame(lastKeyframeT, t, t + 2);
-            // await danceDesigner.s.dancers[i].updatePositions();
-            // Case where the keyframe moved was previously the last keyframe in the routine.
-            if (lastKeyframeIndex == danceDesigner.s.keyframes.length - 1) {
-              if (t > lastKeyframeT) {
-                danceDesigner.maxT = t;
-                keyframeAdjust = "Move Last Extend Routine";
-              } else {
-                // Case where old last position is moving between two other positions
-                if (t < secondToLastT) {
-                  danceDesigner.maxT = secondToLastT;
-                  keyframeAdjust = "Move Last New Order";
-                }
-                // Case where the last position is still the last posiition
-                else {
-                  danceDesigner.maxT = t;
-                  keyframeAdjust = "Move Last Keep Order";
-                }
-              }
-            } else {
-              // Case where the keyframe being moved was previously not the last keyframe in the routine.
-              if (t > danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 1]) {
-                danceDesigner.maxT = t;
-                // Move the position to a new ending position in the routine
-                keyframeAdjust = "Move Middle Position To New End";
-              } else {
-                keyframeAdjust = "Move Middle Position To New Middle";
-              }
-            }
-          }
-
-          // Adjust the stage's keyframes appropriately
-          if (keyframeAdjust == "Move Last Keep Order" || keyframeAdjust == "Move Last Extend Routine") {
-            danceDesigner.s.keyframes[lastKeyframeIndex] = t;
-          } else {
-            danceDesigner.s.keyframes[lastKeyframeIndex] = t;
-            danceDesigner.s.keyframes.sort(function(a, b) {
-              return a - b;
-            });
-          }
-
-          isMovingAKeyFrame = false;
-
-          // PUSH TO UNDO BUFFER
-          await addToUndoBuffer();
-          timeline.updateSetKeyframeTimeMark(lastKeyframeT, t);
-          justHitUndo = false;
-        }
+        // if (isMovingAKeyFrame) {
+        //
+        //   t = Math.round(t);
+        //
+        //   if (lastKeyframeT == 0) {
+        //     // What do you do if the user is moving the first keyframe?
+        //     // Automatically create a new keyframe at time = 0 to replace it
+        //     alert("Cannot move first key frame.");
+        //   }
+        //
+        //   var lastKeyframeIndex = 0;
+        //   var currentTimeLessIndex = 0;
+        //   // console.log(danceDesigner.s.keyframes);
+        //   // Determine where the current time is in the keyframes[] array if it exists
+        //   for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
+        //     if (danceDesigner.s.keyframes[i] == lastKeyframeT) {
+        //       lastKeyframeIndex = i;
+        //     }
+        //     if (danceDesigner.s.keyframes[i] < t) {
+        //       currentTimeLessIndex = i;
+        //     }
+        //   }
+        //   var keyframeAdjust = null;
+        //   var secondToLastT = danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 2];
+        //
+        //   // Adjust all of the dancers' positions appropriately.
+        //   for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+        //     danceDesigner.s.dancers[i].updateKeyFrame(lastKeyframeT, t, t + 2);
+        //     // await danceDesigner.s.dancers[i].updatePositions();
+        //     // Case where the keyframe moved was previously the last keyframe in the routine.
+        //     if (lastKeyframeIndex == danceDesigner.s.keyframes.length - 1) {
+        //       if (t > lastKeyframeT) {
+        //         danceDesigner.maxT = t;
+        //         keyframeAdjust = "Move Last Extend Routine";
+        //       } else {
+        //         // Case where old last position is moving between two other positions
+        //         if (t < secondToLastT) {
+        //           danceDesigner.maxT = secondToLastT;
+        //           keyframeAdjust = "Move Last New Order";
+        //         }
+        //         // Case where the last position is still the last posiition
+        //         else {
+        //           danceDesigner.maxT = t;
+        //           keyframeAdjust = "Move Last Keep Order";
+        //         }
+        //       }
+        //     } else {
+        //       // Case where the keyframe being moved was previously not the last keyframe in the routine.
+        //       if (t > danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 1]) {
+        //         danceDesigner.maxT = t;
+        //         // Move the position to a new ending position in the routine
+        //         keyframeAdjust = "Move Middle Position To New End";
+        //       } else {
+        //         keyframeAdjust = "Move Middle Position To New Middle";
+        //       }
+        //     }
+        //   }
+        //
+        //   // Adjust the stage's keyframes appropriately
+        //   if (keyframeAdjust == "Move Last Keep Order" || keyframeAdjust == "Move Last Extend Routine") {
+        //     danceDesigner.s.keyframes[lastKeyframeIndex] = t;
+        //   } else {
+        //     danceDesigner.s.keyframes[lastKeyframeIndex] = t;
+        //     danceDesigner.s.keyframes.sort(function(a, b) {
+        //       return a - b;
+        //     });
+        //   }
+        //
+        //   isMovingAKeyFrame = false;
+        //
+        //   // PUSH TO UNDO BUFFER
+        //   await addToUndoBuffer();
+        //   timeline.updateSetKeyframeTimeMark(lastKeyframeT, t);
+        //   justHitUndo = false;
+        // }
 
         // t = ((event.offsetX + timeline.scroller.scrollLeft) / timeline.scale);
   			onMouseMove( event );
@@ -509,7 +509,7 @@ var danceDesigner = {
 
         }
       }
-      timeline.updateTimeMark();
+      // timeline.updateTimeMark();
 
   		document.addEventListener( 'mousemove', onMouseMove, false );
   		document.addEventListener( 'mouseup', onMouseUp, false );
@@ -737,8 +737,7 @@ var TimelineEditor = function () {
 
     console.log("SCROLL: ", scroller.scrollLeft);
     updateMarks();
-    updateTimeMark();
-    updateTimeMarksOnScroll(scroller.scrollLeft);
+    // updateTimeMark();
 
 	}, false );
 	timeline.dom.appendChild( scroller );
@@ -753,49 +752,49 @@ var TimelineEditor = function () {
 	loopMark.style.display = 'none';
 	timeline.dom.appendChild( loopMark );
 
-	var timeMark = document.createElement( 'div' );
-	timeMark.style.position = 'absolute';
-	timeMark.style.top = '0px';
-	timeMark.style.left = '-8px';
-	timeMark.style.width = '16px';
-	timeMark.style.height = '100%';
-	timeMark.style.background = 'linear-gradient(90deg, transparent 8px, #f00 8px, #f00 9px, transparent 9px) 0% 0% / 16px 16px repeat-y';
-	timeMark.style.pointerEvents = 'none';
-	timeline.dom.appendChild( timeMark );
+	// var timeMark = document.createElement( 'div' );
+	// timeMark.style.position = 'absolute';
+	// timeMark.style.top = '0px';
+	// timeMark.style.left = '-8px';
+	// timeMark.style.width = '16px';
+	// timeMark.style.height = '100%';
+	// timeMark.style.background = 'linear-gradient(90deg, transparent 8px, #f00 8px, #f00 9px, transparent 9px) 0% 0% / 16px 16px repeat-y';
+	// timeMark.style.pointerEvents = 'none';
+	// timeline.dom.appendChild( timeMark );
 
-  function updateTimeMark() {
-
-		timeMark.style.left = ( t * scale ) - scroller.scrollLeft - 8 + 'px';
-
-		//var loop = player.getLoop();
-
-		// if ( Array.isArray( loop ) ) {
-    //
-		// 	var loopStart = loop[ 0 ] * scale;
-		// 	var loopEnd = loop[ 1 ] * scale;
-    //
-		// 	loopMark.style.display = '';
-		// 	loopMark.style.left = ( loopStart - scroller.scrollLeft ) + 'px';
-		// 	loopMark.style.width = ( loopEnd - loopStart ) + 'px';
-    //
-		// } else {
-			loopMark.style.display = 'none';
-		//}
-
-    var lessT = Math.round(t - 1);
-    var greaterT = Math.round(t + 1);
-    for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
-      if (danceDesigner.s.keyframes[i] == t || danceDesigner.s.keyframes[i] == lessT || danceDesigner.s.keyframes[i] == greaterT) {
-        changeTimeMarkColor(danceDesigner.s.keyframes[i], true);
-      } else {
-        changeTimeMarkColor(danceDesigner.s.keyframes[i], false);
-      }
-    }
-
-    // if (!play) {
-    //   wavesurfer.setCurrentTime(keyframeTimeToRealTime(t));
-    // }
-	}
+  // function updateTimeMark() {
+  //
+	// 	timeMark.style.left = ( t * scale ) - scroller.scrollLeft - 8 + 'px';
+  //
+	// 	//var loop = player.getLoop();
+  //
+	// 	// if ( Array.isArray( loop ) ) {
+  //   //
+	// 	// 	var loopStart = loop[ 0 ] * scale;
+	// 	// 	var loopEnd = loop[ 1 ] * scale;
+  //   //
+	// 	// 	loopMark.style.display = '';
+	// 	// 	loopMark.style.left = ( loopStart - scroller.scrollLeft ) + 'px';
+	// 	// 	loopMark.style.width = ( loopEnd - loopStart ) + 'px';
+  //   //
+	// 	// } else {
+	// 		loopMark.style.display = 'none';
+	// 	//}
+  //
+  //   // var lessT = Math.round(t - 1);
+  //   // var greaterT = Math.round(t + 1);
+  //   // for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
+  //   //   if (danceDesigner.s.keyframes[i] == t || danceDesigner.s.keyframes[i] == lessT || danceDesigner.s.keyframes[i] == greaterT) {
+  //   //     changeTimeMarkColor(danceDesigner.s.keyframes[i], true);
+  //   //   } else {
+  //   //     changeTimeMarkColor(danceDesigner.s.keyframes[i], false);
+  //   //   }
+  //   // }
+  //
+  //   // if (!play) {
+  //   //   wavesurfer.setCurrentTime(keyframeTimeToRealTime(t));
+  //   // }
+	// }
 
   var timeMarks = [];
 
@@ -841,57 +840,52 @@ var TimelineEditor = function () {
     // }
     timeMarks = [];
   }
+  //
+  // function updateKeyframeTimeMark(time) {
+  //   // for (var i = 0; i < timeMarks.length; i++) {
+  //   //   if (timeMarks[i].time == time) {
+  //   //       timeMarks[i].mark.style.left = ( t * scale ) - scroller.scrollLeft - 12 + 'px';
+  //   //   }
+  //   // }
+  // }
 
-  function updateKeyframeTimeMark(time) {
-    // for (var i = 0; i < timeMarks.length; i++) {
-    //   if (timeMarks[i].time == time) {
-    //       timeMarks[i].mark.style.left = ( t * scale ) - scroller.scrollLeft - 12 + 'px';
-    //   }
-    // }
-  }
-
-  function updateSetKeyframeTimeMark(oldTime, newTime) {
-    // for (var i = 0; i < timeMarks.length; i++) {
-    //   if (timeMarks[i].time == oldTime) {
-    //       timeMarks[i].time = newTime;
-    //   }
-    // }
-  }
-
-  function changeTimeMarkColor(t, editing) {
+  function updateKeyframeTimeMark(oldStart, newStart, newEnd) {
     for (var i = 0; i < timeMarks.length; i++) {
-      if (timeMarks[i].time == t) {
-        if (editing) {
-          // make it yellow
-          timeMarks[i].mark.style.background = 'linear-gradient(90deg, transparent 8px, #ffde00 16px, #ffde00 16px, transparent 9px) 0% 0% / 16px 16px repeat-y';
-        } else {
-          // keep it as is
-          timeMarks[i].mark.style.background = 'linear-gradient(90deg, transparent 8px, #1100c9 16px, #1100c9 16px, transparent 9px) 0% 0% / 16px 16px repeat-y';
-        }
-        return;
+      if (timeMarks[i].start == oldStart) {
+          timeMarks[i].start = newStart;
+          timeMarks[i].end = newEnd;
       }
     }
   }
 
-  function updateTimeMarksOnScroll(offset) {
-    for (var i = 0; i < timeMarks.length; i++) {
-        timeMarks[i].mark.style.left = ( t * scale ) - scroller.scrollLeft + (offset / scale) - 12 + 'px';
-    }
-	}
+  // function changeTimeMarkColor(t, editing) {
+  //   for (var i = 0; i < timeMarks.length; i++) {
+  //     if (timeMarks[i].time == t) {
+  //       if (editing) {
+  //         // make it yellow
+  //         timeMarks[i].mark.style.background = 'linear-gradient(90deg, transparent 8px, #ffde00 16px, #ffde00 16px, transparent 9px) 0% 0% / 16px 16px repeat-y';
+  //       } else {
+  //         // keep it as is
+  //         timeMarks[i].mark.style.background = 'linear-gradient(90deg, transparent 8px, #1100c9 16px, #1100c9 16px, transparent 9px) 0% 0% / 16px 16px repeat-y';
+  //       }
+  //       return;
+  //     }
+  //   }
+
+  // }
 
   return {
     container: container,
-    updateTimeMark: updateTimeMark,
+    // updateTimeMark: updateTimeMark,
     addTimeMark: addTimeMark,
     removeTimeMark: removeTimeMark,
     removeTimeMarks: removeTimeMarks,
     updateKeyframeTimeMark: updateKeyframeTimeMark,
-    updateSetKeyframeTimeMark: updateSetKeyframeTimeMark,
-    changeTimeMarkColor: changeTimeMarkColor,
+    // updateSetKeyframeTimeMark: updateSetKeyframeTimeMark,
+    // changeTimeMarkColor: changeTimeMarkColor,
     scroller: scroller,
     scale: scale,
     timeMarks: timeMarks,
-    updateTimeMarksOnScroll: updateTimeMarksOnScroll,
   };
 
 };
@@ -938,12 +932,14 @@ var wavesurfer = WaveSurfer.create({
             //         color: 'hsla(290, 62%, 70%, 0.9)'
             //     }
             // ],
-            dragSelection: {
-                slop: 5
-            }
+            // dragSelection: {
+            //     slop: 5
+            // }
         })
     ]
 });
+
+wavesurfer.regions.disableDragSelection();
 
 var audioFileName = "EMPTY";
 
@@ -1000,46 +996,60 @@ document.getElementById("fileinput").addEventListener('change', function(e){
 
 // wavesurfer.toggleInteraction();
 
-
-// wavesurfer.on('scroll', function (e) {
-//   console.log(e.target.scrollLeft);
-//   // timeline.updateTimeMarksOnScroll(e.target.scrollLeft);
-// });
-
 // Set up listeners on each wavesurfer region
-wavesurfer.on('region-click', function(r, e) {
-  console.log('CLICKED THE REGION');
+wavesurfer.on('region-create', function(r, e) {
   r.update({color: "rgba(255,222,67, 0.8)"});
 });
 
-wavesurfer.on('region-leave', function(r, e) {
-  console.log("LEFT THE REGION");
-  r.update({color: "rgba(118,255,161, 0.8)"});
+wavesurfer.on('region-click', function(r, e) {
+  r.update({color: "rgba(255,222,67, 0.8)"});
+});
+
+wavesurfer.on('region-mouseenter', function(r, e) {
+  r.update({color: "rgba(255,222,67, 0.8)"});
+});
+
+wavesurfer.on('region-mouseleave', function(r, e) {
+  // console.log('MOUSE GONE FROM THE REGION');
+  // console.log(r);
+  // TODO: do this in a better way. only checks
+  if (wavesurfer.getCurrentTime() > r.end || wavesurfer.getCurrentTime() < r.start) {
+    r.update({color: "rgba(118,255,161, 0.8)"});
+  }
 });
 
 wavesurfer.on('region-in', function(r, e) {
-  console.log('IN THE REGION');
   r.update({color: "rgba(255,222,67, 0.8)"});
 });
 
 wavesurfer.on('region-out', function(r, e) {
-  console.log("OUT OF THE REGION");
   r.update({color: "rgba(118,255,161, 0.8)"});
 });
-//
-// for (var i = 0; i < wavesurfer.regions.list.length; i++) {
-//   // updateKeyframeTimeMark
-//   var r = wavesurfer.regions.list[i];
-//   console.log(r);
-//
-//   r.on('in', function (e) {
-//     console.log("ENTERED IN");
-//     r.color = "rgba(255,222,67, 0.8)";
-//   });
-//   r.on('out', function (e) {
-//     r.color = "hsla(290, 62%, 70%, 0.9)";
-//   });
-// }
+
+wavesurfer.on('region-update-end', function(r, e) {
+  console.log(parseFloat(r.id));
+  var oldStart = parseFloat(r.id);
+  timeline.updateKeyframeTimeMark(parseFloat(r.id), r.start, r.end);
+  r.update({id: r.start});
+
+  // Update the keyframe positions
+  for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+    var d = danceDesigner.s.dancers[i];
+    d.updateKeyFrame(oldStart, r.start, r.end);
+  }
+  for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
+    if (danceDesigner.s.keyframes[i] == oldStart) {
+      danceDesigner.s.keyframes[i] = r.start;
+    }
+  }
+  danceDesigner.s.keyframes.sort(function(a, b) {
+    return a - b;
+  });
+
+  console.log(e);
+  console.log(r);
+});
+
 
 function animate() {
   // if (hasMusic) {
@@ -1048,8 +1058,8 @@ function animate() {
     if (play) {
       // t = wavesurfer.getCurrentTime();
       // t = realTimeToKeyframeTime(wavesurfer.getCurrentTime());
-      timeline.changeTimeMarkColor(t, false);
-      timeline.updateTimeMark();
+      // timeline.changeTimeMarkColor(t, false);
+      // timeline.updateTimeMark();
     }
     // var closestT = Math.round(t);
     // if (closestT > danceDesigner.maxT) {
@@ -1070,7 +1080,6 @@ function animate() {
 
       }
     } else {
-
 
       for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
         var d = danceDesigner.s.dancers[i];
@@ -1099,8 +1108,8 @@ function animate() {
               d.mesh.position.y = currKeyFramePos.position.y;
               d.mesh.position.z = currKeyFramePos.position.z;
             } else if (t > currKeyFramePos.end && t < nextKeyFramePos.start) {
-              var diff = nextKeyFramePos.start - currKeyFramePos.start;
-              var frac = (t - currKeyFramePos.start) / diff;
+              var diff = nextKeyFramePos.start - currKeyFramePos.end;
+              var frac = (t - currKeyFramePos.end) / diff;
               d.mesh.position.x = currKeyFramePos.position.x + (frac * (nextKeyFramePos.position.x - currKeyFramePos.position.x));
               d.mesh.position.y = currKeyFramePos.position.y + (frac * (nextKeyFramePos.position.y - currKeyFramePos.position.y));
               d.mesh.position.z = currKeyFramePos.position.z + (frac * (nextKeyFramePos.position.z - currKeyFramePos.position.z));
@@ -1209,22 +1218,6 @@ function retrieveUndo() {
   return undoBuffer.shift();
 }
 
-// Create element function
-function create(tagName, props) {
-  return Object.assign(document.createElement(tagName), (props || {}));
-}
-
-function createElementOnDom (type, id) {
-  var element = document.createElement(type);
-  element.id = id;
-  return element;
-}
-
-// Append child function
-function ac(p, c) {
-  if (c) p.appendChild(c);
-  return p;
-}
 
 // Render the scene
 function render() {
@@ -1309,7 +1302,7 @@ async function addNewKeyFrame(t) {
     // Adding a new keyframe
     danceDesigner.s.addKeyFrame(t);
     timeline.addTimeMark(t);
-    timeline.changeTimeMarkColor(t, true);
+    // timeline.changeTimeMarkColor(t, true);
     danceDesigner.maxT = t;
   }
   return;
@@ -1453,8 +1446,8 @@ async function onButtonClick(event) {
       timeline.addTimeMark(danceDesigner.s.keyframes[i]);
     }
 
-    // Update the cursor time mark
-    timeline.updateTimeMark();
+    // // Update the cursor time mark
+    // timeline.updateTimeMark();
 
     // Add the current state to the undo buffer
     if (undoBuffer.length == 0) {
@@ -2046,8 +2039,8 @@ function initializeLesson() {
   danceDesigner.init();
   animate(0, 0);
   t = 0;
-  timeline.addTimeMark(0);
-  timeline.changeTimeMarkColor(0, true);
+  // timeline.addTimeMark(0);
+  // timeline.changeTimeMarkColor(0, true);
 }
 if (window.addEventListener)
   window.addEventListener('load', initializeLesson, false);

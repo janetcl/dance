@@ -209,3 +209,35 @@ button{
   	outline: none;
 	}
 }
+
+/* Region handles */
+.wavesurfer-handle {
+  width: 5px !important;
+  max-width: 5px !important;
+  border: 1px solid #ddd;
+  background-color: rgba(238, 238, 238, 0.1);
+  box-sizing: border-box;
+}
+
+.wavesurfer-handle-end {
+  margin-left: -10px;
+}
+
+.wavesurfer-handle:before,
+.wavesurfer-handle:after {
+  content: '';
+  display: block;
+  position: absolute;
+  z-index: 1;
+  border-top: 1px solid #fff;
+  border-bottom: 1px solid #fff;
+  height: 4px;
+  left: 5%;
+  right: 5%;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.wavesurfer-handle:before {
+  margin-top: -3px;
+}
