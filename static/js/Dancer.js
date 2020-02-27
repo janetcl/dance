@@ -32,7 +32,7 @@ class Dancer {
   async addKFPosition(start, end, pos) {
     // Filter existing positions to make sure each time has only one position
     this.keyframePositions = this.keyframePositions.filter(function(kfp, index, arr){
-        return kfp.start !== start;
+        return (kfp.start !== start && kfp.end !== end);
     });
     var keyframePosition = {start: start, end: end, position: pos}
     this.keyframePositions.push(keyframePosition);
@@ -111,14 +111,14 @@ class Dancer {
     return;
   }
 
-  updateKeyFrame(oldT, newStart, newEnd) {
+  updateKeyFrame(oldStart, newStart, newEnd) {
     var pos;
     for (var i = 0; i < this.keyframePositions.length; i++) {
-        if (this.keyframePositions[i].start === oldT) {
+        if (this.keyframePositions[i].start === oldStart) {
             pos = this.keyframePositions[i].position;
         }
     }
-    this.removeKeyFrame(oldT);
+    this.removeKeyFrame(oldStart);
     this.addKFPosition(newStart, newEnd, pos);
     return;
   }
@@ -573,6 +573,7 @@ var danceDesigner = {
 
       // Push to Undo Buffer
       addToUndoBuffer();
+      autoSave();
       justHitUndo = false;
     }
     danceDesigner.movingDancer = null;
@@ -647,12 +648,12 @@ var TimelineEditor = function () {
 
   var timeMarks = [];
 
-  function addTimeMark( t ) {
+  function addTimeMark( t, len ) {
 
     var newTimeMark = wavesurfer.addRegion({
       id: t,
       start: t,
-      end: t + 2,
+      end: t + len,
       color: "rgba(118,255,161, 0.8)"
       // color: 'hsla(290, 62%, 70%, 0.9)'
     });
@@ -671,9 +672,7 @@ var TimelineEditor = function () {
   }
 
   function removeTimeMarks() {
-    // for (var i = 0; i < timeMarks.length; i++) {
-    //   timeline.dom.removeChild( timeMarks[i].mark);
-    // }
+    wavesurfer.clearRegions();
     timeMarks = [];
   }
 
@@ -838,8 +837,6 @@ wavesurfer.on('region-update-end', function(r, e) {
     return a - b;
   });
 
-  console.log(e);
-  console.log(r);
 });
 
 
@@ -939,8 +936,59 @@ async function addToUndoBuffer() {
     undoBuffer.length == 10;
     undoBufferFilled = true;
   }
+}
 
-  // console.log("undoBuffer: ", undoBuffer);
+function autoSave() {
+  // Autosave the dance.
+  var image = saveAsImage();
+  var dancersInfo = [];
+  for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+      var dancer = danceDesigner.s.dancers[i];
+      // console.log(dancer);
+      // Store the color, name, positions, kfpositions for each dancer
+      var dancerInfo = {
+        "name": dancer.name,
+        "color": dancer.mesh.material.color,
+        "positions": dancer.positions,
+        "keyframePositions": dancer.keyframePositions
+      }
+      dancersInfo.push(dancerInfo);
+  }
+  var theseDancers = JSON.stringify(dancersInfo);
+  var theseKeyframes = JSON.stringify(danceDesigner.s.keyframes);
+  var dance_name= document.getElementById("dance_name").value;
+
+  const data = {
+   "dance_id": dance_id,
+   "dance_name": dance_name,
+   "dancers": theseDancers,
+   "keyframes": theseKeyframes,
+   "number_of_keyframes": danceDesigner.s.keyframes.length,
+   "image": image,
+   "audioFileName": audioFileName,
+   "audioURL": audioURL,
+  };
+
+  document.getElementById("savedStatus").innerHTML = "Saving your changes..."
+
+
+  fetch('/saveDance', {
+    method: 'POST', // or 'PUT'
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
+  .then((response) => response.json())
+  .then((data) => {
+    // console.log('Success:', data);
+    document.getElementById("savedStatus").innerHTML = "All changes saved."
+    return;
+  })
+  .catch((error) => {
+    document.getElementById("savedStatus").innerHTML = "There was an error saving the most recent changes."
+    // console.error('Error:', error);
+  });
 }
 
 function retrieveUndo() {
@@ -1021,27 +1069,75 @@ document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes
 var newPosThreeVector = null;
 
 async function addNewKeyFrame(t) {
-  // t = Math.round(t);
 
-  for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-    var dancer = danceDesigner.s.dancers[i];
-    if (dancer == danceDesigner.movingDancer) {
-      var newPos = new THREE.Vector3(danceDesigner.newPos.x, danceDesigner.newPos.y, danceDesigner.newPos.z);
-      danceDesigner.newPos = null;
-    } else {
-      var dancerMesh = dancer.mesh;
-      var newPos = new THREE.Vector3(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z);
-    }
-    await dancer.addKFPosition(t, t + 2, newPos);
+// TODO: dancer deletion
+
+  var inKeyFrames = false;
+  var oldKeyFrameIndex = 0;
+  var d = danceDesigner.s.dancers[0];
+  for (var i = 0; i < d.keyframePositions.length; i++) {
+    if (t == d.keyframePositions[i].start
+      || t > d.keyframePositions[i].start && t < d.keyframePositions[i].end
+      || t == d.keyframePositions[i].end) {
+        inKeyFrames = true;
+        oldKeyFrameIndex = i;
+        break;
+      }
   }
 
-  if (!danceDesigner.s.keyframes.includes(t)) {
+  // if (!danceDesigner.s.keyframes.includes(t)) {
+  if (!inKeyFrames) {
     // Adding a new keyframe
     danceDesigner.s.addKeyFrame(t);
-    timeline.addTimeMark(t);
-    // timeline.changeTimeMarkColor(t, true);
-    danceDesigner.maxT = t;
+
+    var nextStartTime = 0;
+    for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
+      if (danceDesigner.s.keyframes[i] > t) {
+        nextStartTime = danceDesigner.s.keyframes[i];
+        break;
+      }
+    }
+    var len = 2;
+    if (nextStartTime > 0) {
+      // len = (nextStartTime - t) - 0.5;
+      len = 0.5 * (nextStartTime - t);
+      if (len < 0.5) {
+        alert("Keyframes must be within 0.5 seconds of each other.");
+      }
+    }
+    timeline.addTimeMark(t, len);
+
+    if (t > danceDesigner.maxT) {
+      danceDesigner.maxT = t;
+    }
+
+    for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+      var dancer = danceDesigner.s.dancers[i];
+      if (dancer == danceDesigner.movingDancer) {
+        var newPos = new THREE.Vector3(danceDesigner.newPos.x, danceDesigner.newPos.y, danceDesigner.newPos.z);
+        danceDesigner.newPos = null;
+      } else {
+        var dancerMesh = dancer.mesh;
+        var newPos = new THREE.Vector3(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z);
+      }
+      await dancer.addKFPosition(t, t + len, newPos);
+    }
+  } else {
+    // Keyframe already exists
+    for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+      var dancer = danceDesigner.s.dancers[i];
+      if (dancer == danceDesigner.movingDancer) {
+        var newPos = new THREE.Vector3(danceDesigner.newPos.x, danceDesigner.newPos.y, danceDesigner.newPos.z);
+        danceDesigner.newPos = null;
+      } else {
+        var dancerMesh = dancer.mesh;
+        var newPos = new THREE.Vector3(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z);
+      }
+      await dancer.addKFPosition(d.keyframePositions[oldKeyFrameIndex].start, d.keyframePositions[oldKeyFrameIndex].end, newPos);
+      console.log(dancer.keyframePositions);
+    }
   }
+
   return;
 }
 
@@ -1056,54 +1152,55 @@ var txSprites = [];
 
 // Handle button clicking
 async function onButtonClick(event) {
-  if (event.target.id == "saveDance") {
+  // if (event.target.id == "saveDance") {
+  //
+  //   var image = saveAsImage();
+  //   var dancersInfo = [];
+  //   for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+  //       var dancer = danceDesigner.s.dancers[i];
+  //       console.log(dancer);
+  //       // Store the color, name, positions, kfpositions for each dancer
+  //       var dancerInfo = {
+  //         "name": dancer.name,
+  //         "color": dancer.mesh.material.color,
+  //         "positions": dancer.positions,
+  //         "keyframePositions": dancer.keyframePositions
+  //       }
+  //       dancersInfo.push(dancerInfo);
+  //   }
+  //   var theseDancers = JSON.stringify(dancersInfo);
+  //   var theseKeyframes = JSON.stringify(danceDesigner.s.keyframes);
+  //   var dance_name= document.getElementById("dance_name").value;
+  //
+  //  const data = {
+  //    "dance_id": dance_id,
+  //    "dance_name": dance_name,
+  //    "dancers": theseDancers,
+  //    "keyframes": theseKeyframes,
+  //    "number_of_keyframes": danceDesigner.s.keyframes.length,
+  //    "image": image,
+  //    "audioFileName": audioFileName,
+  //    "audioURL": audioURL,
+  //   };
+  //
+  //   fetch('/saveDance', {
+  //     method: 'POST', // or 'PUT'
+  //     headers: {
+  //       'Content-Type': 'application/json',
+  //     },
+  //     body: JSON.stringify(data),
+  //   })
+  //   .then((response) => response.json())
+  //   .then((data) => {
+  //     console.log('Success:', data);
+  //     return;
+  //   })
+  //   .catch((error) => {
+  //     console.error('Error:', error);
+  //   });
 
-    var image = saveAsImage();
-    var dancersInfo = [];
-    for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-        var dancer = danceDesigner.s.dancers[i];
-        console.log(dancer);
-        // Store the color, name, positions, kfpositions for each dancer
-        var dancerInfo = {
-          "name": dancer.name,
-          "color": dancer.mesh.material.color,
-          "positions": dancer.positions,
-          "keyframePositions": dancer.keyframePositions
-        }
-        dancersInfo.push(dancerInfo);
-    }
-    var theseDancers = JSON.stringify(dancersInfo);
-    var theseKeyframes = JSON.stringify(danceDesigner.s.keyframes);
-    var dance_name= document.getElementById("dance_name").value;
-
-   const data = {
-     "dance_id": dance_id,
-     "dance_name": dance_name,
-     "dancers": theseDancers,
-     "keyframes": theseKeyframes,
-     "number_of_keyframes": danceDesigner.s.keyframes.length,
-     "image": image,
-     "audioFileName": audioFileName,
-     "audioURL": audioURL,
-    };
-
-    fetch('/saveDance', {
-      method: 'POST', // or 'PUT'
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(data),
-    })
-    .then((response) => response.json())
-    .then((data) => {
-      console.log('Success:', data);
-      return;
-    })
-    .catch((error) => {
-      console.error('Error:', error);
-    });
-
-} else if (event.target.id === "launchModal") {
+// } else
+if (event.target.id === "launchModal") {
   loadInitModal();
 } else if (event.target.id === "addDancer") {
 
@@ -1116,10 +1213,12 @@ async function onButtonClick(event) {
     newDancer.updateColor('#'+(Math.random()*0xFFFFFF<<0).toString(16));
     var posDefault = new THREE.Vector3(-15, 0, -20 + inc);
     inc += 2;
-    // newDancer.addInitPosition(posDefault);
-    newDancer.addKFPosition(0, 2, posDefault);
-    // newDancer.addKFPosition(t, posDefault);
-    // newDancer.updatePositions();
+
+    var d = danceDesigner.s.dancers[0];
+    for (var i = 0; i < d.keyframePositions.length; i++) {
+      newDancer.addKFPosition(d.keyframePositions[i].start, d.keyframePositions[i].end, posDefault);
+    }
+
     newDancer.mesh.position.x = posDefault.x;
     newDancer.mesh.position.y = posDefault.y;
     newDancer.mesh.position.z = posDefault.z;
@@ -1162,7 +1261,6 @@ async function onButtonClick(event) {
       return;
     }
 
-    // console.log("OLD STATE ", oldState);
     t = oldState.time;
     danceDesigner.maxT = oldState.maxT;
     danceDesigner.s.dancers = [];
@@ -1172,23 +1270,23 @@ async function onButtonClick(event) {
       // danceDesigner.s.dancers[i].updatePositions();
       danceDesigner.s.dancers[i].computePositions(oldState.keyframes);
     }
-    // danceDesigner.s.dancers = oldState.dancers;
 
     danceDesigner.s.keyframes = oldState.keyframes;
 
     // Clean up the timeline
     timeline.removeTimeMarks();
 
-    for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
-      timeline.addTimeMark(danceDesigner.s.keyframes[i]);
-    }
+    // for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
+    //   timeline.addTimeMark(danceDesigner.s.keyframes[i]);
+    // }
 
-    // // Update the cursor time mark
-    // timeline.updateTimeMark();
+    var d = danceDesigner.s.dancers[0];
+    for (var i = 0; i < d.keyframePositions.length; i++) {
+      timeline.addTimeMark(keyframePositions[i].start, keyframePositions[i].end - keyframePositions[i].start);
+    }
 
     // Add the current state to the undo buffer
     if (undoBuffer.length == 0) {
-      // console.log("undo buffer length is 0");
       if (!undoBufferFilled) {
         await addToUndoBuffer();
       }
@@ -1198,6 +1296,7 @@ async function onButtonClick(event) {
 
   } else if (event.target.id === "delete") {
 
+    // TODO: Update deletion
     for (var i = 0; i < wavesurfer.regions.list.length; i++) {
       var i = 0;
     }
@@ -1241,6 +1340,7 @@ async function onButtonClick(event) {
     timeline.removeTimeMark(t);
 
     await addToUndoBuffer();
+    autoSave();
 
     justHitUndo = false;
   } else if (event.target.id === "clear") {
@@ -1274,6 +1374,7 @@ async function onButtonClick(event) {
 async function initNewDance(numDancers) {
 
   await clearTheStage();
+  timeline.addTimeMark(0, 2);
 
   // Set default silent audio
   file = '/static/files/default.mp3';
@@ -1297,10 +1398,8 @@ async function initNewDance(numDancers) {
     } else {
       var posDefault = new THREE.Vector3(15, 0, defaultZValue + (offset * (i - 10)));
     }
-    // newDancer.addInitPosition(posDefault);
+
     newDancer.addKFPosition(0, 2, posDefault);
-  //  newDancer.addKFPosition(t, posDefault);
-    // newDancer.updatePositions();
     newDancer.mesh.position.x = posDefault.x;
     newDancer.mesh.position.y = posDefault.y;
     newDancer.mesh.position.z = posDefault.z;
@@ -1571,7 +1670,7 @@ $(document).on('click', '.createNewDance', function() {
 
 $(document).on('click', '.danceBtn', async function(){
 
-  // TODO: Clear the stage of the existing dance.
+  // TODO: Handle deleting existing dances.
   await clearTheStage();
 
   var selectedDance = usersDances[this.children[0].id];
@@ -1598,7 +1697,7 @@ $(document).on('click', '.danceBtn', async function(){
     newMesh.name = "Dancer";
     var newDancer = new Dancer(thisDancer.name, newMesh);
     newDancer.updateColor(thisDancer.color);
-    var posDeafult = thisDancer.keyframePositions[0].position;
+    var posDefault = thisDancer.keyframePositions[0].position;
     // newDancer.addInitPosition(posDefault);
     newDancer.addKFPosition(0, 2, posDefault);
 
@@ -1638,9 +1737,15 @@ $(document).on('click', '.danceBtn', async function(){
   var newKeyframes = JSON.parse(selectedDance.keyframes);
   danceDesigner.s.keyframes = newKeyframes;
 
-  for (var i = 0; i < newKeyframes.length; i++) {
-    timeline.addTimeMark(newKeyframes[i]);
+
+  var d = danceDesigner.s.dancers[0];
+  for (var i = 0; i < d.keyframePositions.length; i++) {
+    timeline.addTimeMark(d.keyframePositions[i].start, d.keyframePositions[i].end - d.keyframePositions[i].start);
   }
+
+  // for (var i = 0; i < newKeyframes.length; i++) {
+  //   timeline.addTimeMark(newKeyframes[i]);
+  // }
   danceDesigner.maxT = newKeyframes[newKeyframes.length - 1];
 
   // Close the modal
@@ -1664,13 +1769,12 @@ async function clearTheStage() {
 
   // Clear the time marks from the timeline
   timeline.removeTimeMarks();
-  timeline.addTimeMark(0);
 
   return;
 }
 
 // TODO: make sure keyframes don't overlap -- enforce a min difference between start and end time
-// TODO: make sure add dancer works 
+// TODO: make sure add dancer works
 
 function saveAsImage() {
   var imgData, imgNode;
@@ -1757,6 +1861,9 @@ function loadInitModal() {
             ${usersDances[i].dance_name}
           </button>
           <img src=${usersDances[i].image} />
+          <button type="button" id="DELETE${usersDances[i].id}" class="btn btn-danger">
+            Delete
+          </button>
         </div>`;
       }
     }
