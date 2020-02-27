@@ -232,26 +232,9 @@ var danceDesigner = {
     document.addEventListener('mouseup', this.onDocumentMouseUp, false);
 
     this.loader = new THREE.TextureLoader();
-    // var geometry = new THREE.BoxGeometry(1, 2, 1);
-    // geometry.name = "Janet";
-    // var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: this.loader.load('static/files/janet.jpg')});
-    // var janetMesh = new THREE.Mesh(geometry, material);
-    // var janet = new Dancer("Janet", janetMesh);
-    // janet.updateColor(0x00c969);
-    // var j1 = new THREE.Vector3(-2, 0, -5);
-    // janet.addInitPosition(j1);
-    // janet.addKFPosition(0, j1);
-    // janet.updatePositions();
-    // janet.mesh.position.x = j1.x;
-    // janet.mesh.position.y = j1.y;
-    // janet.mesh.position.z = j1.z;
-    // this.scene.add(janet.mesh);
-
     this.s = new Stage();
-    // this.s.addDancer(janet);
     this.maxT = 0;
     this.dancersArr = [];
-    // this.dancersArr = [janetMesh];
 
     // var spotLightJanet = new THREE.SpotLight( {color: 0xffffff, intensity: 0.1});
     // spotLightJanet.position.set( -3, 50, 20 );
@@ -363,37 +346,7 @@ var danceDesigner = {
       var isMovingAKeyFrame = false;
       var lastKeyframeT = 0;
   		function onMouseMove( event ) {
-
-        // if (isMovingAKeyFrame) {
-        //   timeline.updateKeyframeTimeMark(lastKeyframeT);
-        // }
-        // t = (event.offsetX / wavesurfer.drawer.width) * wavesurfer.getDuration();
-        // t = ((event.offsetX + timeline.scroller.scrollLeft) / timeline.scale);
-        var lessT = Math.round(t - 1);
-        t = Math.round(t);
-        var greaterT = Math.round(t + 1);
-        // if (danceDesigner.s.keyframes.includes(t) || danceDesigner.s.keyframes.includes(lessT) || danceDesigner.s.keyframes.includes(greaterT)) {
-        //   // Determine where the current time is in the keyframes[] array if it exists
-        //   for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
-        //     if (danceDesigner.s.keyframes[i] == t || danceDesigner.s.keyframes[i] == lessT || danceDesigner.s.keyframes[i] == greaterT) {
-        //       t = danceDesigner.s.keyframes[i];
-        //     }
-        //   }
-        // } else {
-        //   // Set the dancers' position to the maximum position
-        //   for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-        //     // danceDesigner.s.dancers[i].mesh.position.x = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].x;
-        //     // danceDesigner.s.dancers[i].mesh.position.y = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].y;
-        //     // danceDesigner.s.dancers[i].mesh.position.z = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].z;
-        //
-        //     var kLength = danceDesigner.s.dancers[i].keyframePositions.length;
-        //     danceDesigner.s.dancers[i].mesh.position.x = danceDesigner.s.dancers[i].keyframePositions[kLength-1].position.x;
-        //     danceDesigner.s.dancers[i].mesh.position.y = danceDesigner.s.dancers[i].keyframePositions[kLength-1].position.y;
-        //     danceDesigner.s.dancers[i].mesh.position.z = danceDesigner.s.dancers[i].keyframePositions[kLength-1].position.z;
-        //   }
-        // }
   		}
-
   		async function onMouseUp( event ) {
 
         // if (isMovingAKeyFrame) {
@@ -637,8 +590,6 @@ var audio;
 var file;
 var audioURL = "https://res.cloudinary.com/hdcz0vo9p/video/upload/v1581906149/default_dbabou.mp3";
 
-// var sound = document.getElementById('sound');
-
 var TimelineEditor = function () {
 
   var container = new UI.Panel();
@@ -671,56 +622,6 @@ var TimelineEditor = function () {
   canvasDiv.appendChild(canvas);
   timeline.dom.appendChild( canvasDiv );
 
-  function updateMarks() {
-
-    // canvas.width = scroller.clientWidth;
-    //
-    // var context = canvas.getContext( '2d', { alpha: false } );
-    //
-    // context.fillStyle = '#555';
-    // context.fillRect( 0, 0, canvas.width, canvas.height );
-    //
-    // context.strokeStyle = '#888';
-    // context.beginPath();
-    //
-    // context.translate( - scroller.scrollLeft, 0 );
-    //
-    // var duration = 500;
-    // // FIX
-    // var width = duration * scale;
-    // var scale4 = scale / 4;
-    //
-    // for ( var i = 0.5; i <= width; i += scale ) {
-    //
-    //   context.moveTo( i + ( scale4 * 0 ), 18 ); context.lineTo( i + ( scale4 * 0 ), 26 );
-    //
-    //   if ( scale > 16 ) context.moveTo( i + ( scale4 * 1 ), 22 ), context.lineTo( i + ( scale4 * 1 ), 26 );
-    //   if ( scale >  8 ) context.moveTo( i + ( scale4 * 2 ), 22 ), context.lineTo( i + ( scale4 * 2 ), 26 );
-    //   if ( scale > 16 ) context.moveTo( i + ( scale4 * 3 ), 22 ), context.lineTo( i + ( scale4 * 3 ), 26 );
-    //
-    // }
-    //
-    // context.stroke();
-    //
-    // context.font = '10px Arial';
-    // context.fillStyle = '#888'
-    // context.textAlign = 'center';
-    //
-    // var step = Math.max( 1, Math.floor( 64 / scale ) );
-    //
-    // for ( var i = 0; i < duration; i += step ) {
-    //
-    //   var minute = Math.floor( i / 60 );
-    //   var second = Math.floor( i % 60 );
-    //
-    //   var text = ( minute > 0 ? minute + ':' : '' ) + ( '0' + second ).slice( - 2 );
-    //
-    //   context.fillText( text, i * scale, 13 );
-    //
-    // }
-
-  }
-
   var scroller = document.createElement( 'div' );
   scroller.id = 'timelineSection';
 	scroller.style.position = 'absolute';
@@ -730,9 +631,6 @@ var TimelineEditor = function () {
 	scroller.style.overflow = 'auto';
   scroller.style.background = 'rgba( 255, 255, 255, 0.5 )';
 	scroller.addEventListener( 'scroll', function ( event ) {
-
-    console.log("SCROLL: ", scroller.scrollLeft);
-    updateMarks();
 
 	}, false );
 	timeline.dom.appendChild( scroller );
@@ -759,20 +657,7 @@ var TimelineEditor = function () {
       // color: 'hsla(290, 62%, 70%, 0.9)'
     });
 
-    // var newTimeMark = document.createElement( 'div' );
-    // newTimeMark.style.position = 'absolute';
-    // newTimeMark.style.top = '0px';
-    // newTimeMark.style.left = '-8px';
-    // newTimeMark.style.width = '30px';
-    // newTimeMark.style.height = '100%';
-    // newTimeMark.style.background = 'linear-gradient(90deg, transparent 8px, #1100c9 16px, #1100c9 16px, transparent 9px) 0% 0% / 16px 16px repeat-y';
-    // newTimeMark.style.pointerEvents = 'none';
-
-    // timeMarks.push({mark: newTimeMark, time: t});
     timeMarks.push({mark: newTimeMark, start: t, end: t + 2})
-    // newTimeMark.style.left = ( t * scale ) - scroller.scrollLeft - 12 + 'px';
-    // timeline.dom.appendChild( newTimeMark );
-
   }
 
   function removeTimeMark(t) {
@@ -791,14 +676,6 @@ var TimelineEditor = function () {
     // }
     timeMarks = [];
   }
-  //
-  // function updateKeyframeTimeMark(time) {
-  //   // for (var i = 0; i < timeMarks.length; i++) {
-  //   //   if (timeMarks[i].time == time) {
-  //   //       timeMarks[i].mark.style.left = ( t * scale ) - scroller.scrollLeft - 12 + 'px';
-  //   //   }
-  //   // }
-  // }
 
   function updateKeyframeTimeMark(oldStart, newStart, newEnd) {
     for (var i = 0; i < timeMarks.length; i++) {
@@ -809,31 +686,12 @@ var TimelineEditor = function () {
     }
   }
 
-  // function changeTimeMarkColor(t, editing) {
-  //   for (var i = 0; i < timeMarks.length; i++) {
-  //     if (timeMarks[i].time == t) {
-  //       if (editing) {
-  //         // make it yellow
-  //         timeMarks[i].mark.style.background = 'linear-gradient(90deg, transparent 8px, #ffde00 16px, #ffde00 16px, transparent 9px) 0% 0% / 16px 16px repeat-y';
-  //       } else {
-  //         // keep it as is
-  //         timeMarks[i].mark.style.background = 'linear-gradient(90deg, transparent 8px, #1100c9 16px, #1100c9 16px, transparent 9px) 0% 0% / 16px 16px repeat-y';
-  //       }
-  //       return;
-  //     }
-  //   }
-
-  // }
-
   return {
     container: container,
-    // updateTimeMark: updateTimeMark,
     addTimeMark: addTimeMark,
     removeTimeMark: removeTimeMark,
     removeTimeMarks: removeTimeMarks,
     updateKeyframeTimeMark: updateKeyframeTimeMark,
-    // updateSetKeyframeTimeMark: updateSetKeyframeTimeMark,
-    // changeTimeMarkColor: changeTimeMarkColor,
     scroller: scroller,
     scale: scale,
     timeMarks: timeMarks,
@@ -869,24 +727,7 @@ var wavesurfer = WaveSurfer.create({
               'font-size': '10px'
           }
       }),
-      RegionsPlugin.create({
-            // regions: [
-            //     {
-            //         start: 1,
-            //         end: 3,
-            //         loop: false,
-            //         color: 'hsla(400, 100%, 30%, 0.5)'
-            //     }, {
-            //         start: 5,
-            //         end: 7,
-            //         loop: false,
-            //         color: 'hsla(290, 62%, 70%, 0.9)'
-            //     }
-            // ],
-            // dragSelection: {
-            //     slop: 5
-            // }
-        })
+      RegionsPlugin.create({})
     ]
 });
 
@@ -1827,6 +1668,9 @@ async function clearTheStage() {
 
   return;
 }
+
+// TODO: make sure keyframes don't overlap -- enforce a min difference between start and end time
+// TODO: make sure add dancer works 
 
 function saveAsImage() {
   var imgData, imgNode;
