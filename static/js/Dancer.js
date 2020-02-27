@@ -123,6 +123,59 @@ class Dancer {
     return;
   }
 
+  getPosAt(t) {
+    t = wavesurfer.getCurrentTime();
+
+    if (t > danceDesigner.maxT) {
+
+      var lastIndex = this.keyframePositions.length - 1;
+      return this.keyframePositions[lastIndex].position;
+      // this.mesh.position.x = this.keyframePositions[lastIndex].position.x;
+      // this.mesh.position.y = this.keyframePositions[lastIndex].position.y;
+      // this.mesh.position.z = this.keyframePositions[lastIndex].position.z;
+
+    } else {
+
+      if (this.keyframePositions.length == 1) {
+        var lastIndex = this.keyframePositions.length - 1;
+        return this.keyframePositions[lastIndex].position;
+        // this.mesh.position.x = this.keyframePositions[lastIndex].position.x;
+        // this.mesh.position.y = this.keyframePositions[lastIndex].position.y;
+        // this.mesh.position.z = this.keyframePositions[lastIndex].position.z;
+      } else {
+        for (var j = 0; j < this.keyframePositions.length - 1; j++) {
+          var currKeyFramePos = this.keyframePositions[j];
+          var nextKeyFramePos = this.keyframePositions[j+1];
+          if (t == currKeyFramePos.start ||
+            (t > currKeyFramePos.start && t < currKeyFramePos.end) ||
+          (t == currKeyFramePos.end)) {
+            return currKeyFramePos.position;
+            // this.mesh.position.x = currKeyFramePos.position.x;
+            // this.mesh.position.y = currKeyFramePos.position.y;
+            // this.mesh.position.z = currKeyFramePos.position.z;
+          } else if (t > currKeyFramePos.end && t < nextKeyFramePos.start) {
+            var diff = nextKeyFramePos.start - currKeyFramePos.end;
+            var frac = (t - currKeyFramePos.end) / diff;
+            var newPos = new THREE.Vector3(currKeyFramePos.position.x + (frac * (nextKeyFramePos.position.x - currKeyFramePos.position.x)),
+            currKeyFramePos.position.y + (frac * (nextKeyFramePos.position.y - currKeyFramePos.position.y)),
+            currKeyFramePos.position.z + (frac * (nextKeyFramePos.position.z - currKeyFramePos.position.z)));
+            return newPos;
+            // this.mesh.position.x = currKeyFramePos.position.x + (frac * (nextKeyFramePos.position.x - currKeyFramePos.position.x));
+            // this.mesh.position.y = currKeyFramePos.position.y + (frac * (nextKeyFramePos.position.y - currKeyFramePos.position.y));
+            // this.mesh.position.z = currKeyFramePos.position.z + (frac * (nextKeyFramePos.position.z - currKeyFramePos.position.z));
+          } else if (t == nextKeyFramePos.start ||
+            (t > nextKeyFramePos.start && t < nextKeyFramePos.end) ||
+          (t == nextKeyFramePos.end)) {
+            return nextKeyFramePos.position;
+            // this.mesh.position.x = nextKeyFramePos.position.x;
+            // this.mesh.position.y = nextKeyFramePos.position.y;
+            // this.mesh.position.z = nextKeyFramePos.position.z;
+          }
+        }
+      }
+    }
+  }
+
   async clone() {
     var cloneDancer = new Dancer(this.name, this.mesh);
     // cloneDancer.positions = await this.positions.slice(0);
@@ -568,8 +621,13 @@ var danceDesigner = {
       return;
     }
     if (danceDesigner.selection) {
-      // console.log("ADDING A NEW KEYFRAME");
-      await addNewKeyFrame(t);
+      var oldPosition = danceDesigner.movingDancer.getPosAt(t);
+      if ((Math.abs(danceDesigner.newPos.x - oldPosition.x) < 0.05)
+      || (Math.abs(danceDesigner.newPos.z - oldPosition.z) < 0.05)) {
+        alert("Editing dancer");
+      } else {
+        await addNewKeyFrame(t);
+      }
 
       // Push to Undo Buffer
       addToUndoBuffer();
@@ -801,8 +859,6 @@ wavesurfer.on('region-mouseenter', function(r, e) {
 });
 
 wavesurfer.on('region-mouseleave', function(r, e) {
-  // console.log('MOUSE GONE FROM THE REGION');
-  // console.log(r);
   // TODO: do this in a better way. only checks
   if (wavesurfer.getCurrentTime() > r.end || wavesurfer.getCurrentTime() < r.start) {
     r.update({color: "rgba(118,255,161, 0.8)"});
@@ -842,65 +898,63 @@ wavesurfer.on('region-update-end', function(r, e) {
 
 function animate() {
 
-    t = wavesurfer.getCurrentTime();
+  t = wavesurfer.getCurrentTime();
 
-    if (t > danceDesigner.maxT) {
-      // var closestT = danceDesigner.maxT;
-      // closestT = danceDesigner.maxT - 1;
-      for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+  if (t > danceDesigner.maxT) {
+    for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
 
-        var d = danceDesigner.s.dancers[i];
+      var d = danceDesigner.s.dancers[i];
+      var lastIndex = d.keyframePositions.length - 1;
+      d.mesh.position.x = d.keyframePositions[lastIndex].position.x;
+      d.mesh.position.y = d.keyframePositions[lastIndex].position.y;
+      d.mesh.position.z = d.keyframePositions[lastIndex].position.z;
+
+    }
+  } else {
+
+    for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+      var d = danceDesigner.s.dancers[i];
+
+      if (d == danceDesigner.movingDancer) {
+        if (danceDesigner.newPos) {
+          d.mesh.position.x = danceDesigner.newPos.x;
+          d.mesh.position.y = danceDesigner.newPos.y;
+          d.mesh.position.z = danceDesigner.newPos.z;
+        }
+        continue;
+      }
+      if (d.keyframePositions.length == 1) {
         var lastIndex = d.keyframePositions.length - 1;
         d.mesh.position.x = d.keyframePositions[lastIndex].position.x;
         d.mesh.position.y = d.keyframePositions[lastIndex].position.y;
         d.mesh.position.z = d.keyframePositions[lastIndex].position.z;
-
-      }
-    } else {
-
-      for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-        var d = danceDesigner.s.dancers[i];
-
-        if (d == danceDesigner.movingDancer) {
-          if (danceDesigner.newPos) {
-            d.mesh.position.x = danceDesigner.newPos.x;
-            d.mesh.position.y = danceDesigner.newPos.y;
-            d.mesh.position.z = danceDesigner.newPos.z;
-          }
-          continue;
-        }
-        if (d.keyframePositions.length == 1) {
-          var lastIndex = d.keyframePositions.length - 1;
-          d.mesh.position.x = d.keyframePositions[lastIndex].position.x;
-          d.mesh.position.y = d.keyframePositions[lastIndex].position.y;
-          d.mesh.position.z = d.keyframePositions[lastIndex].position.z;
-        } else {
-          for (var j = 0; j < d.keyframePositions.length - 1; j++) {
-            var currKeyFramePos = d.keyframePositions[j];
-            var nextKeyFramePos = d.keyframePositions[j+1];
-            if (t == currKeyFramePos.start ||
-              (t > currKeyFramePos.start && t < currKeyFramePos.end) ||
-            (t == currKeyFramePos.end)) {
-              d.mesh.position.x = currKeyFramePos.position.x;
-              d.mesh.position.y = currKeyFramePos.position.y;
-              d.mesh.position.z = currKeyFramePos.position.z;
-            } else if (t > currKeyFramePos.end && t < nextKeyFramePos.start) {
-              var diff = nextKeyFramePos.start - currKeyFramePos.end;
-              var frac = (t - currKeyFramePos.end) / diff;
-              d.mesh.position.x = currKeyFramePos.position.x + (frac * (nextKeyFramePos.position.x - currKeyFramePos.position.x));
-              d.mesh.position.y = currKeyFramePos.position.y + (frac * (nextKeyFramePos.position.y - currKeyFramePos.position.y));
-              d.mesh.position.z = currKeyFramePos.position.z + (frac * (nextKeyFramePos.position.z - currKeyFramePos.position.z));
-            } else if (t == nextKeyFramePos.start ||
-              (t > nextKeyFramePos.start && t < nextKeyFramePos.end) ||
-            (t == nextKeyFramePos.end)) {
-              d.mesh.position.x = nextKeyFramePos.position.x;
-              d.mesh.position.y = nextKeyFramePos.position.y;
-              d.mesh.position.z = nextKeyFramePos.position.z;
-            }
+      } else {
+        for (var j = 0; j < d.keyframePositions.length - 1; j++) {
+          var currKeyFramePos = d.keyframePositions[j];
+          var nextKeyFramePos = d.keyframePositions[j+1];
+          if (t == currKeyFramePos.start ||
+            (t > currKeyFramePos.start && t < currKeyFramePos.end) ||
+          (t == currKeyFramePos.end)) {
+            d.mesh.position.x = currKeyFramePos.position.x;
+            d.mesh.position.y = currKeyFramePos.position.y;
+            d.mesh.position.z = currKeyFramePos.position.z;
+          } else if (t > currKeyFramePos.end && t < nextKeyFramePos.start) {
+            var diff = nextKeyFramePos.start - currKeyFramePos.end;
+            var frac = (t - currKeyFramePos.end) / diff;
+            d.mesh.position.x = currKeyFramePos.position.x + (frac * (nextKeyFramePos.position.x - currKeyFramePos.position.x));
+            d.mesh.position.y = currKeyFramePos.position.y + (frac * (nextKeyFramePos.position.y - currKeyFramePos.position.y));
+            d.mesh.position.z = currKeyFramePos.position.z + (frac * (nextKeyFramePos.position.z - currKeyFramePos.position.z));
+          } else if (t == nextKeyFramePos.start ||
+            (t > nextKeyFramePos.start && t < nextKeyFramePos.end) ||
+          (t == nextKeyFramePos.end)) {
+            d.mesh.position.x = nextKeyFramePos.position.x;
+            d.mesh.position.y = nextKeyFramePos.position.y;
+            d.mesh.position.z = nextKeyFramePos.position.z;
           }
         }
       }
     }
+  }
   requestAnimationFrame( animate );
   render();
   update();
@@ -982,11 +1036,11 @@ function autoSave() {
   .then((response) => response.json())
   .then((data) => {
     // console.log('Success:', data);
-    document.getElementById("savedStatus").innerHTML = "All changes saved."
+    document.getElementById("savedStatus").innerHTML = "Saved!"
     return;
   })
   .catch((error) => {
-    document.getElementById("savedStatus").innerHTML = "There was an error saving the most recent changes."
+    document.getElementById("savedStatus").innerHTML = "Error: unable to save changes."
     // console.error('Error:', error);
   });
 }
@@ -996,8 +1050,6 @@ function retrieveUndo() {
   if (undoBuffer.length == 0) {
     return;
   }
-
-  // console.log('undo buffer before shifting: ', undoBuffer);
 
   // Pop from the front of the undo buffer
   return undoBuffer.shift();
@@ -1811,14 +1863,21 @@ function saveAsImage() {
 //   }
 // }
 
+// Zoom slider
+var slider = document.querySelector('[data-action="zoom"]');
+
+var playbackSpeed = 1;
+slider.addEventListener('input', function() {
+    playbackSpeed = Number(this.value) / 100;
+    wavesurfer.setPlaybackRate(playbackSpeed);
+});
+
+
 // Update controls and stats
 function update() {
-  // if (hasMusic) {
-    document.getElementById("Time").innerHTML = "Current Time: " + currentTimeFormatted(t);
-    play = wavesurfer.isPlaying();
-  // } else {
-  //   document.getElementById("Time").innerHTML = "Current Time: " + currentTimeFormatted(Math.round(keyframeTimeToRealTime(t)));
-  // }
+  document.getElementById("Time").innerHTML = "Current Time: " + currentTimeFormatted(t);
+  play = wavesurfer.isPlaying();
+  document.getElementById("playbackSpeed").innerHTML = playbackSpeed + "x";
 
   for (var i = 0; i < txSprites.length; i++) {
     var txSprite = txSprites[i].txSprite;
