@@ -600,7 +600,6 @@ var danceDesigner = {
           var newPos = new THREE.Vector3(newPosThreeVector.x, newPosThreeVector.y, newPosThreeVector.z);
           // Set the new position
           danceDesigner.newPos = newPos;
-          console.log(newPos);
         }
 
       }
@@ -802,66 +801,71 @@ var TimelineEditor = function () {
 
   function addTimeMark( t ) {
 
-    wavesurfer.addRegion({
+    var newTimeMark = wavesurfer.addRegion({
+      id: t,
       start: t,
       end: t + 2,
-      color: 'hsla(290, 62%, 70%, 0.9)'
+      color: "rgba(118,255,161, 0.8)"
+      // color: 'hsla(290, 62%, 70%, 0.9)'
     });
 
-    var newTimeMark = document.createElement( 'div' );
-    newTimeMark.style.position = 'absolute';
-    newTimeMark.style.top = '0px';
-    newTimeMark.style.left = '-8px';
-    newTimeMark.style.width = '30px';
-    newTimeMark.style.height = '100%';
-    newTimeMark.style.background = 'linear-gradient(90deg, transparent 8px, #1100c9 16px, #1100c9 16px, transparent 9px) 0% 0% / 16px 16px repeat-y';
-    newTimeMark.style.pointerEvents = 'none';
+    // var newTimeMark = document.createElement( 'div' );
+    // newTimeMark.style.position = 'absolute';
+    // newTimeMark.style.top = '0px';
+    // newTimeMark.style.left = '-8px';
+    // newTimeMark.style.width = '30px';
+    // newTimeMark.style.height = '100%';
+    // newTimeMark.style.background = 'linear-gradient(90deg, transparent 8px, #1100c9 16px, #1100c9 16px, transparent 9px) 0% 0% / 16px 16px repeat-y';
+    // newTimeMark.style.pointerEvents = 'none';
 
-    timeMarks.push({mark: newTimeMark, time: t});
-    newTimeMark.style.left = ( t * scale ) - scroller.scrollLeft - 12 + 'px';
-    timeline.dom.appendChild( newTimeMark );
+    // timeMarks.push({mark: newTimeMark, time: t});
+    timeMarks.push({mark: newTimeMark, start: t, end: t + 2})
+    // newTimeMark.style.left = ( t * scale ) - scroller.scrollLeft - 12 + 'px';
+    // timeline.dom.appendChild( newTimeMark );
 
   }
 
   function removeTimeMark(t) {
-    for (var i = 0; i < timeMarks.length; i++) {
-      if (timeMarks[i].time == t) {
-          timeline.dom.removeChild( timeMarks[i].mark);
-          timeMarks.splice(i, 1);
-          return;
-      }
-    }
+    // for (var i = 0; i < timeMarks.length; i++) {
+    //   if (timeMarks[i].time == t) {
+    //       timeline.dom.removeChild( timeMarks[i].mark);
+    //       timeMarks.splice(i, 1);
+    //       return;
+    //   }
+    // }
   }
 
   function removeTimeMarks() {
-    for (var i = 0; i < timeMarks.length; i++) {
-      timeline.dom.removeChild( timeMarks[i].mark);
-    }
+    // for (var i = 0; i < timeMarks.length; i++) {
+    //   timeline.dom.removeChild( timeMarks[i].mark);
+    // }
     timeMarks = [];
   }
 
   function updateKeyframeTimeMark(time) {
-    for (var i = 0; i < timeMarks.length; i++) {
-      if (timeMarks[i].time == time) {
-          timeMarks[i].mark.style.left = ( t * scale ) - scroller.scrollLeft - 12 + 'px';
-      }
-    }
+    // for (var i = 0; i < timeMarks.length; i++) {
+    //   if (timeMarks[i].time == time) {
+    //       timeMarks[i].mark.style.left = ( t * scale ) - scroller.scrollLeft - 12 + 'px';
+    //   }
+    // }
   }
 
   function updateSetKeyframeTimeMark(oldTime, newTime) {
-    for (var i = 0; i < timeMarks.length; i++) {
-      if (timeMarks[i].time == oldTime) {
-          timeMarks[i].time = newTime;
-      }
-    }
+    // for (var i = 0; i < timeMarks.length; i++) {
+    //   if (timeMarks[i].time == oldTime) {
+    //       timeMarks[i].time = newTime;
+    //   }
+    // }
   }
 
   function changeTimeMarkColor(t, editing) {
     for (var i = 0; i < timeMarks.length; i++) {
       if (timeMarks[i].time == t) {
         if (editing) {
+          // make it yellow
           timeMarks[i].mark.style.background = 'linear-gradient(90deg, transparent 8px, #ffde00 16px, #ffde00 16px, transparent 9px) 0% 0% / 16px 16px repeat-y';
         } else {
+          // keep it as is
           timeMarks[i].mark.style.background = 'linear-gradient(90deg, transparent 8px, #1100c9 16px, #1100c9 16px, transparent 9px) 0% 0% / 16px 16px repeat-y';
         }
         return;
@@ -997,11 +1001,45 @@ document.getElementById("fileinput").addEventListener('change', function(e){
 // wavesurfer.toggleInteraction();
 
 
-wavesurfer.on('scroll', function (e) {
-  console.log(e.target.scrollLeft);
-  timeline.updateTimeMarksOnScroll(e.target.scrollLeft);
+// wavesurfer.on('scroll', function (e) {
+//   console.log(e.target.scrollLeft);
+//   // timeline.updateTimeMarksOnScroll(e.target.scrollLeft);
+// });
+
+// Set up listeners on each wavesurfer region
+wavesurfer.on('region-click', function(r, e) {
+  console.log('CLICKED THE REGION');
+  r.update({color: "rgba(255,222,67, 0.8)"});
 });
 
+wavesurfer.on('region-leave', function(r, e) {
+  console.log("LEFT THE REGION");
+  r.update({color: "rgba(118,255,161, 0.8)"});
+});
+
+wavesurfer.on('region-in', function(r, e) {
+  console.log('IN THE REGION');
+  r.update({color: "rgba(255,222,67, 0.8)"});
+});
+
+wavesurfer.on('region-out', function(r, e) {
+  console.log("OUT OF THE REGION");
+  r.update({color: "rgba(118,255,161, 0.8)"});
+});
+//
+// for (var i = 0; i < wavesurfer.regions.list.length; i++) {
+//   // updateKeyframeTimeMark
+//   var r = wavesurfer.regions.list[i];
+//   console.log(r);
+//
+//   r.on('in', function (e) {
+//     console.log("ENTERED IN");
+//     r.color = "rgba(255,222,67, 0.8)";
+//   });
+//   r.on('out', function (e) {
+//     r.color = "hsla(290, 62%, 70%, 0.9)";
+//   });
+// }
 
 function animate() {
   // if (hasMusic) {
@@ -1038,8 +1076,6 @@ function animate() {
         var d = danceDesigner.s.dancers[i];
 
         if (d == danceDesigner.movingDancer) {
-          console.log("MOVING DANCER IS THIS ONE!");
-          console.log("danceDesigner.newPos", danceDesigner.newPos);
           if (danceDesigner.newPos) {
             d.mesh.position.x = danceDesigner.newPos.x;
             d.mesh.position.y = danceDesigner.newPos.y;
