@@ -994,7 +994,6 @@ document.getElementById("fileinput").addEventListener('change', function(e){
 
 }, false);
 
-// wavesurfer.toggleInteraction();
 
 // Set up listeners on each wavesurfer region
 wavesurfer.on('region-create', function(r, e) {
@@ -1010,9 +1009,7 @@ wavesurfer.on('region-mouseenter', function(r, e) {
 });
 
 wavesurfer.on('region-mouseleave', function(r, e) {
-  // console.log('MOUSE GONE FROM THE REGION');
-  // console.log(r);
-  // TODO: do this in a better way. only checks
+  // TODO: do this in a better way. Doesn't check often enough rn.
   if (wavesurfer.getCurrentTime() > r.end || wavesurfer.getCurrentTime() < r.start) {
     r.update({color: "rgba(118,255,161, 0.8)"});
   }
@@ -1052,121 +1049,71 @@ wavesurfer.on('region-update-end', function(r, e) {
 
 
 function animate() {
-  // if (hasMusic) {
-    t = wavesurfer.getCurrentTime();
-    // currentTime = Math.round(wavesurfer.getCurrentTime());
-    if (play) {
-      // t = wavesurfer.getCurrentTime();
-      // t = realTimeToKeyframeTime(wavesurfer.getCurrentTime());
-      // timeline.changeTimeMarkColor(t, false);
-      // timeline.updateTimeMark();
+  t = wavesurfer.getCurrentTime();
+
+  // if (play) {
+  //   t = wavesurfer.getCurrentTime();
+  // } else {
+  //
+  //   // TODO: limit this to only when the mouse is in the timeline container
+  //   t = wavesurfer.cursor.time;
+  // }
+
+  if (t > danceDesigner.maxT) {
+    for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+
+      var d = danceDesigner.s.dancers[i];
+      var lastIndex = d.keyframePositions.length - 1;
+      d.mesh.position.x = d.keyframePositions[lastIndex].position.x;
+      d.mesh.position.y = d.keyframePositions[lastIndex].position.y;
+      d.mesh.position.z = d.keyframePositions[lastIndex].position.z;
+
     }
-    // var closestT = Math.round(t);
-    // if (closestT > danceDesigner.maxT) {
-    //   closestT = danceDesigner.maxT;
-    //   // closestT = danceDesigner.maxT - 1;
-    // }
+  } else {
 
-    if (t > danceDesigner.maxT) {
-      // var closestT = danceDesigner.maxT;
-      // closestT = danceDesigner.maxT - 1;
-      for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+    for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+      var d = danceDesigner.s.dancers[i];
 
-        var d = danceDesigner.s.dancers[i];
+      if (d == danceDesigner.movingDancer) {
+        if (danceDesigner.newPos) {
+          d.mesh.position.x = danceDesigner.newPos.x;
+          d.mesh.position.y = danceDesigner.newPos.y;
+          d.mesh.position.z = danceDesigner.newPos.z;
+        }
+        continue;
+      }
+      if (d.keyframePositions.length == 1) {
         var lastIndex = d.keyframePositions.length - 1;
         d.mesh.position.x = d.keyframePositions[lastIndex].position.x;
         d.mesh.position.y = d.keyframePositions[lastIndex].position.y;
         d.mesh.position.z = d.keyframePositions[lastIndex].position.z;
-
-      }
-    } else {
-
-      for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-        var d = danceDesigner.s.dancers[i];
-
-        if (d == danceDesigner.movingDancer) {
-          if (danceDesigner.newPos) {
-            d.mesh.position.x = danceDesigner.newPos.x;
-            d.mesh.position.y = danceDesigner.newPos.y;
-            d.mesh.position.z = danceDesigner.newPos.z;
-          }
-          continue;
-        }
-        if (d.keyframePositions.length == 1) {
-          var lastIndex = d.keyframePositions.length - 1;
-          d.mesh.position.x = d.keyframePositions[lastIndex].position.x;
-          d.mesh.position.y = d.keyframePositions[lastIndex].position.y;
-          d.mesh.position.z = d.keyframePositions[lastIndex].position.z;
-        } else {
-          for (var j = 0; j < d.keyframePositions.length - 1; j++) {
-            var currKeyFramePos = d.keyframePositions[j];
-            var nextKeyFramePos = d.keyframePositions[j+1];
-            if (t == currKeyFramePos.start ||
-              (t > currKeyFramePos.start && t < currKeyFramePos.end) ||
-            (t == currKeyFramePos.end)) {
-              d.mesh.position.x = currKeyFramePos.position.x;
-              d.mesh.position.y = currKeyFramePos.position.y;
-              d.mesh.position.z = currKeyFramePos.position.z;
-            } else if (t > currKeyFramePos.end && t < nextKeyFramePos.start) {
-              var diff = nextKeyFramePos.start - currKeyFramePos.end;
-              var frac = (t - currKeyFramePos.end) / diff;
-              d.mesh.position.x = currKeyFramePos.position.x + (frac * (nextKeyFramePos.position.x - currKeyFramePos.position.x));
-              d.mesh.position.y = currKeyFramePos.position.y + (frac * (nextKeyFramePos.position.y - currKeyFramePos.position.y));
-              d.mesh.position.z = currKeyFramePos.position.z + (frac * (nextKeyFramePos.position.z - currKeyFramePos.position.z));
-            } else if (t == nextKeyFramePos.start ||
-              (t > nextKeyFramePos.start && t < nextKeyFramePos.end) ||
-            (t == nextKeyFramePos.end)) {
-              d.mesh.position.x = nextKeyFramePos.position.x;
-              d.mesh.position.y = nextKeyFramePos.position.y;
-              d.mesh.position.z = nextKeyFramePos.position.z;
-            }
+      } else {
+        for (var j = 0; j < d.keyframePositions.length - 1; j++) {
+          var currKeyFramePos = d.keyframePositions[j];
+          var nextKeyFramePos = d.keyframePositions[j+1];
+          if (t == currKeyFramePos.start ||
+            (t > currKeyFramePos.start && t < currKeyFramePos.end) ||
+          (t == currKeyFramePos.end)) {
+            d.mesh.position.x = currKeyFramePos.position.x;
+            d.mesh.position.y = currKeyFramePos.position.y;
+            d.mesh.position.z = currKeyFramePos.position.z;
+          } else if (t > currKeyFramePos.end && t < nextKeyFramePos.start) {
+            var diff = nextKeyFramePos.start - currKeyFramePos.end;
+            var frac = (t - currKeyFramePos.end) / diff;
+            d.mesh.position.x = currKeyFramePos.position.x + (frac * (nextKeyFramePos.position.x - currKeyFramePos.position.x));
+            d.mesh.position.y = currKeyFramePos.position.y + (frac * (nextKeyFramePos.position.y - currKeyFramePos.position.y));
+            d.mesh.position.z = currKeyFramePos.position.z + (frac * (nextKeyFramePos.position.z - currKeyFramePos.position.z));
+          } else if (t == nextKeyFramePos.start ||
+            (t > nextKeyFramePos.start && t < nextKeyFramePos.end) ||
+          (t == nextKeyFramePos.end)) {
+            d.mesh.position.x = nextKeyFramePos.position.x;
+            d.mesh.position.y = nextKeyFramePos.position.y;
+            d.mesh.position.z = nextKeyFramePos.position.z;
           }
         }
-        // if (d.positions[closestT]) {
-        //   d.mesh.position.x = d.positions[closestT].x;
-        //   d.mesh.position.y = d.positions[closestT].y;
-        //   d.mesh.position.z = d.positions[closestT].z;
-        // }
       }
     }
-
-
-
-  // } else {
-  //   if (play) {
-  //     if (danceDesigner.maxT === 0 || t > danceDesigner.maxT) {
-  //       play = false;
-  //     }
-  //     timeline.changeTimeMarkColor(t, false);
-  //     timeline.updateTimeMark();
-  //     for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-  //       var d = danceDesigner.s.dancers[i];
-  //       if (d.positions[t]) {
-  //         d.mesh.position.x = d.positions[t].x;
-  //         d.mesh.position.y = d.positions[t].y;
-  //         d.mesh.position.z = d.positions[t].z;
-  //       }
-  //     }
-  //     t += 1;
-  //     lightAngle += 5;
-  //     if (lightAngle > 360) { lightAngle = 0;};
-  //     danceDesigner.light.position.x = 5 * Math.cos(lightAngle * Math.PI / 180);
-  //     danceDesigner.light.position.z = 5 * Math.sin(lightAngle * Math.PI / 180);
-  //   } else {
-  //     var closestT = Math.round(t);
-  //     if (closestT > danceDesigner.maxT) {
-  //       closestT = danceDesigner.maxT - 1;
-  //     }
-  //     for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-  //       var d = danceDesigner.s.dancers[i];
-  //       if (d.positions[closestT]) {
-  //         d.mesh.position.x = d.positions[closestT].x;
-  //         d.mesh.position.y = d.positions[closestT].y;
-  //         d.mesh.position.z = d.positions[closestT].z;
-  //       }
-  //     }
-  //   }
-  // }
+  }
   requestAnimationFrame( animate );
   render();
   update();
@@ -1284,7 +1231,6 @@ document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes
 var newPosThreeVector = null;
 
 async function addNewKeyFrame(t) {
-  // t = Math.round(t);
 
   for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
     var dancer = danceDesigner.s.dancers[i];
@@ -1302,8 +1248,8 @@ async function addNewKeyFrame(t) {
     // Adding a new keyframe
     danceDesigner.s.addKeyFrame(t);
     timeline.addTimeMark(t);
-    // timeline.changeTimeMarkColor(t, true);
-    danceDesigner.maxT = t;
+    // if (t > danceDesigner.s.keyframes.)
+    // danceDesigner.maxT = t;
   }
   return;
 }

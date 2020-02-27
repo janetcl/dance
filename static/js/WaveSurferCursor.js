@@ -11,7 +11,8 @@
  * @property {object} customStyle An object with custom styles which are applied
  * to the cursor element
  * @property {boolean} showTime=false Show the time on the cursor.
- * @property {object} customShowTimeStyle An object with custom styles which are
+ * @property {number} time='0' Time in seconds of the cursor (hover).
+  * @property {object} customShowTimeStyle An object with custom styles which are
  * applied to the cursor time element.
  * @property {string} followCursorY=false Use `true` to make the time on
  * the cursor follow the x and the y-position of the mouse. Use `false` to make the
@@ -78,6 +79,7 @@ export default class CursorPlugin {
         customStyle: {},
         customShowTimeStyle: {},
         showTime: false,
+				time: 0,
         followCursorY: false,
         formatTimeCallback: null
     };
@@ -96,6 +98,20 @@ export default class CursorPlugin {
             // follow y-position of the mouse
             y = e.clientY - (bbox.top + bbox.height / 2);
         }
+
+				// const duration = this.wavesurfer.getDuration();
+				// const elementWidth =
+				// 		this.wavesurfer.drawer.width /
+				// 		this.wavesurfer.params.pixelRatio;
+				// const scrollWidth = this.wavesurfer.drawer.getScrollX();
+				//
+				// const scrollTime =
+				// 		(duration / this.wavesurfer.drawer.width) * scrollWidth;
+				//
+				// let xPos = e.clientX - bbox.left;
+				// const timeValue =
+				// 		Math.max(0, (xPos / elementWidth) * duration) + scrollTime;
+
 
         this.updateCursorPosition(x, y, flip);
     };
@@ -259,6 +275,9 @@ export default class CursorPlugin {
 
             const timeValue =
                 Math.max(0, (xpos / elementWidth) * duration) + scrollTime;
+
+						this.time = timeValue;
+						
             const formatValue = this.formatTime(timeValue);
             if (flip) {
                 const textOffset = this.outerWidth(this.displayTime);
@@ -323,6 +342,16 @@ export default class CursorPlugin {
             ].join(':')
         );
     }
+
+		// /**
+    //  * Format the timestamp for `cursorTime`.
+    //  *
+    //  * @param {number} cursorTime Time in seconds
+    //  * @returns {number} Time in seconds
+    //  */
+		// getTime(cursorTime) {
+		// 	return cursorTime;
+		// }
 
     /**
      * Get outer width of given element.
