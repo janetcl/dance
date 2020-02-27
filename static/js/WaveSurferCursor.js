@@ -11,6 +11,7 @@
  * @property {object} customStyle An object with custom styles which are applied
  * to the cursor element
  * @property {boolean} showTime=false Show the time on the cursor.
+ * @property {number} time=0 The time of the cursor.
  * @property {object} customShowTimeStyle An object with custom styles which are
  * applied to the cursor time element.
  * @property {string} followCursorY=false Use `true` to make the time on
@@ -77,6 +78,7 @@ export default class CursorPlugin {
         zIndex: 4,
         customStyle: {},
         customShowTimeStyle: {},
+				time: 0,
         showTime: false,
         followCursorY: false,
         formatTimeCallback: null
@@ -259,6 +261,7 @@ export default class CursorPlugin {
 
             const timeValue =
                 Math.max(0, (xpos / elementWidth) * duration) + scrollTime;
+						this.time = timeValue;
             const formatValue = this.formatTime(timeValue);
             if (flip) {
                 const textOffset = this.outerWidth(this.displayTime);

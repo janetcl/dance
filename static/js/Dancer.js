@@ -219,7 +219,6 @@ var danceDesigner = {
     this.renderer1 = new THREE.WebGLRenderer({canvas: document.getElementById("0"), preserveDrawingBuffer: true});
     // document.getElementById("0").addEventListener('click', function() {
     //   t = 0;
-    //   timeline.updateTimeMark();
     //   console.log(0);
     // }, false);
     this.renderer1.setSize( width1, height1 );
@@ -393,7 +392,6 @@ var danceDesigner = {
         //     danceDesigner.s.dancers[i].mesh.position.z = danceDesigner.s.dancers[i].keyframePositions[kLength-1].position.z;
         //   }
         // }
-        timeline.updateTimeMark();
   		}
 
   		async function onMouseUp( event ) {
@@ -476,7 +474,6 @@ var danceDesigner = {
 
         // t = ((event.offsetX + timeline.scroller.scrollLeft) / timeline.scale);
   			onMouseMove( event );
-        timeline.updateTimeMark();
   			document.removeEventListener( 'mousemove', onMouseMove );
   			document.removeEventListener( 'mouseup', onMouseUp );
   		}
@@ -509,7 +506,6 @@ var danceDesigner = {
 
         }
       }
-      // timeline.updateTimeMark();
 
   		document.addEventListener( 'mousemove', onMouseMove, false );
   		document.addEventListener( 'mouseup', onMouseUp, false );
@@ -737,7 +733,6 @@ var TimelineEditor = function () {
 
     console.log("SCROLL: ", scroller.scrollLeft);
     updateMarks();
-    // updateTimeMark();
 
 	}, false );
 	timeline.dom.appendChild( scroller );
@@ -751,50 +746,6 @@ var TimelineEditor = function () {
 	loopMark.style.pointerEvents = 'none';
 	loopMark.style.display = 'none';
 	timeline.dom.appendChild( loopMark );
-
-	// var timeMark = document.createElement( 'div' );
-	// timeMark.style.position = 'absolute';
-	// timeMark.style.top = '0px';
-	// timeMark.style.left = '-8px';
-	// timeMark.style.width = '16px';
-	// timeMark.style.height = '100%';
-	// timeMark.style.background = 'linear-gradient(90deg, transparent 8px, #f00 8px, #f00 9px, transparent 9px) 0% 0% / 16px 16px repeat-y';
-	// timeMark.style.pointerEvents = 'none';
-	// timeline.dom.appendChild( timeMark );
-
-  // function updateTimeMark() {
-  //
-	// 	timeMark.style.left = ( t * scale ) - scroller.scrollLeft - 8 + 'px';
-  //
-	// 	//var loop = player.getLoop();
-  //
-	// 	// if ( Array.isArray( loop ) ) {
-  //   //
-	// 	// 	var loopStart = loop[ 0 ] * scale;
-	// 	// 	var loopEnd = loop[ 1 ] * scale;
-  //   //
-	// 	// 	loopMark.style.display = '';
-	// 	// 	loopMark.style.left = ( loopStart - scroller.scrollLeft ) + 'px';
-	// 	// 	loopMark.style.width = ( loopEnd - loopStart ) + 'px';
-  //   //
-	// 	// } else {
-	// 		loopMark.style.display = 'none';
-	// 	//}
-  //
-  //   // var lessT = Math.round(t - 1);
-  //   // var greaterT = Math.round(t + 1);
-  //   // for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
-  //   //   if (danceDesigner.s.keyframes[i] == t || danceDesigner.s.keyframes[i] == lessT || danceDesigner.s.keyframes[i] == greaterT) {
-  //   //     changeTimeMarkColor(danceDesigner.s.keyframes[i], true);
-  //   //   } else {
-  //   //     changeTimeMarkColor(danceDesigner.s.keyframes[i], false);
-  //   //   }
-  //   // }
-  //
-  //   // if (!play) {
-  //   //   wavesurfer.setCurrentTime(keyframeTimeToRealTime(t));
-  //   // }
-	// }
 
   var timeMarks = [];
 
@@ -1052,20 +1003,8 @@ wavesurfer.on('region-update-end', function(r, e) {
 
 
 function animate() {
-  // if (hasMusic) {
+
     t = wavesurfer.getCurrentTime();
-    // currentTime = Math.round(wavesurfer.getCurrentTime());
-    if (play) {
-      // t = wavesurfer.getCurrentTime();
-      // t = realTimeToKeyframeTime(wavesurfer.getCurrentTime());
-      // timeline.changeTimeMarkColor(t, false);
-      // timeline.updateTimeMark();
-    }
-    // var closestT = Math.round(t);
-    // if (closestT > danceDesigner.maxT) {
-    //   closestT = danceDesigner.maxT;
-    //   // closestT = danceDesigner.maxT - 1;
-    // }
 
     if (t > danceDesigner.maxT) {
       // var closestT = danceDesigner.maxT;
@@ -1122,51 +1061,8 @@ function animate() {
             }
           }
         }
-        // if (d.positions[closestT]) {
-        //   d.mesh.position.x = d.positions[closestT].x;
-        //   d.mesh.position.y = d.positions[closestT].y;
-        //   d.mesh.position.z = d.positions[closestT].z;
-        // }
       }
     }
-
-
-
-  // } else {
-  //   if (play) {
-  //     if (danceDesigner.maxT === 0 || t > danceDesigner.maxT) {
-  //       play = false;
-  //     }
-  //     timeline.changeTimeMarkColor(t, false);
-  //     timeline.updateTimeMark();
-  //     for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-  //       var d = danceDesigner.s.dancers[i];
-  //       if (d.positions[t]) {
-  //         d.mesh.position.x = d.positions[t].x;
-  //         d.mesh.position.y = d.positions[t].y;
-  //         d.mesh.position.z = d.positions[t].z;
-  //       }
-  //     }
-  //     t += 1;
-  //     lightAngle += 5;
-  //     if (lightAngle > 360) { lightAngle = 0;};
-  //     danceDesigner.light.position.x = 5 * Math.cos(lightAngle * Math.PI / 180);
-  //     danceDesigner.light.position.z = 5 * Math.sin(lightAngle * Math.PI / 180);
-  //   } else {
-  //     var closestT = Math.round(t);
-  //     if (closestT > danceDesigner.maxT) {
-  //       closestT = danceDesigner.maxT - 1;
-  //     }
-  //     for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-  //       var d = danceDesigner.s.dancers[i];
-  //       if (d.positions[closestT]) {
-  //         d.mesh.position.x = d.positions[closestT].x;
-  //         d.mesh.position.y = d.positions[closestT].y;
-  //         d.mesh.position.z = d.positions[closestT].z;
-  //       }
-  //     }
-  //   }
-  // }
   requestAnimationFrame( animate );
   render();
   update();
@@ -1861,7 +1757,7 @@ $(document).on('click', '.danceBtn', async function(){
     newMesh.name = "Dancer";
     var newDancer = new Dancer(thisDancer.name, newMesh);
     newDancer.updateColor(thisDancer.color);
-    var posDefault = thisDancer.positions[0];
+    var posDeafult = thisDancer.keyframePositions[0].position;
     // newDancer.addInitPosition(posDefault);
     newDancer.addKFPosition(0, 2, posDefault);
 
@@ -2039,8 +1935,6 @@ function initializeLesson() {
   danceDesigner.init();
   animate(0, 0);
   t = 0;
-  // timeline.addTimeMark(0);
-  // timeline.changeTimeMarkColor(0, true);
 }
 if (window.addEventListener)
   window.addEventListener('load', initializeLesson, false);
