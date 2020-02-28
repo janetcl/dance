@@ -251,10 +251,13 @@ var danceDesigner = {
   // janet: null, phillip: null,
   init: function() {
     this.scene = new THREE.Scene();
-    // this.rendererWidth = window.innerWidth * 8 / 10;
-    // this.rendererHeight = window.innerHeight * 8 / 10;
-    this.rendererWidth = 900;
-    this.rendererHeight = 570;
+
+    // TODO: Make the renderer a function of window width/height
+
+    this.rendererWidth = window.innerWidth * 8 / 10;
+    this.rendererHeight = window.innerHeight * 8 / 10;
+    // this.rendererWidth = 900;
+    // this.rendererHeight = 570;
     var viewAngle = 45;
     var nearClipping = 0.1;
     var farClipping = 9999;
@@ -263,17 +266,14 @@ var danceDesigner = {
     this.renderer.setSize( this.rendererWidth, this.rendererHeight );
 
     // Create small renderer for aerial view
-    // var width1 = window.innerWidth / 6;
-    // var height1 = window.innerHeight / 6;
-    var width1 = 300;
-    var height1 = 190;
+    var width1 = window.innerWidth / 5.5;
+    var height1 = window.innerHeight / 5.5;
+    // var width1 = 300;
+    // var height1 = 190;
     var viewAngle1 = 45;
     this.camera1 = new THREE.PerspectiveCamera( viewAngle1, width1 / height1, nearClipping, farClipping );
     this.renderer1 = new THREE.WebGLRenderer({canvas: document.getElementById("0"), preserveDrawingBuffer: true});
-    // document.getElementById("0").addEventListener('click', function() {
-    //   t = 0;
-    //   console.log(0);
-    // }, false);
+
     this.renderer1.setSize( width1, height1 );
     this.camera1.position.z = -10;
     this.camera1.position.y = 30;
@@ -338,8 +338,9 @@ var danceDesigner = {
     floor.add( wireframe );
 
     // Set the camera and orbit controls
-    this.camera.position.z = 8;
-    this.camera.position.y = 3;
+    this.camera.position.z = 25;
+    this.camera.position.y = 30;
+    // this.camera.lookAt(new THREE.Vector3(0, 0, 10));
 
     this.controls = new THREE.OrbitControls( this.camera, this.renderer.domElement );
     this.controls.target.set( 0, 0, -2 );
@@ -670,7 +671,7 @@ var TimelineEditor = function () {
   canvasDiv.style.background = 'rgba( 255, 255, 255, 0.3 )';
 
   var canvas = document.createElement( 'canvas' );
-  canvas.height = 32;
+  canvas.height = '30px';
   canvas.style.width = '100%';
   canvas.style.background = 'rgba( 255, 255, 255, 0.3 )';
 	canvas.style.position = 'absolute';
@@ -680,7 +681,7 @@ var TimelineEditor = function () {
   var scroller = document.createElement( 'div' );
   scroller.id = 'timelineSection';
 	scroller.style.position = 'absolute';
-	scroller.style.top = '32px';
+	scroller.style.top = '30px';
 	scroller.style.bottom = '0px';
 	scroller.style.width = '100%';
 	scroller.style.overflow = 'auto';
@@ -689,16 +690,6 @@ var TimelineEditor = function () {
 
 	}, false );
 	timeline.dom.appendChild( scroller );
-
-  var loopMark = document.createElement( 'div' );
-	loopMark.style.position = 'absolute';
-	loopMark.style.top = 0;
-	loopMark.style.height = 100 + '%';
-	loopMark.style.width = 0;
-	loopMark.style.background = 'rgba( 255, 255, 255, 0.1 )';
-	loopMark.style.pointerEvents = 'none';
-	loopMark.style.display = 'none';
-	timeline.dom.appendChild( loopMark );
 
   var timeMarks = [];
 
@@ -932,6 +923,7 @@ function animate() {
           } else if (t > currKeyFramePos.end && t < nextKeyFramePos.start) {
             var diff = nextKeyFramePos.start - currKeyFramePos.end;
             var frac = (t - currKeyFramePos.end) / diff;
+            console.log(nextKeyFramePos);
             d.mesh.position.x = currKeyFramePos.position.x + (frac * (nextKeyFramePos.position.x - currKeyFramePos.position.x));
             d.mesh.position.y = currKeyFramePos.position.y + (frac * (nextKeyFramePos.position.y - currKeyFramePos.position.y));
             d.mesh.position.z = currKeyFramePos.position.z + (frac * (nextKeyFramePos.position.z - currKeyFramePos.position.z));
@@ -958,13 +950,13 @@ var undoBufferFilled = false;
 async function addToUndoBuffer() {
   moveNumber++;
 
+  // TODO: Update the undo buffer.
+  // TODO: Implement the redo buffer.
   // Copy over the dancers
   let oldDancers = [];
   for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-    // if (danceDesigner.s.dancers[i].positions.length > 0) {
       const newDancer = await danceDesigner.s.dancers[i].clone();
       oldDancers.push(newDancer);
-    // }
   }
 
   // Push to the undo buffer
@@ -989,7 +981,6 @@ function autoSave() {
   var dancersInfo = [];
   for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
       var dancer = danceDesigner.s.dancers[i];
-      // console.log(dancer);
       // Store the color, name, positions, kfpositions for each dancer
       var dancerInfo = {
         "name": dancer.name,
@@ -1177,7 +1168,6 @@ async function addNewKeyFrame(t) {
         var newPos = new THREE.Vector3(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z);
       }
       await dancer.addKFPosition(d.keyframePositions[oldKeyFrameIndex].start, d.keyframePositions[oldKeyFrameIndex].end, newPos);
-      console.log(dancer.keyframePositions);
     }
   }
 
@@ -1781,7 +1771,6 @@ $(document).on('click', '.danceBtn', async function(){
       }
     );
     txSprites.push({"txSprite": txSprite, "dancerMesh": newDancer.mesh});
-    console.log(txSprite);
     danceDesigner.scene.add( txSprite );
 
     // Increment new dancer count
@@ -1830,6 +1819,7 @@ async function clearTheStage() {
 
 // TODO: make sure keyframes don't overlap -- enforce a min difference between start and end time
 // TODO: make sure add dancer works
+// TODO: color each handle bar differently to mark start/end
 
 function saveAsImage() {
   var imgData, imgNode;

@@ -10,11 +10,11 @@
  <script type="text/javascript"
       src="https://kit.fontawesome.com/79de6bbc8d.js" crossorigin="anonymous"></script>
  </head>
- <body ontouchstart="" style="margin: 0; color: white; background-color: #3366ff;">
-   <div class="container main">
-     <div class="row" style="justify-content: space-between; width: 100%;">
+ <body ontouchstart="" style="margin: 0; color: white; background-color: #454ADE;">
+   <div class="container main" style="max-width: 2600px;">
+     <div class="row">
        <div class="col-renderer">
-         <div class="row" style="justify-content: space-between; position: absolute; width: 900px;">
+         <div class="row" style="justify-content: space-between;">
            <div class="col-4">
              <p style="margin-top: 5px; margin-left: 10px; position: absolute;" id="keyFrames"></p>
            </div>
@@ -119,7 +119,7 @@
             </div>
             <div class="row">
               <div class="col">
-                <input data-action="zoom" type="range" min="0" max="500" value="100" style="width: 100%" />
+                <input data-action="zoom" type="range" min="0" max="500" value="100" />
                 <p>Playback Speed</p>
                 <p id="playbackSpeed">1x</p>
               </div>
@@ -127,11 +127,12 @@
            </div>
          </div>
        </div>
-     </div>
+
+
      <div class="danceBtn" style="visible: hidden; position: absolute;">
      </div>
 
-     <div class="row timelineBar">
+     <div class="row timelineBar" style="margin-left: 0px;">
        <div id="timelineEditor">
      </div>
 
