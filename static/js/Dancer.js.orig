@@ -840,7 +840,11 @@ wavesurfer.on('region-mouseenter', function(r, e) {
 });
 
 wavesurfer.on('region-mouseleave', function(r, e) {
+<<<<<<< HEAD
+  // TODO: do this in a better way. Doesn't check often enough rn.
+=======
   // TODO: do this in a better way. only checks
+>>>>>>> tmp
   if (wavesurfer.getCurrentTime() > r.end || wavesurfer.getCurrentTime() < r.start) {
     r.update({color: "rgba(118,255,161, 0.8)"});
   }
@@ -878,8 +882,20 @@ wavesurfer.on('region-update-end', function(r, e) {
 
 
 function animate() {
+<<<<<<< HEAD
+  t = wavesurfer.getCurrentTime();
+
+  // if (play) {
+  //   t = wavesurfer.getCurrentTime();
+  // } else {
+  //
+  //   // TODO: limit this to only when the mouse is in the timeline container
+  //   t = wavesurfer.cursor.time;
+  // }
+=======
 
   t = wavesurfer.getCurrentTime();
+>>>>>>> tmp
 
   if (t > danceDesigner.maxT) {
     for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
@@ -922,7 +938,10 @@ function animate() {
           } else if (t > currKeyFramePos.end && t < nextKeyFramePos.start) {
             var diff = nextKeyFramePos.start - currKeyFramePos.end;
             var frac = (t - currKeyFramePos.end) / diff;
+<<<<<<< HEAD
+=======
             console.log(nextKeyFramePos);
+>>>>>>> tmp
             d.mesh.position.x = currKeyFramePos.position.x + (frac * (nextKeyFramePos.position.x - currKeyFramePos.position.x));
             d.mesh.position.y = currKeyFramePos.position.y + (frac * (nextKeyFramePos.position.y - currKeyFramePos.position.y));
             d.mesh.position.z = currKeyFramePos.position.z + (frac * (nextKeyFramePos.position.z - currKeyFramePos.position.z));
@@ -1122,6 +1141,11 @@ async function addNewKeyFrame(t) {
   if (!inKeyFrames) {
     // Adding a new keyframe
     danceDesigner.s.addKeyFrame(t);
+<<<<<<< HEAD
+    timeline.addTimeMark(t);
+    // if (t > danceDesigner.s.keyframes.)
+    // danceDesigner.maxT = t;
+=======
 
     var nextStartTime = 0;
     for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
@@ -1168,6 +1192,7 @@ async function addNewKeyFrame(t) {
       }
       await dancer.addKFPosition(d.keyframePositions[oldKeyFrameIndex].start, d.keyframePositions[oldKeyFrameIndex].end, newPos);
     }
+>>>>>>> tmp
   }
 
   return;
