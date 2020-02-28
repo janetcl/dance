@@ -1377,17 +1377,18 @@ if (event.target.id === "launchModal") {
     for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
       if (keyframeIndex == 0) {
         // Cannot remove the first keyframe
+        alert("Cannot remove the first keyframe!");
         return;
       } else if (keyframeIndex == (danceDesigner.s.keyframes.length - 1)) {
         danceDesigner.maxT = danceDesigner.s.keyframes[keyframeIndex - 1];
       }
-      danceDesigner.s.dancers[i].removeKeyFrame(t);
+      danceDesigner.s.dancers[i].removeKeyFrame(keyframeStart);
 
     }
 
     // Filter existing keyframes to remove keyframe mark
     danceDesigner.s.keyframes = danceDesigner.s.keyframes.filter(function(time, index, arr){
-        return time !== t;
+        return time !== keyframeStart;
     });
 
     // Update time mark in timeline
