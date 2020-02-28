@@ -1714,7 +1714,6 @@ $(document).on('click', '.createNewDance', function() {
 
 $(document).on('click', '.danceBtn', async function(){
 
-  // TODO: Handle deleting existing dances.
   await clearTheStage();
 
   var selectedDance = usersDances[this.children[0].id];
@@ -1722,6 +1721,9 @@ $(document).on('click', '.danceBtn', async function(){
   danceDesigner.s.dancers = [];
 
   wavesurfer.load(selectedDance.audioURL);
+
+  // TODO: Fix this bug of retrieving audio from the database
+  // console.log("selectedDance.audioFileName", selectedDance.audioFileName);
   if (selectedDance.audioFileName === "EMPTY") {
     document.getElementById("audioFileName").innerHTML = "";
   } else {
