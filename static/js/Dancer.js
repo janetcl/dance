@@ -501,9 +501,6 @@ var danceDesigner = {
       } else {
         // Set the dancers' position to the maximum position
         for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-          // danceDesigner.s.dancers[i].mesh.position.x = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].x;
-          // danceDesigner.s.dancers[i].mesh.position.y = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].y;
-          // danceDesigner.s.dancers[i].mesh.position.z = danceDesigner.s.dancers[i].positions[danceDesigner.maxT].z;
 
           var kLength = danceDesigner.s.dancers[i].keyframePositions.length;
           danceDesigner.s.dancers[i].mesh.position.x = danceDesigner.s.dancers[i].keyframePositions[kLength-1].position.x;
@@ -540,12 +537,6 @@ var danceDesigner = {
           if (tempT > danceDesigner.maxT) {
             tempT = Math.round(danceDesigner.maxT);
           }
-
-          // if ((Math.abs(danceDesigner.s.dancers[i].positions[tempT].x - intersects[0].object.position.x) < 1) &&
-          // (Math.abs(danceDesigner.s.dancers[i].positions[tempT].y - intersects[0].object.position.y) < 1) &&
-          // (Math.abs(danceDesigner.s.dancers[i].positions[tempT].z - intersects[0].object.position.z) < 1)) {
-          //   danceDesigner.movingDancer = danceDesigner.s.dancers[i];
-          // }
 
           if ((Math.abs(danceDesigner.s.dancers[i].mesh.position.x - intersects[0].object.position.x) < 1) &&
           (Math.abs(danceDesigner.s.dancers[i].mesh.position.y - intersects[0].object.position.y) < 1) &&
@@ -622,9 +613,14 @@ var danceDesigner = {
     }
     if (danceDesigner.selection) {
       var oldPosition = danceDesigner.movingDancer.getPosAt(t);
-      if ((Math.abs(danceDesigner.newPos.x - oldPosition.x) < 0.05)
-      || (Math.abs(danceDesigner.newPos.z - oldPosition.z) < 0.05)) {
-        alert("Editing dancer");
+      if (danceDesigner.newPos) {
+        if ((Math.abs(danceDesigner.newPos.x - oldPosition.x) < 0.05)
+        || (Math.abs(danceDesigner.newPos.z - oldPosition.z) < 0.05)) {
+          // TODO: Fix this.
+          alert("Editing dancer");
+        } else {
+          await addNewKeyFrame(t);
+        }
       } else {
         await addNewKeyFrame(t);
       }
@@ -719,14 +715,9 @@ var TimelineEditor = function () {
     timeMarks.push({mark: newTimeMark, start: t, end: t + 2})
   }
 
-  function removeTimeMark(t) {
-    // for (var i = 0; i < timeMarks.length; i++) {
-    //   if (timeMarks[i].time == t) {
-    //       timeline.dom.removeChild( timeMarks[i].mark);
-    //       timeMarks.splice(i, 1);
-    //       return;
-    //   }
-    // }
+  function removeTimeMark(time) {
+    var region = wavesurfer.regions.list[time];
+    region.remove();
   }
 
   function removeTimeMarks() {
@@ -1349,21 +1340,32 @@ if (event.target.id === "launchModal") {
   } else if (event.target.id === "delete") {
 
     // TODO: Update deletion
-    for (var i = 0; i < wavesurfer.regions.list.length; i++) {
-      var i = 0;
-    }
+    // for (var i = 0; i < wavesurfer.regions.list.length; i++) {
+    //   var i = 0;
+    // }
     var keyframeIndex = -1;
 
-    var lessT = Math.round(t - 1);
-    t = Math.round(t);
-    var greaterT = Math.round(t + 1);
-    if (danceDesigner.s.keyframes.includes(t) || danceDesigner.s.keyframes.includes(lessT) || danceDesigner.s.keyframes.includes(greaterT)) {
-      // Determine where the current time is in the keyframes[] array if it exists
-      for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
-        if (danceDesigner.s.keyframes[i] == t || danceDesigner.s.keyframes[i] == lessT || danceDesigner.s.keyframes[i] == greaterT) {
-          t = danceDesigner.s.keyframes[i];
-          keyframeIndex = i;
-        }
+    // var lessT = Math.round(t - 1);
+    // t = Math.round(t);
+    // var greaterT = Math.round(t + 1);
+    // if (danceDesigner.s.keyframes.includes(t) || danceDesigner.s.keyframes.includes(lessT) || danceDesigner.s.keyframes.includes(greaterT)) {
+    //   // Determine where the current time is in the keyframes[] array if it exists
+    //   for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
+    //     if (danceDesigner.s.keyframes[i] == t || danceDesigner.s.keyframes[i] == lessT || danceDesigner.s.keyframes[i] == greaterT) {
+    //       t = danceDesigner.s.keyframes[i];
+    //       keyframeIndex = i;
+    //     }
+    //   }
+    // }
+
+    var keyframeStart = 0;
+    var d = danceDesigner.s.dancers[0];
+    for (var i = 0; i < d.keyframePositions.length; i++) {
+      if (t == d.keyframePositions[i].start ||
+        t > d.keyframePositions[i].start && t < d.keyframePositions[i].end
+        || t == d.keyframePositions[i].end) {
+        keyframeIndex = i;
+        keyframeStart = d.keyframePositions[i].start;
       }
     }
 
@@ -1389,7 +1391,7 @@ if (event.target.id === "launchModal") {
     });
 
     // Update time mark in timeline
-    timeline.removeTimeMark(t);
+    timeline.removeTimeMark(keyframeStart);
 
     await addToUndoBuffer();
     autoSave();
