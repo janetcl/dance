@@ -922,7 +922,7 @@ function animate() {
           } else if (t > currKeyFramePos.end && t < nextKeyFramePos.start) {
             var diff = nextKeyFramePos.start - currKeyFramePos.end;
             var frac = (t - currKeyFramePos.end) / diff;
-            console.log(nextKeyFramePos);
+            // console.log(nextKeyFramePos);
             d.mesh.position.x = currKeyFramePos.position.x + (frac * (nextKeyFramePos.position.x - currKeyFramePos.position.x));
             d.mesh.position.y = currKeyFramePos.position.y + (frac * (nextKeyFramePos.position.y - currKeyFramePos.position.y));
             d.mesh.position.z = currKeyFramePos.position.z + (frac * (nextKeyFramePos.position.z - currKeyFramePos.position.z));
@@ -1716,7 +1716,7 @@ $(document).on('click', '.danceBtn', async function(){
 
   await clearTheStage();
 
-  var selectedDance = usersDances[this.children[0].id];
+  var selectedDance = usersDances[this.children[0].children[0].id];
   document.getElementById("dance_name").value = selectedDance.dance_name;
   danceDesigner.s.dancers = [];
 
@@ -1909,14 +1909,20 @@ function loadInitModal() {
     else {
         for (var i = 0; i < usersDances.length; i++) {
         innerHTML +=
-        `<div class="col-6 text-center danceBtn" style="justify-content: center;">
-          <button type="button" id="${usersDances[i].id}" class="btn btn-light">
-            ${usersDances[i].dance_name}
+        `<div class="col-4 text-center danceBtn" style="justify-content: center;">
+          <div class="row" style="justify-content: center;">
+            <button type="button" id="${usersDances[i].id}" class="btn btn-light">
+              ${usersDances[i].dance_name}
           </button>
-          <img src=${usersDances[i].image} />
-          <button type="button" id="DELETE${usersDances[i].id}" class="btn btn-danger">
-            Delete
-          </button>
+          </div>
+          <div class="row" style="justify-content: center;">
+            <img src=${usersDances[i].image} width="250"/>
+          </div>
+          <div class="row" style="justify-content: center;">
+            <button type="button" id="DELETE${usersDances[i].id}" class="btn btn-danger">
+              Delete
+            </button>
+          </div>
         </div>`;
       }
     }
