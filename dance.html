@@ -62,14 +62,14 @@
           </div>
 
         <!-- Modal -->
-        <div class="modal fade" id="dancesModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal fade" id="dancesModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
           <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
               <div class="modal-header">
                 <h5 class="modal-title" style="color: black;" id="exampleModalLabel">Welcome, {{name}}!</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <!-- <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                   <span aria-hidden="true">&times;</span>
-                </button>
+                </button> -->
               </div>
               <div id="modal-body" class="modal-body">
               </div>
@@ -118,9 +118,16 @@
 
             </div>
             <div class="row">
-              <div class="col">
-                <input data-action="zoom" type="range" min="0" max="500" value="100" />
-                <p>Playback Speed<p id="playbackSpeed">1x</p></p>
+              <div class="col-6">
+                <input data-action="zoom" id="volumeSlider" type="range" min="0" max="500" value="100" />
+                <!-- <p>Playback Speed<p id="playbackSpeed">1x</p></p> -->
+                <div style="overflow: hidden;">
+                    <p style="float: left;">Playback Speed</p>
+                    <p style="float: right;" id="playbackSpeed">1x</p>
+                </div>
+              </div>
+              <div class="col-6">
+                <input data-action="zoom" id="zoomSlider" type="range" min="0" max="500" value="100" />
               </div>
             </div>
            </div>
@@ -183,6 +190,7 @@
         src="{{ url_for('static', filename='js/DragControls.js') }}"></script>
    <script type="module"
         src="{{ url_for('static', filename='js/Dancer.js') }}"></script>
+   <script type="text/javascript" src="{{ url_for('static', filename='js/jscolor.js') }}"></script>
    <!-- <script type="module"
         src="{{ url_for('static', filename='js/WaveSurferTimeline.js') }}"></script>
    <script type="module"

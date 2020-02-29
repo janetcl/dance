@@ -1,6 +1,7 @@
 import TimelinePlugin from './WaveSurferTimeline.js';
 import CursorPlugin from './WaveSurferCursor.js';
 import RegionsPlugin from './WaveSurferRegions.js';
+import * as jscolor from './jscolor.js';
 
 class Dancer {
 
@@ -1661,6 +1662,10 @@ $(document).on('click', '.createNewDance', function() {
         Number of Dancers:
         <input type="number" id="quantity" name="quantity" min="1" max="20" value="2" style="color: black; width: 100px;">
       </p>
+      <button
+        class="jscolor {value:'66ccff'}"
+        style="width:50px; height:20px;">
+      </button>
     </div>
   </div>`;
   document.getElementById("modal-body").innerHTML = innerHTML;
@@ -1692,12 +1697,27 @@ $(document).on('click', '.createNewDance', function() {
     else {
         for (var i = 0; i < usersDances.length; i++) {
         innerHTML +=
-        `<div class="col-6 text-center danceBtn" style="justify-content: center;">
-          <button type="button" id="${usersDances[i].id}" class="btn btn-light">
-            ${usersDances[i].dance_name} ${usersDances[i].id}
+        `<div class="col-4 text-center danceBtn" style="justify-content: center;">
+          <div class="row" style="justify-content: center;">
+            <button type="button" id="${usersDances[i].id}" class="btn btn-light">
+              ${usersDances[i].dance_name}
           </button>
-          <img src=${usersDances[i].image} />
+          </div>
+          <div class="row" style="justify-content: center;">
+            <img src=${usersDances[i].image} width="250"/>
+          </div>
+          <div class="row" style="justify-content: center;">
+            <button type="button" id="DELETE${usersDances[i].id}" class="btn btn-danger">
+              Delete
+            </button>
+          </div>
         </div>`;
+        // `<div class="col-6 text-center danceBtn" style="justify-content: center;">
+        //   <button type="button" id="${usersDances[i].id}" class="btn btn-light">
+        //     ${usersDances[i].dance_name} ${usersDances[i].id}
+        //   </button>
+        //   <img src=${usersDances[i].image} />
+        // </div>`;
       }
     }
     innerHTML += '</div></div>';
@@ -1717,6 +1737,10 @@ $(document).on('click', '.danceBtn', async function(){
   await clearTheStage();
 
   var selectedDance = usersDances[this.children[0].children[0].id];
+  // console.log(this.children[0]);
+  // console.log(this.children[0].children[0]);
+  // console.log(this.children[0].children[0].id);
+  // console.log(usersDances);
   document.getElementById("dance_name").value = selectedDance.dance_name;
   danceDesigner.s.dancers = [];
 
@@ -1858,13 +1882,18 @@ function saveAsImage() {
 // }
 
 // Zoom slider
-var slider = document.querySelector('[data-action="zoom"]');
+// var slider = document.querySelector('[data-action="zoom"]');
 
 var playbackSpeed = 1;
-slider.addEventListener('input', function() {
+document.querySelector('#volumeSlider').addEventListener('input', function() {
     playbackSpeed = Number(this.value) / 100;
     wavesurfer.setPlaybackRate(playbackSpeed);
 });
+
+document.querySelector('#zoomSlider').oninput = function () {
+  console.log(this.value);
+    wavesurfer.zoom(Number(this.value));
+};
 
 
 // Update controls and stats
@@ -1943,6 +1972,7 @@ function loadInitModal() {
 // Initialize lesson on page load
 function initializeLesson() {
   danceDesigner.init();
+  jscolor.installByClassName("jscolor");
   animate(0, 0);
   t = 0;
 }
