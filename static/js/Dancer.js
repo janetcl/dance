@@ -1,7 +1,9 @@
 import TimelinePlugin from './WaveSurferTimeline.js';
 import CursorPlugin from './WaveSurferCursor.js';
 import RegionsPlugin from './WaveSurferRegions.js';
-import * as jscolor from './jscolor.js';
+// import EffectComposer from './EffectComposer.js';
+// const jsc = require("./jscolor");
+// import * as jsc from './jscolor.js';
 
 class Dancer {
 
@@ -22,14 +24,6 @@ class Dancer {
     this.mesh.material.color.set(color);
   }
 
-  // clearPositions() {
-  //   this.positions = [];
-  // }
-
-  // addInitPosition(pos) {
-  //   this.positions.push(pos);
-  // }
-
   async addKFPosition(start, end, pos) {
     // Filter existing positions to make sure each time has only one position
     this.keyframePositions = this.keyframePositions.filter(function(kfp, index, arr){
@@ -40,69 +34,6 @@ class Dancer {
     // Sort all positions in time order
     this.keyframePositions.sort(function(a, b) {return a.start - b.start});
   }
-
-  // async updatePositions() {
-  //   this.positions[0].x = this.keyframePositions[0].position.x;
-  //   this.positions[0].y = this.keyframePositions[0].position.y;
-  //   this.positions[0].z = this.keyframePositions[0].position.z;
-  //   if (this.keyframePositions.length == 2) {
-  //     var firstTime = this.keyframePositions[0];
-  //     var secondTime = this.keyframePositions[1];
-  //     for (var i = 0; i < secondTime.time; i++) {
-  //       if (this.positions[i]) {
-  //         this.positions[i].x = ((secondTime.position.x - firstTime.position.x) * i / (secondTime.time)) + firstTime.position.x;
-  //         this.positions[i].y = ((secondTime.position.y - firstTime.position.y) * i / (secondTime.time)) + firstTime.position.y;
-  //         this.positions[i].z = ((secondTime.position.z - firstTime.position.z) * i / (secondTime.time)) + firstTime.position.z;
-  //       } else {
-  //         var newPos = new THREE.Vector3(
-  //           ((secondTime.position.x - firstTime.position.x) * i / (secondTime.time)) + firstTime.position.x,
-  //           ((secondTime.position.y - firstTime.position.y) * i / (secondTime.time)) + firstTime.position.y,
-  //           ((secondTime.position.z - firstTime.position.z) * i / (secondTime.time)) + firstTime.position.z
-  //         );
-  //         this.positions[i] = newPos;
-  //       }
-  //     }
-  //     if (this.positions[secondTime.time]) {
-  //       this.positions[secondTime.time].x = secondTime.position.x;
-  //       this.positions[secondTime.time].y = secondTime.position.y;
-  //       this.positions[secondTime.time].z = secondTime.position.z;
-  //     } else {
-  //       var newPos = new THREE.Vector3(secondTime.position.x, secondTime.position.y, secondTime.position.z);
-  //       this.positions[secondTime.time] = newPos;
-  //     }
-  //   } else {
-  //     for (var j = 0; j < this.keyframePositions.length - 1; j++) {
-  //       var firstTime = this.keyframePositions[j];
-  //       var secondTime = this.keyframePositions[j+1];
-  //       var timeDiff = secondTime.time - firstTime.time;
-  //       for (var i = 0; i < timeDiff; i++) {
-  //         if (this.positions[firstTime.time + i]) {
-  //           this.positions[firstTime.time + i].x = ((secondTime.position.x - firstTime.position.x) * i / (timeDiff)) + firstTime.position.x;
-  //           this.positions[firstTime.time + i].y = ((secondTime.position.y - firstTime.position.y) * i / (timeDiff)) + firstTime.position.y;
-  //           this.positions[firstTime.time + i].z = ((secondTime.position.z - firstTime.position.z) * i / (timeDiff)) + firstTime.position.z;
-  //         } else {
-  //           var newPos = new THREE.Vector3(
-  //             ((secondTime.position.x - firstTime.position.x) * i / (timeDiff)) + firstTime.position.x,
-  //             ((secondTime.position.y - firstTime.position.y) * i / (timeDiff)) + firstTime.position.y,
-  //             ((secondTime.position.z - firstTime.position.z) * i / (timeDiff)) + firstTime.position.z
-  //           );
-  //           this.positions[firstTime.time + i] = newPos;
-  //         }
-  //       }
-  //       if (j == this.keyframePositions.length - 2) {
-  //         if (this.positions[secondTime.time]) {
-  //           this.positions[secondTime.time].x = secondTime.position.x;
-  //           this.positions[secondTime.time].y = secondTime.position.y;
-  //           this.positions[secondTime.time].z = secondTime.position.z;
-  //         } else {
-  //           var newPos = new THREE.Vector3(secondTime.position.x, secondTime.position.y, secondTime.position.z);
-  //           this.positions[secondTime.time] = newPos;
-  //         }
-  //       }
-  //     }
-  //   }
-  //   return;
-  // }
 
   removeKeyFrame(start) {
     // Filter existing positions to make sure each time has only one position
@@ -131,18 +62,11 @@ class Dancer {
 
       var lastIndex = this.keyframePositions.length - 1;
       return this.keyframePositions[lastIndex].position;
-      // this.mesh.position.x = this.keyframePositions[lastIndex].position.x;
-      // this.mesh.position.y = this.keyframePositions[lastIndex].position.y;
-      // this.mesh.position.z = this.keyframePositions[lastIndex].position.z;
-
     } else {
 
       if (this.keyframePositions.length == 1) {
         var lastIndex = this.keyframePositions.length - 1;
         return this.keyframePositions[lastIndex].position;
-        // this.mesh.position.x = this.keyframePositions[lastIndex].position.x;
-        // this.mesh.position.y = this.keyframePositions[lastIndex].position.y;
-        // this.mesh.position.z = this.keyframePositions[lastIndex].position.z;
       } else {
         for (var j = 0; j < this.keyframePositions.length - 1; j++) {
           var currKeyFramePos = this.keyframePositions[j];
@@ -151,9 +75,6 @@ class Dancer {
             (t > currKeyFramePos.start && t < currKeyFramePos.end) ||
           (t == currKeyFramePos.end)) {
             return currKeyFramePos.position;
-            // this.mesh.position.x = currKeyFramePos.position.x;
-            // this.mesh.position.y = currKeyFramePos.position.y;
-            // this.mesh.position.z = currKeyFramePos.position.z;
           } else if (t > currKeyFramePos.end && t < nextKeyFramePos.start) {
             var diff = nextKeyFramePos.start - currKeyFramePos.end;
             var frac = (t - currKeyFramePos.end) / diff;
@@ -161,16 +82,10 @@ class Dancer {
             currKeyFramePos.position.y + (frac * (nextKeyFramePos.position.y - currKeyFramePos.position.y)),
             currKeyFramePos.position.z + (frac * (nextKeyFramePos.position.z - currKeyFramePos.position.z)));
             return newPos;
-            // this.mesh.position.x = currKeyFramePos.position.x + (frac * (nextKeyFramePos.position.x - currKeyFramePos.position.x));
-            // this.mesh.position.y = currKeyFramePos.position.y + (frac * (nextKeyFramePos.position.y - currKeyFramePos.position.y));
-            // this.mesh.position.z = currKeyFramePos.position.z + (frac * (nextKeyFramePos.position.z - currKeyFramePos.position.z));
           } else if (t == nextKeyFramePos.start ||
             (t > nextKeyFramePos.start && t < nextKeyFramePos.end) ||
           (t == nextKeyFramePos.end)) {
             return nextKeyFramePos.position;
-            // this.mesh.position.x = nextKeyFramePos.position.x;
-            // this.mesh.position.y = nextKeyFramePos.position.y;
-            // this.mesh.position.z = nextKeyFramePos.position.z;
           }
         }
       }
@@ -179,7 +94,6 @@ class Dancer {
 
   async clone() {
     var cloneDancer = new Dancer(this.name, this.mesh);
-    // cloneDancer.positions = await this.positions.slice(0);
     cloneDancer.keyframePositions = await this.keyframePositions.slice(0);
     return cloneDancer;
   }
@@ -616,10 +530,10 @@ var danceDesigner = {
     if (danceDesigner.selection) {
       var oldPosition = danceDesigner.movingDancer.getPosAt(t);
       if (danceDesigner.newPos) {
-        if ((Math.abs(danceDesigner.newPos.x - oldPosition.x) < 0.05)
-        || (Math.abs(danceDesigner.newPos.z - oldPosition.z) < 0.05)) {
+        if ((Math.abs(danceDesigner.newPos.x - oldPosition.x) < 0.01)
+        || (Math.abs(danceDesigner.newPos.z - oldPosition.z) < 0.01)) {
           // TODO: Fix this.
-          alert("Editing dancer");
+          alert("Editing dancer ", danceDesigner.movingDancer.mesh.material.color, danceDesigner.movingDancer.name);
         } else {
           await addNewKeyFrame(t);
         }
@@ -875,6 +789,7 @@ wavesurfer.on('region-update-end', function(r, e) {
     return a - b;
   });
 
+  autoSave();
 });
 
 
@@ -985,7 +900,6 @@ function autoSave() {
       var dancerInfo = {
         "name": dancer.name,
         "color": dancer.mesh.material.color,
-        "positions": dancer.positions,
         "keyframePositions": dancer.keyframePositions
       }
       dancersInfo.push(dancerInfo);
@@ -1161,8 +1075,13 @@ async function addNewKeyFrame(t) {
     for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
       var dancer = danceDesigner.s.dancers[i];
       if (dancer == danceDesigner.movingDancer) {
-        var newPos = new THREE.Vector3(danceDesigner.newPos.x, danceDesigner.newPos.y, danceDesigner.newPos.z);
-        danceDesigner.newPos = null;
+        if (danceDesigner.newPos) {
+          var newPos = new THREE.Vector3(danceDesigner.newPos.x, danceDesigner.newPos.y, danceDesigner.newPos.z);
+          danceDesigner.newPos = null;
+        } else {
+          var dancerMesh = dancer.mesh;
+          var newPos = new THREE.Vector3(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z);
+        }
       } else {
         var dancerMesh = dancer.mesh;
         var newPos = new THREE.Vector3(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z);
@@ -1182,6 +1101,9 @@ var next_available_id = 0;
 var userData;
 var inc = 0;
 var txSprites = [];
+
+
+// TODO: Why is the dance not saving?
 
 // Handle button clicking
 async function onButtonClick(event) {
@@ -1426,6 +1348,19 @@ async function initNewDance(numDancers) {
   wavesurfer.load(file);
   document.getElementById("audioFileName").innerHTML = "";
 
+  var oldHTML = document.getElementById("modal-body");
+  var dancersRows = oldHTML.children[0].children[0].children[1].children[1];
+  var newDancers = [];
+  for (var j = 0; j < dancersRows.children.length; j++) {
+    var child = {};
+    child.id = dancersRows.children[j].id;
+    child.name = dancersRows.children[j].children[0].value;
+    child.color = dancersRows.children[j].children[1].value;
+    newDancers.push(child);
+  }
+
+// TODO: Edit first keyframe, need to detect that you are in that waveform region
+
   // Reset the dancers
   var loader = new THREE.TextureLoader();
   newDancerNumber = 0;
@@ -1436,8 +1371,9 @@ async function initNewDance(numDancers) {
     var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: loader.load('static/files/janet.jpg')});
     var newMesh = new THREE.Mesh(geometry, material);
     newMesh.name = "Dancer";
-    var newDancer = new Dancer("Dancer" + newDancerNumber, newMesh);
-    newDancer.updateColor('#'+(Math.random()*0xFFFFFF<<0).toString(16));
+    console.log(newDancers[i].name);
+    var newDancer = new Dancer(newDancers[i].name, newMesh);
+    newDancer.updateColor(newDancers[i].color);
     if (i < 10) {
       var posDefault = new THREE.Vector3(-15, 0, defaultZValue + (offset * i));
     } else {
@@ -1449,7 +1385,7 @@ async function initNewDance(numDancers) {
     newDancer.mesh.position.y = posDefault.y;
     newDancer.mesh.position.z = posDefault.z;
 
-    var txSprite = makeTextSprite( "Dancer" + newDancerNumber,
+    var txSprite = makeTextSprite( newDancers[i].name,
     newDancer.mesh.position.x, newDancer.mesh.position.y + 1.4, newDancer.mesh.position.z,
     { fontsize: 200,
       fontface: "Roboto",
@@ -1655,19 +1591,39 @@ $(document).on('click', '.createNewDance', function() {
 
   // TODO: Guide to a new modal to specify the number of dancers in the routine*, stage dimensions(stretch goal), and audio.
 
+  var color1 = '#'+(Math.random()*0xFFFFFF<<0).toString(16);
+  var color2 = '#'+(Math.random()*0xFFFFFF<<0).toString(16);
   var innerHTML =
   `<div class="container">
     <div class="row">
-      <p style="color: black;">
-        Number of Dancers:
-        <input type="number" id="quantity" name="quantity" min="1" max="20" value="2" style="color: black; width: 100px;">
-      </p>
-      <button
-        class="jscolor {value:'66ccff'}"
-        style="width:50px; height:20px;">
-      </button>
+      <div class="col-12">
+        <p style="color: black;">
+          Number of Dancers:
+          <input type="number" id="quantity" name="quantity" min="1" max="20" value="2" style="color: black; width: 100px;">
+        </p>
+      </div>
+      <div class="container">
+        <div class="row">
+          <div class="col-12">
+            <p style="color: black;">
+              Edit the dancers' names and colors below!
+            </p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-6" id="Dancer1">
+            <input type="text" value="Dancer1">
+            <input type="color" value="${color1}">
+          </div>
+          <div class="col-6" id="Dancer2">
+            <input type="text" value="Dancer2">
+            <input type="color" value="${color2}">
+          </div>
+        </div>
+      </div>
     </div>
   </div>`;
+
   document.getElementById("modal-body").innerHTML = innerHTML;
 
   var footerHTML =
@@ -1683,6 +1639,7 @@ $(document).on('click', '.createNewDance', function() {
   document.getElementById("createFinal").addEventListener("click", async function() {
     var numDancers = document.getElementById("quantity").value;
     await initNewDance(numDancers);
+    autoSave();
   });
 
   document.getElementById("goBack").addEventListener("click", function(userData) {
@@ -1691,7 +1648,7 @@ $(document).on('click', '.createNewDance', function() {
     if (usersDances.length == 0) {
       innerHTML +=
       `<div class="col">
-        <p style="color: black;">You haven't created any dances yet.</p>
+        <p style="color: black;">You haven't created any dances yet. 😔</p>
         </div>`;
     }
     else {
@@ -1731,16 +1688,11 @@ $(document).on('click', '.createNewDance', function() {
   });
 });
 
-
 $(document).on('click', '.danceBtn', async function(){
 
   await clearTheStage();
 
   var selectedDance = usersDances[this.children[0].children[0].id];
-  // console.log(this.children[0]);
-  // console.log(this.children[0].children[0]);
-  // console.log(this.children[0].children[0].id);
-  // console.log(usersDances);
   document.getElementById("dance_name").value = selectedDance.dance_name;
   danceDesigner.s.dancers = [];
 
@@ -1768,14 +1720,13 @@ $(document).on('click', '.danceBtn', async function(){
     var newDancer = new Dancer(thisDancer.name, newMesh);
     newDancer.updateColor(thisDancer.color);
     var posDefault = thisDancer.keyframePositions[0].position;
-    // newDancer.addInitPosition(posDefault);
     newDancer.addKFPosition(0, 2, posDefault);
 
+    console.log(thisDancer.keyframePositions);
     for (var k = 0; k < thisDancer.keyframePositions.length; k++) {
       newDancer.addKFPosition(thisDancer.keyframePositions[k].start, thisDancer.keyframePositions[k].end, thisDancer.keyframePositions[k].position);
     }
 
-    // newDancer.updatePositions();
     newDancer.mesh.position.x = posDefault.x;
     newDancer.mesh.position.y = posDefault.y;
     newDancer.mesh.position.z = posDefault.z;
@@ -1786,7 +1737,7 @@ $(document).on('click', '.danceBtn', async function(){
     danceDesigner.s.addDancer(newDancer);
 
     // Add in the text sprites
-    var txSprite = makeTextSprite( "Dancer" + newDancerNumber,
+    var txSprite = makeTextSprite( thisDancer.name,
     newDancer.mesh.position.x, newDancer.mesh.position.y + 1.4, newDancer.mesh.position.z,
     { fontsize: 200,
       fontface: "Roboto",
@@ -1808,19 +1759,20 @@ $(document).on('click', '.danceBtn', async function(){
 
 
   var d = danceDesigner.s.dancers[0];
+  console.log(danceDesigner.s.dancers[0].keyframePositions);
   for (var i = 0; i < d.keyframePositions.length; i++) {
     timeline.addTimeMark(d.keyframePositions[i].start, d.keyframePositions[i].end - d.keyframePositions[i].start);
   }
 
-  // for (var i = 0; i < newKeyframes.length; i++) {
-  //   timeline.addTimeMark(newKeyframes[i]);
-  // }
-  danceDesigner.maxT = newKeyframes[newKeyframes.length - 1];
+  danceDesigner.maxT = d.keyframePositions[d.keyframePositions.length-1].end;
 
   // Close the modal
   $('#dancesModal').modal('hide');
 
 });
+
+// TODO: Fix how the thumbnail image is saved to resize despite screen size differences,
+// so it is always the same size in the modal.
 
 async function clearTheStage() {
 
@@ -1841,6 +1793,31 @@ async function clearTheStage() {
 
   return;
 }
+
+var record = document.getElementById("video");
+record.addEventListener("click", function() {
+  var composer = new THREE.EffectComposer(danceDesigner.renderer);
+  // set up effects passes for your app here
+
+  function animate() {
+
+	requestAnimationFrame( animate );
+
+	composer.render();
+
+  var threecap = new THREEcap();
+  threecap.record({
+    width: 640,
+    height: 480,
+    fps: 25,
+    time: 10,
+    format: 'mp4',
+    //canvas: canvasDomElement,   // optional, slowest
+    composer: composer // optional, fastest
+  }).then(function(video) {
+    video.saveFile('myVideo.mp4');
+  });
+});
 
 // TODO: make sure keyframes don't overlap -- enforce a min difference between start and end time
 // TODO: make sure add dancer works
@@ -1911,6 +1888,74 @@ function update() {
   document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes;
   keyframes = danceDesigner.s.keyframes.length;
   danceDesigner.controls.update();
+
+  if (document.getElementById("quantity")) {
+    document.getElementById("quantity").addEventListener("change", function(e) {
+
+
+      var oldHTML = document.getElementById("modal-body");
+
+      var dancersRows = oldHTML.children[0].children[0].children[1].children[1];
+
+      var newDancers = [];
+
+      for (var j = 0; j < dancersRows.children.length; j++) {
+
+        var child = {};
+        child.id = dancersRows.children[j].id;
+        child.name = dancersRows.children[j].children[0].value;
+        child.color = dancersRows.children[j].children[1].value;
+
+        newDancers.push(child);
+      }
+
+      var innerHTML =
+      `<div class="container">
+        <div class="row">
+          <div class="col-12">
+            <p style="color: black;">
+              Number of Dancers:
+              <input type="number" id="quantity" name="quantity" min="1" max="20" value="${e.target.value}" style="color: black; width: 100px;">
+            </p>
+          </div>`;
+
+      var dancerPickers =
+      `<div class="container">
+        <div class="row">
+          <div class="col-12">
+            <p style="color: black;">
+              Edit the dancers' names and colors below!
+            </p>
+          </div>
+        </div>
+        <div class="row">`;
+
+      for (var i = 0; i < e.target.value; i++) {
+        if (i > newDancers.length - 1) {
+          var thisColor = '#'+(Math.random()*0xFFFFFF<<0).toString(16);
+          dancerPickers +=
+          `<div class="col-6" id="Dancer${i+1}">
+            <input type="text" value="Dancer${i+1}">
+            <input type="color" value="${thisColor}">
+          </div>`
+        } else {
+          dancerPickers +=
+          `<div class="col-6" id="Dancer${i+1}">
+            <input type="text" value="${newDancers[i].name}">
+            <input type="color" value=${newDancers[i].color}>
+          </div>`
+        }
+      };
+
+      dancerPickers += `</div></div>`;
+
+      innerHTML += dancerPickers;
+      innerHTML += "</div></div>";
+
+      document.getElementById("modal-body").innerHTML = innerHTML;
+
+    });
+  }
 }
 
 $(document).ready(function() {
@@ -1932,7 +1977,7 @@ function loadInitModal() {
     if (usersDances.length == 0) {
       innerHTML +=
       `<div class="col">
-        <p style="color: black;">You haven't created any dances yet.</p>
+        <p style="color: black;">You haven't created any dances yet. 😔</p>
         </div>`;
     }
     else {
@@ -1972,7 +2017,6 @@ function loadInitModal() {
 // Initialize lesson on page load
 function initializeLesson() {
   danceDesigner.init();
-  jscolor.installByClassName("jscolor");
   animate(0, 0);
   t = 0;
 }

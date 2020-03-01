@@ -348,6 +348,7 @@ def save_dance():
         # # If in the database, update the dance with the new values.
         print("\nAlready in database\n")
         dance = db.session.query(Dance).filter(Dance.id == id).first()
+        print("BEFORE: \n", dance.dancers)
         dance.dance_name = dance_name
         dance.dancers = dancers
         dance.keyframes = keyframes
@@ -355,6 +356,8 @@ def save_dance():
         dance.image = image
         dance.audioFileName = audioFileName
         dance.audioURL = audioURL
+        print("\nDance\n")
+        print("AFTER: \n", dance.dancers)
         db.session.commit()
 
     return jsonify({"Success": "Nicely done"})
