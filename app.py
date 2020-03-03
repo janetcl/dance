@@ -86,7 +86,7 @@ class Dance(db.Model):
     dancers: 'typing.Any'
     keyframes: 'typing.Any'
     number_of_keyframes: int
-    image: 'typing.Any'
+    image: str
     audioFileName: str
     audioURL: str
 
@@ -334,30 +334,33 @@ def save_dance():
     dancers = request.json['dancers']
     keyframes = request.json['keyframes']
     number_of_keyframes = request.json['number_of_keyframes']
-    image = request.json['image']
+    imageStream = request.json['image']
     audioFileName = request.json['audioFileName']
     audioURL = request.json['audioURL']
+
+    response = cloudinary.uploader.upload(imageStream)
+    imageURL, options = cloudinary.utils.cloudinary_url(response['public_id'])
 
     # # Doesn't exist? Add it to the database.
     if not db.session.query(Dance).filter(Dance.id == id).count():
         id = db.session.query(Dance).count()
-        dance = Dance(id, user_id, user_email, dance_name, dancers, keyframes, number_of_keyframes, image, audioFileName, audioURL)
+        dance = Dance(id, user_id, user_email, dance_name, dancers, keyframes, number_of_keyframes, imageURL, audioFileName, audioURL)
         db.session.add(dance)
         db.session.commit()
     else:
         # # If in the database, update the dance with the new values.
-        print("\nAlready in database\n")
+        # print("\nAlready in database\n")
         dance = db.session.query(Dance).filter(Dance.id == id).first()
-        print("BEFORE: \n", dance.dancers)
+        # print("BEFORE: \n", dance.dancers)
         dance.dance_name = dance_name
         dance.dancers = dancers
         dance.keyframes = keyframes
         dance.number_of_keyframes = number_of_keyframes
-        dance.image = image
+        dance.image = imageURL
         dance.audioFileName = audioFileName
         dance.audioURL = audioURL
-        print("\nDance\n")
-        print("AFTER: \n", dance.dancers)
+        # print("\nDance\n")
+        # print("AFTER: \n", dance.dancers)
         db.session.commit()
 
     return jsonify({"Success": "Nicely done"})

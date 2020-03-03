@@ -1103,61 +1103,17 @@ var inc = 0;
 var txSprites = [];
 
 
-// TODO: Why is the dance not saving?
+var elements = document.getElementsByClassName("launchModal");
+for (var i = 0; i < elements.length; i++) {
+    elements[i].addEventListener('click', loadInitModal, false);
+}
+
+// TODO: Add an X arrow if the modal is loaded from an existing dance
 
 // Handle button clicking
 async function onButtonClick(event) {
-  // if (event.target.id == "saveDance") {
-  //
-  //   var image = saveAsImage();
-  //   var dancersInfo = [];
-  //   for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-  //       var dancer = danceDesigner.s.dancers[i];
-  //       console.log(dancer);
-  //       // Store the color, name, positions, kfpositions for each dancer
-  //       var dancerInfo = {
-  //         "name": dancer.name,
-  //         "color": dancer.mesh.material.color,
-  //         "positions": dancer.positions,
-  //         "keyframePositions": dancer.keyframePositions
-  //       }
-  //       dancersInfo.push(dancerInfo);
-  //   }
-  //   var theseDancers = JSON.stringify(dancersInfo);
-  //   var theseKeyframes = JSON.stringify(danceDesigner.s.keyframes);
-  //   var dance_name= document.getElementById("dance_name").value;
-  //
-  //  const data = {
-  //    "dance_id": dance_id,
-  //    "dance_name": dance_name,
-  //    "dancers": theseDancers,
-  //    "keyframes": theseKeyframes,
-  //    "number_of_keyframes": danceDesigner.s.keyframes.length,
-  //    "image": image,
-  //    "audioFileName": audioFileName,
-  //    "audioURL": audioURL,
-  //   };
-  //
-  //   fetch('/saveDance', {
-  //     method: 'POST', // or 'PUT'
-  //     headers: {
-  //       'Content-Type': 'application/json',
-  //     },
-  //     body: JSON.stringify(data),
-  //   })
-  //   .then((response) => response.json())
-  //   .then((data) => {
-  //     console.log('Success:', data);
-  //     return;
-  //   })
-  //   .catch((error) => {
-  //     console.error('Error:', error);
-  //   });
-
-// } else
-if (event.target.id === "launchModal") {
-  loadInitModal();
-} else if (event.target.id === "addDancer") {
+  
+if (event.target.id === "addDancer") {
 
     var loader = new THREE.TextureLoader();
     var geometry = new THREE.BoxGeometry(1, 2, 1);
@@ -1325,16 +1281,9 @@ if (event.target.id === "launchModal") {
     var playButtonIcon = document.getElementById("playIcon");
     playButtonIcon.classList.toggle("fa-pause");
     playButtonIcon.classList.toggle("fa-play");
-    play = false;
-
-    // if (!hasMusic && t > danceDesigner.maxT) {
-    //   t = 0;
-    // }
     lightAngle = 0;
     play = true;
-    // if (hasMusic) {
-      wavesurfer.playPause();
-    // }
+    wavesurfer.playPause();
   }
 }
 
@@ -1589,7 +1538,8 @@ return sprite;
 $(document).on('click', '.createNewDance', function() {
   dance_id = next_available_id;
 
-  // TODO: Guide to a new modal to specify the number of dancers in the routine*, stage dimensions(stretch goal), and audio.
+  // TODO: Guide to a new modal to specify stage dimensions(stretch goal) and audio.
+  // TODO: Add secondary modal to specify the dancer's init positions.
 
   var color1 = '#'+(Math.random()*0xFFFFFF<<0).toString(16);
   var color2 = '#'+(Math.random()*0xFFFFFF<<0).toString(16);
@@ -1774,6 +1724,8 @@ $(document).on('click', '.danceBtn', async function(){
 // TODO: Fix how the thumbnail image is saved to resize despite screen size differences,
 // so it is always the same size in the modal.
 
+// TODO: why does login not work on heroku? getting a 401 error.
+
 async function clearTheStage() {
 
   // Clear the dancers
@@ -1793,32 +1745,33 @@ async function clearTheStage() {
 
   return;
 }
+//
+// var record = document.getElementById("video");
+// record.addEventListener("click", function() {
+//   var composer = new THREE.EffectComposer(danceDesigner.renderer);
+//   // set up effects passes for your app here
+//
+//   function animate() {
+//
+// 	requestAnimationFrame( animate );
+//
+// 	composer.render();
+//
+//   var threecap = new THREEcap();
+//   threecap.record({
+//     width: 640,
+//     height: 480,
+//     fps: 25,
+//     time: 10,
+//     format: 'mp4',
+//     //canvas: canvasDomElement,   // optional, slowest
+//     composer: composer // optional, fastest
+//   }).then(function(video) {
+//     video.saveFile('myVideo.mp4');
+//   });
+// });
 
-var record = document.getElementById("video");
-record.addEventListener("click", function() {
-  var composer = new THREE.EffectComposer(danceDesigner.renderer);
-  // set up effects passes for your app here
-
-  function animate() {
-
-	requestAnimationFrame( animate );
-
-	composer.render();
-
-  var threecap = new THREEcap();
-  threecap.record({
-    width: 640,
-    height: 480,
-    fps: 25,
-    time: 10,
-    format: 'mp4',
-    //canvas: canvasDomElement,   // optional, slowest
-    composer: composer // optional, fastest
-  }).then(function(video) {
-    video.saveFile('myVideo.mp4');
-  });
-});
-
+// TODO: fix filming issues
 // TODO: make sure keyframes don't overlap -- enforce a min difference between start and end time
 // TODO: make sure add dancer works
 // TODO: color each handle bar differently to mark start/end
@@ -1857,9 +1810,6 @@ function saveAsImage() {
 //     wavesurfer.setVolume(volume.value / 100);
 //   }
 // }
-
-// Zoom slider
-// var slider = document.querySelector('[data-action="zoom"]');
 
 var playbackSpeed = 1;
 document.querySelector('#volumeSlider').addEventListener('input', function() {

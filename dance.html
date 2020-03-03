@@ -24,9 +24,6 @@
            <div class="col-4" style="justify-content: flex-end; align-items: flex-end;">
              <p style="margin-top: 5px; align-self: flex-end; position: absolute; text-align:right;" id="Time" class="time"></p>
            </div>
-           <!-- <p style="margin-left:20px; position: absolute;" id="keyFrames"></p>
-           <div class="title">Dance Designer</div>
-           <p style="margin-right: 20px; text-align:right;" id="Time" class="time"></p> -->
          </div>
          <canvas id="renderer">
          </canvas>
@@ -34,18 +31,18 @@
        <div class="col-special">
          <div class="topBar">
            <div class="row">
-             <div class="col-3">
+             <div class="col-3 launchModal">
                <img src="{{avatar_url}}" style="width: 32px; height: 32px; margin-top: 4px; margin-left: 4px;"></img>
              </div>
-             <div class="col-9">
+             <div class="col-7 launchModal">
                <p style="align-self: right; text-align: left; color: black;">Welcome, {{name}}!</p>
+             </div>
+             <div class="col-2">
+               <a href="/logout"><i class="fas fa-power-off" style="color: blue; margin-right: 10px;"></i></a>
              </div>
            </div>
          </div>
-         <div class="row ml-1 mt-2">
-           <p>{{email}}</p>
-         </div>
-         <div class="row ml-1 mt-0">
+         <div class="row ml-1 mt-1">
            <div class="col-6">
              <button class="btn btn-light" id="addDancer">Add Dancer</button>
            </div>
@@ -53,12 +50,11 @@
              <p id="savedStatus"></p>
            </div>
          </div>
-         <div class="row ml-1 mt-0">
-            <!-- Button trigger modal -->
+         <!-- <div class="row ml-1 mt-0">
             <button type="button" id="launchModal" class="btn btn-primary">
               Launch modal
             </button>
-          </div>
+          </div> -->
 
         <!-- Modal -->
         <div class="modal fade" id="dancesModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
