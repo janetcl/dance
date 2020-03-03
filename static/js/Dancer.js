@@ -1102,6 +1102,7 @@ var userData;
 var inc = 0;
 var txSprites = [];
 
+// TODO: Make play/pause triggerable with space bar
 
 var elements = document.getElementsByClassName("launchModal");
 for (var i = 0; i < elements.length; i++) {
@@ -1112,7 +1113,7 @@ for (var i = 0; i < elements.length; i++) {
 
 // Handle button clicking
 async function onButtonClick(event) {
-  
+
 if (event.target.id === "addDancer") {
 
     var loader = new THREE.TextureLoader();

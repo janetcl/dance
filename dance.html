@@ -50,11 +50,6 @@
              <p id="savedStatus"></p>
            </div>
          </div>
-         <!-- <div class="row ml-1 mt-0">
-            <button type="button" id="launchModal" class="btn btn-primary">
-              Launch modal
-            </button>
-          </div> -->
 
         <!-- Modal -->
         <div class="modal fade" id="dancesModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
@@ -80,7 +75,7 @@
            <!-- <p id="dance_name" style="color: black;">Dance Name</p> -->
            <input type="text" style="color: black;" id="dance_name" value="Dance Name">
          </div>
-         <div class="row ml-1">
+         <div class="row ml-1 mt-1">
            <button class="btn btn-outline-danger" id="video">Export</button>
          </div>
          <div class="row ml-1 mt-5" style="align-self: flex-end; align-items: flex-end;">
@@ -113,16 +108,20 @@
 
             </div>
             <div class="row">
-              <div class="col-6">
+              <div class="col-12">
                 <input data-action="zoom" id="volumeSlider" type="range" min="0" max="500" value="100" />
-                <!-- <p>Playback Speed<p id="playbackSpeed">1x</p></p> -->
-                <div style="overflow: hidden;">
-                    <p style="float: left;">Playback Speed</p>
+                <div class="col-6">
+                  <div style="overflow: hidden;">
+                    <p style="float: left;">Playback:</p>
                     <p style="float: right;" id="playbackSpeed">1x</p>
+                  </div>
                 </div>
               </div>
-              <div class="col-6">
-                <input data-action="zoom" id="zoomSlider" type="range" min="0" max="500" value="100" />
+              <div class="col-8">
+                <div style="overflow: hidden;">
+                  <p style="float: left;">Zoom:</p>
+                  <input style="float: right;" data-action="zoom" id="zoomSlider" type="range" min="0" max="200" value="100" />
+                </div>
               </div>
             </div>
            </div>
