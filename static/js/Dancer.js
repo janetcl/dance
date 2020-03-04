@@ -1620,12 +1620,6 @@ $(document).on('click', '.createNewDance', function() {
             </button>
           </div>
         </div>`;
-        // `<div class="col-6 text-center danceBtn" style="justify-content: center;">
-        //   <button type="button" id="${usersDances[i].id}" class="btn btn-light">
-        //     ${usersDances[i].dance_name} ${usersDances[i].id}
-        //   </button>
-        //   <img src=${usersDances[i].image} />
-        // </div>`;
       }
     }
     innerHTML += '</div></div>';
@@ -1643,14 +1637,17 @@ $(document).on('click', '.danceBtn', async function(){
 
   await clearTheStage();
 
-  var selectedDance = usersDances[this.children[0].children[0].id];
+  for (var i = 0; i < usersDances.length; i++) {
+    if (usersDances[i].id == this.children[0].children[0].id) {
+      var selectedDance = usersDances[i];
+    }
+  }
   document.getElementById("dance_name").value = selectedDance.dance_name;
   danceDesigner.s.dancers = [];
 
   wavesurfer.load(selectedDance.audioURL);
 
   // TODO: Fix this bug of retrieving audio from the database
-  // console.log("selectedDance.audioFileName", selectedDance.audioFileName);
   if (selectedDance.audioFileName === "EMPTY") {
     document.getElementById("audioFileName").innerHTML = "";
   } else {
@@ -1673,7 +1670,7 @@ $(document).on('click', '.danceBtn', async function(){
     var posDefault = thisDancer.keyframePositions[0].position;
     newDancer.addKFPosition(0, 2, posDefault);
 
-    console.log(thisDancer.keyframePositions);
+    // console.log(thisDancer.keyframePositions);
     for (var k = 0; k < thisDancer.keyframePositions.length; k++) {
       newDancer.addKFPosition(thisDancer.keyframePositions[k].start, thisDancer.keyframePositions[k].end, thisDancer.keyframePositions[k].position);
     }
