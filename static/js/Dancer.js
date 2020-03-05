@@ -167,8 +167,6 @@ var danceDesigner = {
   init: function() {
     this.scene = new THREE.Scene();
 
-    // TODO: Make the renderer a function of window width/height
-
     this.rendererWidth = window.innerWidth * 8 / 10;
     this.rendererHeight = window.innerHeight * 8 / 10;
     // this.rendererWidth = 900;
@@ -770,8 +768,55 @@ wavesurfer.on('region-out', function(r, e) {
 });
 
 wavesurfer.on('region-update-end', function(r, e) {
-  console.log(parseFloat(r.id));
+  // console.log(parseFloat(r.id));
   var oldStart = parseFloat(r.id);
+  var dancer = danceDesigner.s.dancers[0];
+
+  if (oldStart == 0 && r.start !== 0) {
+    alert("Cannot move the first keyframe!");
+    r.update({id: oldStart, start: oldStart, end: dancer.keyframePositions[0].end});
+    return;
+  }
+
+  for (var i = 0; i < dancer.keyframePositions.length; i++) {
+    // console.log(dancer.keyframePositions[i]);
+    // Cannot have two keyframes starting in the same place.
+    if (r.start == dancer.keyframePositions[i].start) {
+      if (r.start !== oldStart) {
+        alert("Keyframes cannot overlap!");
+        // Reset the keyframes to its old position
+        for (var j = 0; j < dancer.keyframePositions.length; j++) {
+          if (dancer.keyframePositions[j].start == oldStart) {
+            r.update({id: oldStart, start: oldStart, end: dancer.keyframePositions[j].end});
+            return;
+          }
+        }
+      }
+    } else if (r.start > dancer.keyframePositions[i].start) {
+      if (r.end <= dancer.keyframePositions[i].end || r.start <= dancer.keyframePositions[i].end) {
+        alert("Keyframes cannot overlap!");
+        // Reset the keyframes to its old position
+        for (var j = 0; j < dancer.keyframePositions.length; j++) {
+          if (dancer.keyframePositions[j].start == oldStart) {
+            r.update({id: oldStart, start: oldStart, end: dancer.keyframePositions[j].end});
+            return;
+          }
+        }
+      }
+    } else if (r.start < dancer.keyframePositions[i].start) {
+      if (r.end >= dancer.keyframePositions[i].start) {
+        alert("Keyframes cannot overlap!");
+        // Reset the keyframes to its old position
+        for (var j = 0; j < dancer.keyframePositions.length; j++) {
+          if (dancer.keyframePositions[j].start == oldStart) {
+            r.update({id: oldStart, start: oldStart, end: dancer.keyframePositions[j].end});
+            return;
+          }
+        }
+      }
+    }
+  }
+
   timeline.updateKeyframeTimeMark(parseFloat(r.id), r.start, r.end);
   r.update({id: r.start});
 
@@ -788,6 +833,8 @@ wavesurfer.on('region-update-end', function(r, e) {
   danceDesigner.s.keyframes.sort(function(a, b) {
     return a - b;
   });
+
+  // TODO: Fix the bug where there is some position undefined after moving keyframes around. Why is this happening?
 
   autoSave();
 });
@@ -838,7 +885,6 @@ function animate() {
           } else if (t > currKeyFramePos.end && t < nextKeyFramePos.start) {
             var diff = nextKeyFramePos.start - currKeyFramePos.end;
             var frac = (t - currKeyFramePos.end) / diff;
-            // console.log(nextKeyFramePos);
             d.mesh.position.x = currKeyFramePos.position.x + (frac * (nextKeyFramePos.position.x - currKeyFramePos.position.x));
             d.mesh.position.y = currKeyFramePos.position.y + (frac * (nextKeyFramePos.position.y - currKeyFramePos.position.y));
             d.mesh.position.z = currKeyFramePos.position.z + (frac * (nextKeyFramePos.position.z - currKeyFramePos.position.z));
@@ -890,6 +936,8 @@ async function addToUndoBuffer() {
   }
 }
 
+document.getElementById("dance_name").addEventListener("change", autoSave, false);
+
 function autoSave() {
   // Autosave the dance.
   var image = saveAsImage();
@@ -907,6 +955,7 @@ function autoSave() {
   var theseDancers = JSON.stringify(dancersInfo);
   var theseKeyframes = JSON.stringify(danceDesigner.s.keyframes);
   var dance_name= document.getElementById("dance_name").value;
+  console.log(dance_name);
 
   const data = {
    "dance_id": dance_id,
@@ -1102,11 +1151,13 @@ var userData;
 var inc = 0;
 var txSprites = [];
 
-// TODO: Make play/pause triggerable with space bar
-
 var elements = document.getElementsByClassName("launchModal");
 for (var i = 0; i < elements.length; i++) {
-    elements[i].addEventListener('click', loadInitModal, false);
+    elements[i].addEventListener('click', function () {
+      loadInitModal();
+      document.getElementById("closeModalButton").style.display = "block";
+      document.getElementById("closeModalButton").disabled = false;
+    }, false);
 }
 
 // TODO: Add an X arrow if the modal is loaded from an existing dance
@@ -1321,7 +1372,6 @@ async function initNewDance(numDancers) {
     var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: loader.load('static/files/janet.jpg')});
     var newMesh = new THREE.Mesh(geometry, material);
     newMesh.name = "Dancer";
-    console.log(newDancers[i].name);
     var newDancer = new Dancer(newDancers[i].name, newMesh);
     newDancer.updateColor(newDancers[i].color);
     if (i < 10) {
@@ -1536,6 +1586,11 @@ function makeTextSprite( message, x, y, z, parameters )
 return sprite;
 }
 
+document.getElementById("playbackSpeed").addEventListener("click", async function() {
+  var d = danceDesigner.s.dancers[0];
+  console.log(d.keyframePositions);
+});
+
 $(document).on('click', '.createNewDance', function() {
   dance_id = next_available_id;
 
@@ -1609,13 +1664,13 @@ $(document).on('click', '.createNewDance', function() {
           <div class="row" style="justify-content: center;">
             <button type="button" id="${usersDances[i].id}" class="btn btn-light">
               ${usersDances[i].dance_name}
-          </button>
+            </button>
           </div>
           <div class="row" style="justify-content: center;">
             <img src=${usersDances[i].image} width="250"/>
           </div>
           <div class="row" style="justify-content: center;">
-            <button type="button" id="DELETE${usersDances[i].id}" class="btn btn-danger">
+            <button type="button" id="DELETE${usersDances[i].id}" class="btn deleteDance btn-danger">
               Delete
             </button>
           </div>
@@ -1625,12 +1680,27 @@ $(document).on('click', '.createNewDance', function() {
     innerHTML += '</div></div>';
     document.getElementById("modal-body").innerHTML = innerHTML;
 
+    console.log(document.getElementById("closeModalButton"))
+
     var footerHTML =
     `<button type="button" id="createNewDance" class="createNewDance btn btn-primary">Create new dance</button>`;
 
     document.getElementById("modal-footer").innerHTML = footerHTML;
 
   });
+});
+
+// TODO: Finish this
+$(document).on('click', '.deleteDance', async function() {
+  console.log(this.id);
+  var id = this.id.substring(5);
+  console.log(id);
+  for (var i = 0; i < usersDances.length; i++) {
+    if (usersDances[i].id == id) {
+      var selectedDance = usersDances[i];
+      console.log(selectedDance);
+    }
+  }
 });
 
 $(document).on('click', '.danceBtn', async function(){
@@ -1770,7 +1840,6 @@ async function clearTheStage() {
 // });
 
 // TODO: fix filming issues
-// TODO: make sure keyframes don't overlap -- enforce a min difference between start and end time
 // TODO: make sure add dancer works
 // TODO: color each handle bar differently to mark start/end
 
@@ -1788,6 +1857,17 @@ function saveAsImage() {
             return;
         }
 }
+
+$(document).keydown(function(event) {
+  if (event.keyCode == 32 && event.target.id !== "dance_name") {
+    var playButton = document.getElementById("play");
+    var playButtonIcon = document.getElementById("playIcon");
+    playButtonIcon.classList.toggle("fa-pause");
+    playButtonIcon.classList.toggle("fa-play");
+    wavesurfer.playPause();
+    return false;
+  }
+});
 
 // // Volume controls
 // var volume = document.getElementById("volume");
@@ -1810,14 +1890,13 @@ function saveAsImage() {
 // }
 
 var playbackSpeed = 1;
-document.querySelector('#volumeSlider').addEventListener('input', function() {
-    playbackSpeed = Number(this.value) / 100;
-    wavesurfer.setPlaybackRate(playbackSpeed);
+document.querySelector('#playbackSlider').addEventListener('input', function() {
+  playbackSpeed = Number(this.value) / 100;
+  wavesurfer.setPlaybackRate(playbackSpeed);
 });
 
 document.querySelector('#zoomSlider').oninput = function () {
-  console.log(this.value);
-    wavesurfer.zoom(Number(this.value));
+  wavesurfer.zoom(Number(this.value));
 };
 
 
@@ -1908,7 +1987,11 @@ function update() {
 
 $(document).ready(function() {
   loadInitModal();
+  document.getElementById("closeModalButton").style.display = "none";
+  document.getElementById("closeModalButton").disabled = true;
 });
+
+// TODO: For some reason the name isn't saving.
 
 function loadInitModal() {
   fetch('/getDances', {
@@ -1935,13 +2018,13 @@ function loadInitModal() {
           <div class="row" style="justify-content: center;">
             <button type="button" id="${usersDances[i].id}" class="btn btn-light">
               ${usersDances[i].dance_name}
-          </button>
+            </button>
           </div>
           <div class="row" style="justify-content: center;">
             <img src=${usersDances[i].image} width="250"/>
           </div>
           <div class="row" style="justify-content: center;">
-            <button type="button" id="DELETE${usersDances[i].id}" class="btn btn-danger">
+            <button type="button" id="DELETE${usersDances[i].id}" class="btn deleteDance btn-danger">
               Delete
             </button>
           </div>
