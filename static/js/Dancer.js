@@ -140,7 +140,8 @@ var danceDesigner = {
   scene: null, camera: null, renderer: null, rendererWidth: null,
   rendererHeight: null, movingDancer: null,
   controls: null, loader: null, container: null, light: null,
-  plane: null, selection: null, offset: new THREE.Vector3(),
+  plane: null, selection: null,
+  // offset: new THREE.Vector3(),
   raycaster: new THREE.Raycaster(), s: null,
   dancersArr: [], maxT: null, stagePlane: null,
   xMax: null, xMin: null, zMax: null, zMin: null,
@@ -262,12 +263,7 @@ var danceDesigner = {
     // Plane, that helps to determinate an intersection position
     this.plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(500, 500, 8, 8),
     new THREE.MeshBasicMaterial({color: 0xffffff, visible: false}));
-    // this.plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(500, 500, 8, 8),
-    // new THREE.MeshBasicMaterial({color: 0xffffff, visible: false}));
-    // this.plane.rotation.x = Math.PI / 2;
     this.plane.rotateX(3 * Math.PI / 2);
-    // this.plane.position.z = -10;
-    // this.plane.position.y = -1;
     this.plane.position.z = 0;
     this.plane.position.y = 0;
     this.plane.position.x = 0;
@@ -450,7 +446,7 @@ var danceDesigner = {
         }
         // Calculate the offset
         var intersects = danceDesigner.raycaster.intersectObject(danceDesigner.plane);
-        danceDesigner.offset.copy(intersects[0].point).sub(danceDesigner.plane.position);
+        // danceDesigner.offset.copy(intersects[0].point).sub(danceDesigner.plane.position);
       }
     }
   },
@@ -502,14 +498,11 @@ var danceDesigner = {
         }
 
       }
-    } else {
-      // Update position of the plane if need
-      var intersects = danceDesigner.raycaster.intersectObjects(danceDesigner.dancersArr);
-      if (intersects.length > 0) {
-        // danceDesigner.plane.position.copy(intersects[0].object.position);
-        // danceDesigner.plane.lookAt(danceDesigner.camera.position);
-      }
     }
+    // else {
+    //   // Update position of the plane if need
+    //   var intersects = danceDesigner.raycaster.intersectObjects(danceDesigner.dancersArr);
+    // }
   },
   onDocumentMouseUp: async function (event) {
     // event.preventDefault();
