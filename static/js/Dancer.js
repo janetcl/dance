@@ -272,6 +272,7 @@ var danceDesigner = {
     var stageNormalVector = new THREE.Vector3(0, 1, 0);
     this.stagePlane = new THREE.Plane(stageNormalVector);
 
+
     // Create small renderer for timeline
     // var width2 = window.innerWidth / 6;
     // var height2 = window.innerHeight / 6;
@@ -468,12 +469,7 @@ var danceDesigner = {
       // Check the position where the plane is intersected
       var intersects = danceDesigner.raycaster.intersectObject(danceDesigner.plane);
       // Reposition the object based on the intersection point with the plane
-      newPosThreeVector = danceDesigner.stagePlane.projectPoint(
-        // intersects[0].point.sub(danceDesigner.offset),
-        // danceDesigner.selection.position
-        intersects[0].point,
-        danceDesigner.selection.position
-      );
+      newPosThreeVector = danceDesigner.stagePlane.projectPoint(intersects[0].point, danceDesigner.selection.position);
       // Find the dancer based on the initial pose
       if (danceDesigner.movingDancer) {
         if (newPosThreeVector) {
@@ -909,6 +905,42 @@ function animate() {
       }
     }
 
+    var d = danceDesigner.s.dancers[0];
+    if (d) {
+      for (var i = 0; i < d.keyframePositions.length - 1; i++) {
+        var currKeyFramePos = d.keyframePositions[i];
+        var nextKeyFramePos = d.keyframePositions[i+1];
+        if (t > currKeyFramePos.end && t < nextKeyFramePos.start) {
+          for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
+            var curDancer = danceDesigner.s.dancers[j];
+            var geometry = new THREE.Geometry();
+            geometry.vertices.push(new THREE.Vector3(curDancer.keyframePositions[i].position.x, -0.99, curDancer.keyframePositions[i].position.z),
+            new THREE.Vector3(curDancer.keyframePositions[i+1].position.x, -0.99, curDancer.keyframePositions[i+1].position.z));
+            var line = new MeshLine();
+            line.setGeometry(geometry, function (p) {return p + 0.7;} );
+            var material = new MeshLineMaterial( {
+              color: curDancer.mesh.material.color,
+              // transparent: true,
+              // opacity: 0.7
+             } );
+             // console.log("WORKS ", i);
+            var mesh = new THREE.Mesh(line.geometry, material);
+            mesh.name = "Path";
+            danceDesigner.scene.add(mesh);
+          }
+          break;
+        } else {
+          // console.log("REMOVING ", i);
+          while (danceDesigner.scene.getObjectByName("Path")) {
+            danceDesigner.scene.remove(danceDesigner.scene.getObjectByName("Path"));
+          }
+        }
+      }
+    } else {
+      console.log("D IS NULL");
+    }
+
+
   }
   requestAnimationFrame( animate );
   render();
@@ -966,7 +998,6 @@ function autoSave() {
   var theseDancers = JSON.stringify(dancersInfo);
   var theseKeyframes = JSON.stringify(danceDesigner.s.keyframes);
   var dance_name= document.getElementById("dance_name").value;
-  console.log(dance_name);
 
   const data = {
    "dance_id": dance_id,
@@ -1027,7 +1058,7 @@ function render() {
     //
     //   if (time == t && play == false) {
     //     thisRenderer.render(danceDesigner.scene, danceDesigner.camera1);
-    //   }
+    //   }``
     //   else {
     //     for (let i = 0; i < scene.children.length; i ++) {
     //       if (scene.children[i].type == "Mesh" && scene.children[i].geometry.type == "BoxGeometry") {
