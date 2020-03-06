@@ -760,7 +760,6 @@ wavesurfer.on('region-update-end', function(r, e) {
   }
 
   for (var i = 0; i < dancer.keyframePositions.length; i++) {
-    // console.log(dancer.keyframePositions[i]);
     // Cannot have two keyframes starting in the same place.
     if (r.start == dancer.keyframePositions[i].start) {
       if (r.start !== oldStart) {
@@ -775,7 +774,8 @@ wavesurfer.on('region-update-end', function(r, e) {
         }
       }
     } else if (r.start > dancer.keyframePositions[i].start) {
-      if (r.end <= dancer.keyframePositions[i].end || r.start <= dancer.keyframePositions[i].end) {
+      if ((r.end <= dancer.keyframePositions[i].end || r.start <= dancer.keyframePositions[i].end)
+      && dancer.keyframePositions[i].start != oldStart) {
         console.log(dancer.keyframePositions);
         alert("Keyframes cannot overlap!");
         // Reset the keyframes to its old position
@@ -787,7 +787,7 @@ wavesurfer.on('region-update-end', function(r, e) {
         }
       }
     } else if (r.start < dancer.keyframePositions[i].start) {
-      if (r.end >= dancer.keyframePositions[i].start) {
+      if (r.end >= dancer.keyframePositions[i].start && dancer.keyframePositions[i].start != oldStart) {
         console.log(dancer.keyframePositions);
         alert("Keyframes cannot overlap!");
         // Reset the keyframes to its old position
@@ -842,7 +842,8 @@ function animate() {
         if (i != j) {
           if (Math.abs(d.mesh.position.x - danceDesigner.s.dancers[j].mesh.position.x) < 1
           && Math.abs(d.mesh.position.z - danceDesigner.s.dancers[j].mesh.position.z) < 1) {
-            document.body.style.backgroundColor = "red";
+            // TODO: COLLISION
+            // document.body.style.backgroundColor = "red";
           }
         }
       }
@@ -899,7 +900,8 @@ function animate() {
             console.log("t" , t);
             console.log(d);
             console.log(danceDesigner.s.dancers[j]);
-            document.body.style.backgroundColor = "red";
+            // TODO: COLLISION
+            // document.body.style.backgroundColor = "red";
           }
         }
       }
@@ -936,10 +938,7 @@ function animate() {
           }
         }
       }
-    } else {
-      console.log("D IS NULL");
     }
-
 
   }
   requestAnimationFrame( animate );
