@@ -98,23 +98,6 @@ class Dancer {
     return cloneDancer;
   }
 
-  computePositions(keyframes) {
-    if (keyframes.length == 1) {
-      return;
-    }
-    for (var i = 0; i < keyframes.length - 1; i++) {
-      var firstTime = keyframes[i];
-      var secondTime = keyframes[i + 1];
-      var timeDiff = secondTime - firstTime;
-      for (var j = 0; j < timeDiff; j++) {
-        this.positions[firstTime + j].x = ((this.positions[secondTime].x - this.positions[firstTime].x) * j / (timeDiff)) + this.positions[firstTime].x;
-        this.positions[firstTime + j].y = ((this.positions[secondTime].y - this.positions[firstTime].y) * j / (timeDiff)) + this.positions[firstTime].y;
-        this.positions[firstTime + j].z = ((this.positions[secondTime].z - this.positions[firstTime].z) * j / (timeDiff)) + this.positions[firstTime].z;
-      }
-    }
-    return;
-  }
-
 }
 
 class Stage {
@@ -277,10 +260,17 @@ var danceDesigner = {
     this.scene.add( axesHelper );
 
     // Plane, that helps to determinate an intersection position
-    this.plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(500, 500, 8, 8), new THREE.MeshBasicMaterial({color: 0xffffff, visible: false}));
-    this.plane.rotation.x = Math.PI / 2;
-    this.plane.position.z = -10;
-    this.plane.position.y = -1;
+    this.plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(500, 500, 8, 8),
+    new THREE.MeshBasicMaterial({color: 0xffffff, visible: false}));
+    // this.plane = new THREE.Mesh(new THREE.PlaneBufferGeometry(500, 500, 8, 8),
+    // new THREE.MeshBasicMaterial({color: 0xffffff, visible: false}));
+    // this.plane.rotation.x = Math.PI / 2;
+    this.plane.rotateX(3 * Math.PI / 2);
+    // this.plane.position.z = -10;
+    // this.plane.position.y = -1;
+    this.plane.position.z = 0;
+    this.plane.position.y = 0;
+    this.plane.position.x = 0;
     this.scene.add(this.plane);
 
     var stageNormalVector = new THREE.Vector3(0, 1, 0);
@@ -483,7 +473,9 @@ var danceDesigner = {
       var intersects = danceDesigner.raycaster.intersectObject(danceDesigner.plane);
       // Reposition the object based on the intersection point with the plane
       newPosThreeVector = danceDesigner.stagePlane.projectPoint(
-        intersects[0].point.sub(danceDesigner.offset),
+        // intersects[0].point.sub(danceDesigner.offset),
+        // danceDesigner.selection.position
+        intersects[0].point,
         danceDesigner.selection.position
       );
       // Find the dancer based on the initial pose
@@ -514,8 +506,8 @@ var danceDesigner = {
       // Update position of the plane if need
       var intersects = danceDesigner.raycaster.intersectObjects(danceDesigner.dancersArr);
       if (intersects.length > 0) {
-        danceDesigner.plane.position.copy(intersects[0].object.position);
-        danceDesigner.plane.lookAt(danceDesigner.camera.position);
+        // danceDesigner.plane.position.copy(intersects[0].object.position);
+        // danceDesigner.plane.lookAt(danceDesigner.camera.position);
       }
     }
   },
@@ -529,7 +521,7 @@ var danceDesigner = {
       var oldPosition = danceDesigner.movingDancer.getPosAt(t);
       if (danceDesigner.newPos) {
         if ((Math.abs(danceDesigner.newPos.x - oldPosition.x) < 0.01)
-        || (Math.abs(danceDesigner.newPos.z - oldPosition.z) < 0.01)) {
+        && (Math.abs(danceDesigner.newPos.z - oldPosition.z) < 0.01)) {
           // TODO: Fix this.
           alert("Editing dancer ", danceDesigner.movingDancer.mesh.material.color, danceDesigner.movingDancer.name);
         } else {
@@ -783,6 +775,7 @@ wavesurfer.on('region-update-end', function(r, e) {
     // Cannot have two keyframes starting in the same place.
     if (r.start == dancer.keyframePositions[i].start) {
       if (r.start !== oldStart) {
+        console.log(dancer.keyframePositions);
         alert("Keyframes cannot overlap!");
         // Reset the keyframes to its old position
         for (var j = 0; j < dancer.keyframePositions.length; j++) {
@@ -794,6 +787,7 @@ wavesurfer.on('region-update-end', function(r, e) {
       }
     } else if (r.start > dancer.keyframePositions[i].start) {
       if (r.end <= dancer.keyframePositions[i].end || r.start <= dancer.keyframePositions[i].end) {
+        console.log(dancer.keyframePositions);
         alert("Keyframes cannot overlap!");
         // Reset the keyframes to its old position
         for (var j = 0; j < dancer.keyframePositions.length; j++) {
@@ -805,6 +799,7 @@ wavesurfer.on('region-update-end', function(r, e) {
       }
     } else if (r.start < dancer.keyframePositions[i].start) {
       if (r.end >= dancer.keyframePositions[i].start) {
+        console.log(dancer.keyframePositions);
         alert("Keyframes cannot overlap!");
         // Reset the keyframes to its old position
         for (var j = 0; j < dancer.keyframePositions.length; j++) {
@@ -824,7 +819,9 @@ wavesurfer.on('region-update-end', function(r, e) {
   for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
     var d = danceDesigner.s.dancers[i];
     d.updateKeyFrame(oldStart, r.start, r.end);
+    console.log(d.keyframePositions);
   }
+
   for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
     if (danceDesigner.s.keyframes[i] == oldStart) {
       danceDesigner.s.keyframes[i] = r.start;
@@ -852,7 +849,14 @@ function animate() {
       d.mesh.position.x = d.keyframePositions[lastIndex].position.x;
       d.mesh.position.y = d.keyframePositions[lastIndex].position.y;
       d.mesh.position.z = d.keyframePositions[lastIndex].position.z;
-
+      for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
+        if (i != j) {
+          if (Math.abs(d.mesh.position.x - danceDesigner.s.dancers[j].mesh.position.x) < 1
+          && Math.abs(d.mesh.position.z - danceDesigner.s.dancers[j].mesh.position.z) < 1) {
+            document.body.style.backgroundColor = "red";
+          }
+        }
+      }
     }
   } else {
 
@@ -860,6 +864,7 @@ function animate() {
       var d = danceDesigner.s.dancers[i];
 
       if (d == danceDesigner.movingDancer) {
+        console.log("MOVING DANCER");
         if (danceDesigner.newPos) {
           d.mesh.position.x = danceDesigner.newPos.x;
           d.mesh.position.y = danceDesigner.newPos.y;
@@ -897,7 +902,20 @@ function animate() {
           }
         }
       }
+
+      for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
+        if (i != j) {
+          if (Math.abs(d.mesh.position.x - danceDesigner.s.dancers[j].mesh.position.x) < 1
+          && Math.abs(d.mesh.position.z - danceDesigner.s.dancers[j].mesh.position.z) < 1) {
+            console.log("t" , t);
+            console.log(d);
+            console.log(danceDesigner.s.dancers[j]);
+            document.body.style.backgroundColor = "red";
+          }
+        }
+      }
     }
+
   }
   requestAnimationFrame( animate );
   render();
@@ -1230,18 +1248,12 @@ if (event.target.id === "addDancer") {
     for (var i = 0; i < oldState.dancers.length; i++) {
       const oldDancer = await oldState.dancers[i].clone();
       danceDesigner.s.dancers.push(oldDancer);
-      // danceDesigner.s.dancers[i].updatePositions();
-      danceDesigner.s.dancers[i].computePositions(oldState.keyframes);
     }
 
     danceDesigner.s.keyframes = oldState.keyframes;
 
     // Clean up the timeline
     timeline.removeTimeMarks();
-
-    // for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
-    //   timeline.addTimeMark(danceDesigner.s.keyframes[i]);
-    // }
 
     var d = danceDesigner.s.dancers[0];
     for (var i = 0; i < d.keyframePositions.length; i++) {
