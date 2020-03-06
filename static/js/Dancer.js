@@ -769,6 +769,7 @@ wavesurfer.on('region-update-end', function(r, e) {
         for (var j = 0; j < dancer.keyframePositions.length; j++) {
           if (dancer.keyframePositions[j].start == oldStart) {
             r.update({id: oldStart, start: oldStart, end: dancer.keyframePositions[j].end});
+            autoSave();
             return;
           }
         }
@@ -782,6 +783,7 @@ wavesurfer.on('region-update-end', function(r, e) {
         for (var j = 0; j < dancer.keyframePositions.length; j++) {
           if (dancer.keyframePositions[j].start == oldStart) {
             r.update({id: oldStart, start: oldStart, end: dancer.keyframePositions[j].end});
+            autoSave();
             return;
           }
         }
@@ -794,12 +796,16 @@ wavesurfer.on('region-update-end', function(r, e) {
         for (var j = 0; j < dancer.keyframePositions.length; j++) {
           if (dancer.keyframePositions[j].start == oldStart) {
             r.update({id: oldStart, start: oldStart, end: dancer.keyframePositions[j].end});
+            autoSave();
             return;
           }
         }
       }
     }
   }
+
+  //TODO: still need to fix this. sometimes keyframe positions are not updating properly.
+  // the entire dance isn't saving with the new keyframes.
 
   timeline.updateKeyframeTimeMark(parseFloat(r.id), r.start, r.end);
   r.update({id: r.start});
@@ -919,7 +925,7 @@ function animate() {
             geometry.vertices.push(new THREE.Vector3(curDancer.keyframePositions[i].position.x, -0.99, curDancer.keyframePositions[i].position.z),
             new THREE.Vector3(curDancer.keyframePositions[i+1].position.x, -0.99, curDancer.keyframePositions[i+1].position.z));
             var line = new MeshLine();
-            line.setGeometry(geometry, function (p) {return p + 0.7;} );
+            line.setGeometry(geometry, function (p) {return p + 0.3;} );
             var material = new MeshLineMaterial( {
               color: curDancer.mesh.material.color,
               // transparent: true,
@@ -1371,7 +1377,81 @@ if (event.target.id === "addDancer") {
     lightAngle = 0;
     play = true;
     wavesurfer.playPause();
+  } else if (event.target.id === "editPaths") {
+    // TODO: Implement this.
+    var d = danceDesigner.s.dancers[0];
+    if (d) {
+      for (var i = 0; i < d.keyframePositions.length - 1; i++) {
+        var currKeyFramePos = d.keyframePositions[i];
+        var nextKeyFramePos = d.keyframePositions[i+1];
+        if (t > currKeyFramePos.end && t < nextKeyFramePos.start) {
+
+          editPaths(t);
+          // for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
+          //   var curDancer = danceDesigner.s.dancers[j];
+          //   var geometry = new THREE.Geometry();
+          //   geometry.vertices.push(new THREE.Vector3(curDancer.keyframePositions[i].position.x, -0.99, curDancer.keyframePositions[i].position.z),
+          //   new THREE.Vector3(curDancer.keyframePositions[i+1].position.x, -0.99, curDancer.keyframePositions[i+1].position.z));
+          //   var line = new MeshLine();
+          //   line.setGeometry(geometry, function (p) {return p + 0.3;} );
+          //   var material = new MeshLineMaterial( {
+          //     color: curDancer.mesh.material.color,
+          //     // transparent: true,
+          //     // opacity: 0.7
+          //    } );
+          //    // console.log("WORKS ", i);
+          //   var mesh = new THREE.Mesh(line.geometry, material);
+          //   mesh.name = "Path";
+          //   danceDesigner.scene.add(mesh);
+          // }
+          // break;
+
+
+        } else {
+          console.log("edit paths!");
+        }
+      }
+    }
+
   }
+}
+
+function editPaths(time) {
+  var innerHTML =
+  `<div class="container">
+    <div class="row">
+      <div class="col-12">
+        <p style="color: black;">
+          WHEEEEE
+          <input type="number" id="quantity" name="quantity" min="1" max="20" value="2" style="color: black; width: 100px;">
+        </p>
+      </div>
+      <div class="container">
+        <div class="row">
+          <div class="col-12">
+            <p style="color: black;">
+              Edit the dancers' names and colors below!
+            </p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-6" id="Dancer1">
+            <input type="text" value="Dancer1">
+            <input type="color">
+          </div>
+          <div class="col-6" id="Dancer2">
+            <input type="text" value="Dancer2">
+            <input type="color">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  document.getElementById("modal-body").innerHTML = innerHTML;
+  document.getElementById("closeModalButton").style.display = "block";
+  document.getElementById("closeModalButton").disabled = false;
+  $('#dancesModal').modal('show');
 }
 
 async function initNewDance(numDancers) {
