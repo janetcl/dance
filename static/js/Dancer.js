@@ -235,6 +235,10 @@ var danceDesigner = {
       color: 0xAB4D18,
       map: this.loader.load('static/files/stage.jpg'),
       side: THREE.DoubleSide,
+      reflectivity: 0.1,
+      shininess: 10,
+      lightMapIntensity: 0.4,
+      aoMapIntensity: 0.4
     });
     var floor = new THREE.Mesh( geometry, material );
     floor.rotation.x = Math.PI / 2;
@@ -2125,14 +2129,8 @@ $(document).on('click', '.danceBtn', async function(){
 
     for (var i = 0; i < thisDancer.keyframePositions.length - 1; i++) {
       var currKeyFramePos = newDancer.keyframePositions[i];
-      console.log(currKeyFramePos);
-      // currKeyFramePos.splineHelperObjects = [];
-      // currKeyFramePos.splineHelperObjects = thisDancer.keyframePositions[i].splineHelperObjects;
-      console.log("SPLINE CURVE", thisDancer.keyframePositions[i].curve);
-      console.log("THIS DANCER", thisDancer.keyframePositions[i].splineHelperObjects);
       // Set the curve
       setCurvesOldDance(newDancer, j, currKeyFramePos, i, thisDancer.keyframePositions[i].curve);
-      // TODO: NEED TO SET THE CURVE BASED ON POSITIONS?
     }
 
     // Increment new dancer count
