@@ -168,6 +168,7 @@ var danceDesigner = {
     this.renderer = new THREE.WebGLRenderer({canvas: document.getElementById("renderer")});
     this.renderer.setSize( this.rendererWidth, this.rendererHeight );
     this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     // Create small renderer for aerial view
     var width1 = window.innerWidth / 5.5;
@@ -214,7 +215,7 @@ var danceDesigner = {
     light.position.x = 0;
     light.position.y = 20;
     light.position.z = -10;
-    light.intensity = 2;
+    light.intensity = 1;
     light.castShadow = true;
     this.scene.add(light);
 
@@ -230,16 +231,17 @@ var danceDesigner = {
 
     // Add the stage
     var geometry = new THREE.PlaneGeometry( 30, 20, 10, 5 );
-    var material = new THREE.MeshBasicMaterial({
-      color: 0xFF8844,
+    var material = new THREE.MeshPhongMaterial({
+      color: 0xAB4D18,
       map: this.loader.load('static/files/stage.jpg'),
       side: THREE.DoubleSide,
     });
     var floor = new THREE.Mesh( geometry, material );
-    floor.rotation.x = - Math.PI / 2;
+    floor.rotation.x = Math.PI / 2;
     floor.position.z = -10;
     floor.position.y = -1;
     floor.receiveShadow = true;
+    floor.castShadow = false;
     this.scene.add( floor );
 
     this.xMax = 17.5;
@@ -247,10 +249,10 @@ var danceDesigner = {
     this.zMax = 0;
     this.zMin = -20;
 
-    var geo = new THREE.WireframeGeometry( floor.geometry );
-    var mat = new THREE.LineBasicMaterial( { color: 0xffffff, linewidth: 2 } );
-    var wireframe = new THREE.LineSegments( geo, mat );
-    floor.add( wireframe );
+    // var geo = new THREE.WireframeGeometry( floor.geometry );
+    // var mat = new THREE.LineBasicMaterial( { color: 0xffffff, linewidth: 2 } );
+    // var wireframe = new THREE.LineSegments( geo, mat );
+    // floor.add( wireframe );
 
     // Set the camera and orbit controls
     this.camera.position.z = 25;
