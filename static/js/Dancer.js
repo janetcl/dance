@@ -236,7 +236,7 @@ var danceDesigner = {
       side: THREE.DoubleSide,
     });
     var floor = new THREE.Mesh( geometry, material );
-    floor.rotation.x = Math.PI / 2;
+    floor.rotation.x = - 3 * Math.PI / 2;
     floor.position.z = -10;
     floor.position.y = -1;
     floor.receiveShadow = true;
@@ -669,6 +669,24 @@ function addSplineObject( keyframe, position, index, splineObjectNumber, dancerC
 
 }
 
+function addSplineObjectOldDance( keyframe, position, index, splineObjectNumber, dancerColor ) {
+
+  var material = new THREE.MeshLambertMaterial( { color: dancerColor } );
+  var geometry = new THREE.BoxBufferGeometry( 0.5, 0.5, 0.5 );
+  var object = new THREE.Mesh( geometry, material );
+
+  object.position.copy( position );
+  object.castShadow = true;
+  object.receiveShadow = true;
+  object.name = "SplineObject" + index;
+  danceDesigner.scene.add( object );
+  object.visible = false;
+  danceDesigner.splineHelperObjects.push(object);
+  keyframe.splineHelperObjects.push( object );
+  return object;
+
+}
+
 // function addPoint() {
 //
 //   danceDesigner.splinePointsLength ++;
@@ -697,9 +715,6 @@ function addSplineObject( keyframe, position, index, splineObjectNumber, dancerC
 function updateSplineOutline(index, arg) {
 
     var spline = danceDesigner.s.dancers[index].keyframePositions[arg].curve;
-    // console.log("UPDATE SPLINE: ", spline);
-    // console.log("AT INDEX: ", index);
-
     var splineMesh = spline.mesh;
     var position = splineMesh.geometry.attributes.position;
 
@@ -998,13 +1013,18 @@ function animate() {
       d.mesh.position.x = d.keyframePositions[lastIndex].position.x;
       d.mesh.position.y = d.keyframePositions[lastIndex].position.y;
       d.mesh.position.z = d.keyframePositions[lastIndex].position.z;
-      for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
-        if (i != j) {
-          if (Math.abs(d.mesh.position.x - danceDesigner.s.dancers[j].mesh.position.x) < 1
-          && Math.abs(d.mesh.position.z - danceDesigner.s.dancers[j].mesh.position.z) < 1) {
-            // TODO: COLLISION
-            // document.body.style.backgroundColor = "red";
-          }
+      // for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
+      //   if (i != j) {
+      //     if (Math.abs(d.mesh.position.x - danceDesigner.s.dancers[j].mesh.position.x) < 1
+      //     && Math.abs(d.mesh.position.z - danceDesigner.s.dancers[j].mesh.position.z) < 1) {
+      //       // TODO: COLLISION
+      //       // document.body.style.backgroundColor = "red";
+      //     }
+      //   }
+      // }
+      if (lastIndex > 0) {
+        if (d.keyframePositions[lastIndex - 1].curve) {
+          hideCurves(d.keyframePositions[lastIndex - 1]);
         }
       }
     }
@@ -1016,46 +1036,23 @@ function animate() {
       for (var i = 0; i < d.keyframePositions.length - 1; i++) {
         var currKeyFramePos = d.keyframePositions[i];
         var nextKeyFramePos = d.keyframePositions[i+1];
-        // if (t == oldT) {
-        //   console.log("t == oldT");
-        //   console.log('oldT', oldT);
-        //   console.log("t", t);
-        //   break;
-        // } else {
 
-          // if (currKeyFramePos.curve) {
-          //   console.log('hide curves')
-          //   showCurves(currKeyFramePos);
-          // }
-
-          if (t > currKeyFramePos.end && t < nextKeyFramePos.start) {
-            for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
-              var curDancer = danceDesigner.s.dancers[j];
-              currKeyFramePos = curDancer.keyframePositions[i];
-              nextKeyFramePos = curDancer.keyframePositions[i+1];
-              // console.log("j", j);
-              if (currKeyFramePos.curve) {
-                // console.log('show curves', j)
-                showCurves(currKeyFramePos);
-              }
-            }
-            // oldT = t;
-          //   break;
-
-          } else if ((i == d.keyframePositions.length - 2 && t > nextKeyFramePos.end)
-          || (t >= currKeyFramePos.start && t <= currKeyFramePos.end)
-          || (t >= nextKeyFramePos.start && t <= nextKeyFramePos.end)) {
-            // console.log(nextKeyFramePos);
-            // console.log("removing", d.keyframePositions);
+        if (t > currKeyFramePos.end && t < nextKeyFramePos.start) {
+          for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
+            var curDancer = danceDesigner.s.dancers[j];
+            currKeyFramePos = curDancer.keyframePositions[i];
+            nextKeyFramePos = curDancer.keyframePositions[i+1];
             if (currKeyFramePos.curve) {
-              // console.log('hide curves')
-              hideCurves(currKeyFramePos);
+              showCurves(currKeyFramePos);
             }
           }
-      //   }
+        } else {
+          if (currKeyFramePos.curve) {
+            hideCurves(currKeyFramePos);
+          }
+        }
       }
     }
-
 
     for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
       var d = danceDesigner.s.dancers[i];
@@ -1091,7 +1088,7 @@ function animate() {
             var diff = nextKeyFramePos.start - currKeyFramePos.end;
             var frac = (t - currKeyFramePos.end) / diff;
             if (currKeyFramePos.curve) {
-              // console.log(currKeyFramePos.curve);
+              console.log("currKeyFramePos", currKeyFramePos.curve);
               showCurves(currKeyFramePos);
               currKeyFramePos.curve.getPoint(frac, d.mesh.position);
             } else {
@@ -1168,31 +1165,22 @@ function setCurves(dancer, index, currKeyFramePos, nextKeyFramePos, posIndex) {
    curve.mesh.name = "Spline" + index;
 
    currKeyFramePos.curve = curve;
-   danceDesigner.scene.add( curve.mesh );
-   curve.mesh.visible = false;
+   danceDesigner.scene.add( currKeyFramePos.curve.mesh );
+   currKeyFramePos.curve.mesh.visible = false;
 }
 
 function setCurvesOldDance(dancer, index, currKeyFramePos, posIndex, oldCurve) {
 
-  console.log("OLD Curve: ", oldCurve);
+  currKeyFramePos.positions = [];
+  currKeyFramePos.splineHelperObjects = [];
 
    for ( var i = 0; i < oldCurve.points.length; i ++ ) {
 
-     console.log(oldCurve.points);
-     addSplineObject( currKeyFramePos, oldCurve.points[i], index, i, dancer.mesh.material.color);
+      var newPos = new THREE.Vector3(oldCurve.points[i][0], 0, oldCurve.points[i][2]);
+      addSplineObjectOldDance( currKeyFramePos, newPos, index, i, dancer.mesh.material.color);
+      currKeyFramePos.positions.push( newPos );
 
    }
-
-   currKeyFramePos.positions = [];
-
-   for ( var i = 0; i < danceDesigner.splinePointsLength; i ++ ) {
-
-     // console.log("POSITIONS: ", currKeyFramePos.splineHelperObjects[ i ].position);
-     currKeyFramePos.positions.push( oldCurve.points[i] );
-
-   }
-
-   console.log("Positions after: ", currKeyFramePos.positions);
 
    var geometry = new THREE.BufferGeometry();
    geometry.setAttribute( 'position', new THREE.BufferAttribute( new Float32Array( ARC_SEGMENTS * 3 ), 3 ) );
@@ -1207,8 +1195,8 @@ function setCurvesOldDance(dancer, index, currKeyFramePos, posIndex, oldCurve) {
    curve.mesh.name = "Spline" + index;
 
    currKeyFramePos.curve = curve;
-   danceDesigner.scene.add( curve.mesh );
-   curve.mesh.visible = false;
+   danceDesigner.scene.add( currKeyFramePos.curve.mesh );
+   currKeyFramePos.curve.mesh.visible = false;
 }
 
 
@@ -2160,8 +2148,8 @@ $(document).on('click', '.danceBtn', async function(){
     for (var i = 0; i < thisDancer.keyframePositions.length - 1; i++) {
       var currKeyFramePos = newDancer.keyframePositions[i];
       console.log(currKeyFramePos);
-      currKeyFramePos.splineHelperObjects = [];
-      currKeyFramePos.splineHelperObjects = thisDancer.keyframePositions[i].splineHelperObjects;
+      // currKeyFramePos.splineHelperObjects = [];
+      // currKeyFramePos.splineHelperObjects = thisDancer.keyframePositions[i].splineHelperObjects;
       console.log("SPLINE CURVE", thisDancer.keyframePositions[i].curve);
       console.log("THIS DANCER", thisDancer.keyframePositions[i].splineHelperObjects);
       // Set the curve
