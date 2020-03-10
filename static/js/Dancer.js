@@ -1,6 +1,8 @@
 import TimelinePlugin from './WaveSurferTimeline.js';
 import CursorPlugin from './WaveSurferCursor.js';
 import RegionsPlugin from './WaveSurferRegions.js';
+import { TransformControls } from './TransformControls.js';
+import { DragControls } from './DragControls.js';
 // import EffectComposer from './EffectComposer.js';
 // const jsc = require("./jscolor");
 // import * as jsc from './jscolor.js';
@@ -116,6 +118,7 @@ class Stage {
       }
     }
     this.dancers.push(dan);
+    dan.mesh.castShadow = true;
   }
 
   removeDancer(dan) {
@@ -135,19 +138,20 @@ class Stage {
 
 }
 
+var ARC_SEGMENTS = 200;
 
 var danceDesigner = {
   scene: null, camera: null, renderer: null, rendererWidth: null,
   rendererHeight: null, movingDancer: null,
   controls: null, loader: null, container: null, light: null,
   plane: null, selection: null,
-  // offset: new THREE.Vector3(),
+  splineHelperObjects: [], splinePointsLength: 4, splines: {}, positions: [],
+  selectionPath: null,
   raycaster: new THREE.Raycaster(), s: null,
   dancersArr: [], maxT: null, stagePlane: null,
   xMax: null, xMin: null, zMax: null, zMin: null,
   camera1: null, renderer1: null, camera2: null, renderer2: null,
   scene2: null, renderers: [], dragControls: null, newPos: null,
-  // janet: null, phillip: null,
   init: function() {
     this.scene = new THREE.Scene();
 
@@ -161,6 +165,7 @@ var danceDesigner = {
     this.camera = new THREE.PerspectiveCamera( viewAngle, this.rendererWidth / this.rendererHeight, nearClipping, farClipping );
     this.renderer = new THREE.WebGLRenderer({canvas: document.getElementById("renderer")});
     this.renderer.setSize( this.rendererWidth, this.rendererHeight );
+    this.renderer.shadowMap.enabled = true;
 
     // Create small renderer for aerial view
     var width1 = window.innerWidth / 5.5;
@@ -211,6 +216,16 @@ var danceDesigner = {
     light.intensity = 2;
     this.scene.add(light);
 
+    this.scene.add( new THREE.AmbientLight( 0xf0f0f0 ) );
+    var light = new THREE.SpotLight( 0xffffff, 1.5 );
+    light.position.set( 0, 1500, 200 );
+    light.castShadow = true;
+    light.shadow = new THREE.LightShadow( new THREE.PerspectiveCamera( 70, 1, 200, 2000 ) );
+    light.shadow.bias = - 0.000222;
+    light.shadow.mapSize.width = 1024;
+    light.shadow.mapSize.height = 1024;
+    this.scene.add( light );
+
     // Add the stage
     var geometry = new THREE.PlaneGeometry( 30, 20, 10, 5 );
     var material = new THREE.MeshBasicMaterial({
@@ -222,6 +237,7 @@ var danceDesigner = {
     floor.rotation.x = Math.PI / 2;
     floor.position.z = -10;
     floor.position.y = -1;
+    floor.receiveShadow = true;
     this.scene.add( floor );
 
     this.xMax = 17.5;
@@ -243,7 +259,7 @@ var danceDesigner = {
     this.controls.target.set( 0, 0, -2 );
     this.controls.maxDistance = 50;
 
-    this.dragControls = new THREE.DragControls(this.dancersArr, this.camera, this.renderer.domElement);
+    this.dragControls = new DragControls(this.dancersArr, this.camera, this.renderer.domElement);
     this.dragControls.addEventListener( 'dragstart', function ( event ) {
     	event.object.material.emissive.set( 0xaaaaaa );
       // console.log("moving object: ", event.object);
@@ -272,6 +288,133 @@ var danceDesigner = {
     var stageNormalVector = new THREE.Vector3(0, 1, 0);
     this.stagePlane = new THREE.Plane(stageNormalVector);
 
+
+    // NEW STUFF!
+    // var transformControl = new TransformControls( this.camera, this.renderer.domElement );
+    // // transformControl.addEventListener( 'change', render );
+    // transformControl.addEventListener( 'dragging-changed', function ( event ) {
+    //
+    //   danceDesigner.controls.enabled = ! event.value;
+    //
+    // } );
+    // this.scene.add( transformControl );
+    //
+    // // Hiding transform situation is a little in a mess :()
+    // transformControl.addEventListener( 'change', function () {
+    //
+    //   console.log("transform control change");
+    //   // cancelHideTransform();
+    //
+    // } );
+    //
+    // transformControl.addEventListener( 'mouseDown', function () {
+    //
+    //   console.log(" transformControl mouse down");
+    //   // cancelHideTransform();
+    //
+    // } );
+    //
+    // transformControl.addEventListener( 'mouseUp', function () {
+    //
+    //   // delayHideTransform();
+    //
+    // } );
+    //
+    // transformControl.addEventListener( 'objectChange', function () {
+    //
+    //   console.log("UPDATE SPLINE OUTLINE");
+    //   updateSplineOutline();
+    //
+    // } );
+
+    // var dragcontrols = new DragControls( this.splineHelperObjects, this.camera, this.renderer.domElement ); //
+    // dragcontrols.enabled = false;
+    // dragcontrols.addEventListener( 'hoveron', function ( event ) {
+    //
+    //   console.log("HOVER ON ", event.object);
+    //
+    //   // transformControl.attach( event.object );
+    //   // cancelHideTransform();
+    //
+    // } );
+    //
+    // dragcontrols.addEventListener( 'hoveroff', function () {
+    //
+    //   // delayHideTransform();
+    //
+    // } );
+
+    // var hiding;
+
+    // function delayHideTransform() {
+    //
+    //   cancelHideTransform();
+    //   hideTransform();
+    //
+    // }
+
+    // function hideTransform() {
+    //
+    //   hiding = setTimeout( function () {
+    //
+    //     transformControl.detach( transformControl.object );
+    //
+    //   }, 2500 );
+    //
+    // }
+
+    // function cancelHideTransform() {
+    //
+    //   if ( hiding ) clearTimeout( hiding );
+    //
+    // }
+
+    /*******
+     * Curves
+     *********/
+
+    for ( var i = 0; i < this.splinePointsLength; i ++ ) {
+
+      addSplineObject( this.positions[ i ] );
+
+    }
+
+
+    for ( var i = 0; i < this.splinePointsLength; i ++ ) {
+
+      this.positions.push( this.splineHelperObjects[ i ].position );
+
+    }
+
+    var geometry = new THREE.BufferGeometry();
+    geometry.setAttribute( 'position', new THREE.BufferAttribute( new Float32Array( ARC_SEGMENTS * 3 ), 3 ) );
+
+    var curve = new THREE.CatmullRomCurve3( this.positions );
+    curve.curveType = 'centripetal';
+    curve.mesh = new THREE.Line( geometry.clone(), new THREE.LineBasicMaterial( {
+      color: 0x00ff00,
+      opacity: 0.35
+    } ) );
+    curve.mesh.castShadow = true;
+    this.splines.centripetal = curve;
+
+    for ( var k in this.splines ) {
+
+      var spline = this.splines[ k ];
+      this.scene.add( spline.mesh );
+
+    }
+
+    load( [ new THREE.Vector3( 2, 0, 5 ),
+      new THREE.Vector3( - 5, 0, -14 ),
+      new THREE.Vector3( - 9, 0, - 7 ),
+      new THREE.Vector3( - 4, 0, 5 ) ] );
+
+    //
+    // load( [ new THREE.Vector3( 289.76843686945404, 452.51481137238443, 56.10018915737797 ),
+    //   new THREE.Vector3( - 53.56300074753207, 171.49711742836848, - 14.495472686253045 ),
+    //   new THREE.Vector3( - 91.40118730204415, 176.4306956436485, - 6.958271935582161 ),
+    //   new THREE.Vector3( - 383.785318791128, 491.1365363371675, 47.869296953772746 ) ] );
 
     // Create small renderer for timeline
     // var width2 = window.innerWidth / 6;
@@ -434,11 +577,6 @@ var danceDesigner = {
         danceDesigner.selection = intersects[0].object;
 
         for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-          var tempT = Math.round(t);
-          if (tempT > danceDesigner.maxT) {
-            tempT = Math.round(danceDesigner.maxT);
-          }
-
           if ((Math.abs(danceDesigner.s.dancers[i].mesh.position.x - intersects[0].object.position.x) < 1) &&
           (Math.abs(danceDesigner.s.dancers[i].mesh.position.y - intersects[0].object.position.y) < 1) &&
           (Math.abs(danceDesigner.s.dancers[i].mesh.position.z - intersects[0].object.position.z) < 1)) {
@@ -449,6 +587,15 @@ var danceDesigner = {
         var intersects = danceDesigner.raycaster.intersectObject(danceDesigner.plane);
         // danceDesigner.offset.copy(intersects[0].point).sub(danceDesigner.plane.position);
       }
+
+      var intersectsSplines = danceDesigner.raycaster.intersectObjects(danceDesigner.splineHelperObjects);
+      if (intersectsSplines.length > 0) {
+        // Disable the controls
+        danceDesigner.controls.enabled = false;
+        // Set the selection - first intersected object
+        danceDesigner.selectionPath = intersectsSplines[0].object;
+      }
+
     }
   },
   onDocumentMouseMove: function (event) {
@@ -494,6 +641,13 @@ var danceDesigner = {
         }
 
       }
+    } else if (danceDesigner.selectionPath) {
+      // console.log('SELECTIONPATH ', danceDesigner.selectionPath);
+      // Check the position where the plane is intersected
+      var intersects = danceDesigner.raycaster.intersectObject(danceDesigner.plane);
+      newPosThreeVector = danceDesigner.stagePlane.projectPoint(intersects[0].point, danceDesigner.selectionPath.position);
+      danceDesigner.selectionPath.position.set(newPosThreeVector.x, newPosThreeVector.y, newPosThreeVector.z);
+      updateSplineOutline();
     }
     // else {
     //   // Update position of the plane if need
@@ -525,10 +679,17 @@ var danceDesigner = {
       autoSave();
       justHitUndo = false;
     }
+    if (danceDesigner.selectionPath) {
+      updateSplineOutline();
+      // Push to Undo Buffer
+      addToUndoBuffer();
+      autoSave();
+    }
     danceDesigner.movingDancer = null;
     // Enable the controls
     danceDesigner.controls.enabled = true;
     danceDesigner.selection = null;
+    danceDesigner.selectionPath = null;
   }
 };
 
@@ -631,6 +792,122 @@ var TimelineEditor = function () {
   };
 
 };
+
+function addSplineObject( position ) {
+
+  var material = new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } );
+  var geometry = new THREE.BoxBufferGeometry( 1, 1, 1 );
+  var object = new THREE.Mesh( geometry, material );
+
+  if ( position ) {
+
+    object.position.copy( position );
+
+  } else {
+
+    object.position.x = Math.random() * 1000 - 500;
+    object.position.y = Math.random() * 600;
+    object.position.z = Math.random() * 800 - 400;
+
+  }
+
+  object.castShadow = true;
+  object.receiveShadow = true;
+  danceDesigner.scene.add( object );
+  danceDesigner.splineHelperObjects.push( object );
+  return object;
+
+}
+
+function addPoint() {
+
+  danceDesigner.splinePointsLength ++;
+
+  danceDesigner.positions.push( addSplineObject().position );
+
+  updateSplineOutline();
+
+}
+
+function removePoint() {
+
+  if ( danceDesigner.splinePointsLength <= 4 ) {
+
+    return;
+
+  }
+  danceDesigner.splinePointsLength --;
+  danceDesigner.positions.pop();
+  danceDesigner.scene.remove( danceDesigner.splineHelperObjects.pop() );
+
+  updateSplineOutline();
+
+}
+
+function updateSplineOutline() {
+
+  for ( var k in danceDesigner.splines ) {
+
+    var spline = danceDesigner.splines[ k ];
+
+    var splineMesh = spline.mesh;
+    var position = splineMesh.geometry.attributes.position;
+
+    for ( var i = 0; i < ARC_SEGMENTS; i ++ ) {
+
+      var t = i / ( ARC_SEGMENTS - 1 );
+      var point = new THREE.Vector3();
+      spline.getPoint( t, point );
+      position.setXYZ( i, point.x, point.y, point.z );
+
+    }
+
+    position.needsUpdate = true;
+
+  }
+
+}
+
+function exportSpline() {
+
+  var strplace = [];
+
+  for ( var i = 0; i < splinePointsLength; i ++ ) {
+
+    var p = danceDesigner.splineHelperObjects[ i ].position;
+    strplace.push( 'new THREE.Vector3({0}, {1}, {2})'.format( p.x, p.y, p.z ) );
+
+  }
+
+  console.log( strplace.join( ',\n' ) );
+  var code = '[' + ( strplace.join( ',\n\t' ) ) + ']';
+  prompt( 'copy and paste code', code );
+
+}
+
+function load( new_positions ) {
+
+  while ( new_positions.length > danceDesigner.positions.length ) {
+
+    addPoint();
+
+  }
+
+  while ( new_positions.length < danceDesigner.positions.length ) {
+
+    removePoint();
+
+  }
+
+  for ( var i = 0; i < danceDesigner.positions.length; i ++ ) {
+
+    danceDesigner.positions[ i ].copy( new_positions[ i ] );
+
+  }
+
+  updateSplineOutline();
+
+}
 
 var timeline = new TimelineEditor();
 document.getElementById( 'timelineEditor' ).appendChild( timeline.container.dom );
@@ -831,6 +1108,18 @@ wavesurfer.on('region-update-end', function(r, e) {
   autoSave();
 });
 
+String.prototype.format = function () {
+
+  var str = this;
+
+  for ( var i = 0; i < arguments.length; i ++ ) {
+
+    str = str.replace( '{' + i + '}', arguments[ i ] );
+
+  }
+  return str;
+
+};
 
 function animate() {
 
@@ -936,13 +1225,20 @@ function animate() {
             mesh.name = "Path";
             danceDesigner.scene.add(mesh);
           }
-          break;
-        } else {
-          // console.log("REMOVING ", i);
+        } else if (t > nextKeyFramePos.end) {
+          // console.log(nextKeyFramePos);
+          // console.log(d.keyframePositions);
+          // console.log(t);
           while (danceDesigner.scene.getObjectByName("Path")) {
             danceDesigner.scene.remove(danceDesigner.scene.getObjectByName("Path"));
           }
         }
+        //  else {
+        //   // console.log("REMOVING ", i);
+        //   while (danceDesigner.scene.getObjectByName("Path")) {
+        //     danceDesigner.scene.remove(danceDesigner.scene.getObjectByName("Path"));
+        //   }
+        // }
       }
     }
 
@@ -1051,6 +1347,7 @@ function retrieveUndo() {
 // Render the scene
 function render() {
   if (danceDesigner.renderer) {
+
     danceDesigner.renderer.render(danceDesigner.scene, danceDesigner.camera);
     danceDesigner.renderer1.render(danceDesigner.scene, danceDesigner.camera1);
 
@@ -1131,8 +1428,6 @@ async function addNewKeyFrame(t) {
 
   // if (!danceDesigner.s.keyframes.includes(t)) {
   if (!inKeyFrames) {
-    // Adding a new keyframe
-    danceDesigner.s.addKeyFrame(t);
 
     var nextStartTime = 0;
     for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
@@ -1147,8 +1442,13 @@ async function addNewKeyFrame(t) {
       len = 0.5 * (nextStartTime - t);
       if (len < 0.5) {
         alert("Keyframes must be within 0.5 seconds of each other.");
+        return;
       }
     }
+
+    // Adding a new keyframe
+    danceDesigner.s.addKeyFrame(t);
+
     timeline.addTimeMark(t, len);
 
     if (t > danceDesigner.maxT) {
@@ -1449,8 +1749,6 @@ function editPaths(time) {
   </div>`;
 
   document.getElementById("modal-body").innerHTML = innerHTML;
-  document.getElementById("closeModalButton").style.display = "block";
-  document.getElementById("closeModalButton").disabled = false;
   $('#dancesModal').modal('show');
 }
 
