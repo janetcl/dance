@@ -236,7 +236,7 @@ var danceDesigner = {
       side: THREE.DoubleSide,
     });
     var floor = new THREE.Mesh( geometry, material );
-    floor.rotation.x = - 3 * Math.PI / 2;
+    floor.rotation.x = Math.PI / 2;
     floor.position.z = -10;
     floor.position.y = -1;
     floor.receiveShadow = true;
@@ -687,31 +687,6 @@ function addSplineObjectOldDance( keyframe, position, index, splineObjectNumber,
 
 }
 
-// function addPoint() {
-//
-//   danceDesigner.splinePointsLength ++;
-//
-//   danceDesigner.positions.push( addSplineObject().position );
-//
-//   updateSplineOutline();
-//
-// }
-
-// function removePoint() {
-//
-//   if ( danceDesigner.splinePointsLength <= 4 ) {
-//
-//     return;
-//
-//   }
-//   danceDesigner.splinePointsLength --;
-//   danceDesigner.positions.pop();
-//   danceDesigner.scene.remove( danceDesigner.splineHelperObjects.pop() );
-//
-//   updateSplineOutline();
-//
-// }
-
 function updateSplineOutline(index, arg) {
 
     var spline = danceDesigner.s.dancers[index].keyframePositions[arg].curve;
@@ -1044,6 +1019,7 @@ function animate() {
             nextKeyFramePos = curDancer.keyframePositions[i+1];
             if (currKeyFramePos.curve) {
               showCurves(currKeyFramePos);
+              updateSplineOutline(j, i);
             }
           }
         } else {
@@ -1088,7 +1064,7 @@ function animate() {
             var diff = nextKeyFramePos.start - currKeyFramePos.end;
             var frac = (t - currKeyFramePos.end) / diff;
             if (currKeyFramePos.curve) {
-              console.log("currKeyFramePos", currKeyFramePos.curve);
+              // console.log("currKeyFramePos", currKeyFramePos.curve);
               showCurves(currKeyFramePos);
               currKeyFramePos.curve.getPoint(frac, d.mesh.position);
             } else {
@@ -1157,7 +1133,6 @@ function setCurves(dancer, index, currKeyFramePos, nextKeyFramePos, posIndex) {
    var curve = new THREE.CatmullRomCurve3( currKeyFramePos.positions );
    curve.curveType = 'centripetal';
    curve.mesh = new THREE.Line( geometry.clone(), new THREE.LineBasicMaterial( {
-     // color: 0x00ff00,
      color: dancer.mesh.material.color,
      opacity: 0.35
    } ) );
@@ -1178,7 +1153,7 @@ function setCurvesOldDance(dancer, index, currKeyFramePos, posIndex, oldCurve) {
 
       var newPos = new THREE.Vector3(oldCurve.points[i][0], 0, oldCurve.points[i][2]);
       addSplineObjectOldDance( currKeyFramePos, newPos, index, i, dancer.mesh.material.color);
-      currKeyFramePos.positions.push( newPos );
+      currKeyFramePos.positions.push( currKeyFramePos.splineHelperObjects[ i ].position );
 
    }
 
@@ -1444,7 +1419,6 @@ async function addNewKeyFrame(t) {
       // TODO: Update spline path. Not sure if this is correct.
       if (bestFitIndex < dancer.keyframePositions.length - 1) {
         setCurves(dancer, i, dancer.keyframePositions[bestFitIndex], dancer.keyframePositions[bestFitIndex + 1], bestFitIndex);
-        // updateSplineOutline(i, bestFitIndex);
       }
     }
   }
@@ -2200,6 +2174,7 @@ async function clearTheStage() {
 
   // Clear the time marks from the timeline
   timeline.removeTimeMarks();
+  danceDesigner.splineHelperObjects = [];
 
   return;
 }
