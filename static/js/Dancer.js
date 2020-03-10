@@ -16,6 +16,7 @@ class Dancer {
     this.mesh.position.x = 0;
     this.mesh.position.y = 0;
     this.mesh.position.z = 0;
+    this.curve = null;
     this.positions = []; // For path drawing
   }
 
@@ -504,7 +505,7 @@ var danceDesigner = {
       var intersects = danceDesigner.raycaster.intersectObject(danceDesigner.plane);
       newPosThreeVector = danceDesigner.stagePlane.projectPoint(intersects[0].point, danceDesigner.selectionPath.position);
       danceDesigner.selectionPath.position.set(newPosThreeVector.x, newPosThreeVector.y, newPosThreeVector.z);
-      updateSplineOutline(danceDesigner.selectionPath.name.slice(12));
+      updateSplineOutline(danceDesigner.selectionPath.name.slice(12), bestFitIndex);
     }
   },
   onDocumentMouseUp: async function (event) {
@@ -533,7 +534,7 @@ var danceDesigner = {
       justHitUndo = false;
     }
     if (danceDesigner.selectionPath) {
-      updateSplineOutline(danceDesigner.selectionPath.name.slice(12));
+      updateSplineOutline(danceDesigner.selectionPath.name.slice(12), bestFitIndex);
       // Push to Undo Buffer
       addToUndoBuffer();
       autoSave();
@@ -690,9 +691,13 @@ function addSplineObject( position, index, splineObjectNumber, dancerColor ) {
 //
 // }
 
-function updateSplineOutline(index) {
+function updateSplineOutline(index, arg) {
 
-    var spline = danceDesigner.splines[ index ];
+    // var spline = danceDesigner.splines[ index ];
+    // console.log(danceDesigner.s.dancers[index]);
+    // console.log(danceDesigner.s.dancers[index].keyframePositions);
+    // console.log(bestFitIndex);
+    var spline = danceDesigner.s.dancers[index].keyframePositions[arg].curve;
     console.log("UPDATE SPLINE: ", spline);
     console.log("AT INDEX: ", index);
 
@@ -991,6 +996,98 @@ function animate() {
     }
   } else {
 
+    var d = danceDesigner.s.dancers[0];
+    if (d) {
+      for (var i = 0; i < d.keyframePositions.length - 1; i++) {
+        var currKeyFramePos = d.keyframePositions[i];
+        var nextKeyFramePos = d.keyframePositions[i+1];
+        if (t == oldT) {
+          break;
+        } else {
+
+          // while (danceDesigner.scene.getObjectByName("Path")) {
+          //   danceDesigner.scene.remove(danceDesigner.scene.getObjectByName("Path"));
+          // }
+
+          for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
+            while (danceDesigner.scene.getObjectByName("SplineObject" + j)) {
+              danceDesigner.scene.remove(danceDesigner.scene.getObjectByName("SplineObject" + j));
+            }
+            while (danceDesigner.scene.getObjectByName("Spline" + j)) {
+              danceDesigner.scene.remove(danceDesigner.scene.getObjectByName("Spline" + j));
+            }
+          }
+          // while (danceDesigner.scene.getObjectByName("Spline")) {
+          //   danceDesigner.scene.remove(danceDesigner.scene.getObjectByName("Spline"));
+          // }
+
+          // danceDesigner.splines = [];
+          danceDesigner.splineHelperObjects = [];
+          // TODO: store these helper objects with the keyframe positions, in the curve object to make it a lot easier for yourself
+
+          if (t > currKeyFramePos.end && t < nextKeyFramePos.start) {
+            for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
+              var curDancer = danceDesigner.s.dancers[j];
+              currKeyFramePos = curDancer.keyframePositions[i];
+              nextKeyFramePos = curDancer.keyframePositions[i+1];
+              // var geometry = new THREE.Geometry();
+              // geometry.vertices.push(new THREE.Vector3(curDancer.keyframePositions[i].position.x, -0.99, curDancer.keyframePositions[i].position.z),
+              // new THREE.Vector3(curDancer.keyframePositions[i+1].position.x, -0.99, curDancer.keyframePositions[i+1].position.z));
+              // var line = new MeshLine();
+              // line.setGeometry(geometry, function (p) {return p + 0.3;} );
+              // var material = new MeshLineMaterial( {
+              //   color: curDancer.mesh.material.color,
+              //   // transparent: true,
+              //   // opacity: 0.7
+              //  } );
+              //  // console.log("WORKS ", i);
+              // var mesh = new THREE.Mesh(line.geometry, material);
+              // mesh.name = "Path";
+              // danceDesigner.scene.add(mesh);
+
+              setCurves(curDancer, j, currKeyFramePos, nextKeyFramePos, i);
+              // TODO: Set the curves in another place (not animate). Access the curves for each keyframe position in the animate portion
+
+            }
+            oldT = t;
+            break;
+            // TODO: NEED TO HANDLE DIRECT CHANGES, from one transition stage to the next
+
+          } else if ((i == d.keyframePositions.length - 2 && t > nextKeyFramePos.end)
+          || (t >= currKeyFramePos.start && t <= currKeyFramePos.end)
+          || (t >= nextKeyFramePos.start && t <= nextKeyFramePos.end)) {
+            // console.log(nextKeyFramePos);
+            console.log("removing", d.keyframePositions);
+            // console.log(t);
+            while (danceDesigner.scene.getObjectByName("Path")) {
+              danceDesigner.scene.remove(danceDesigner.scene.getObjectByName("Path"));
+            }
+            for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
+              while (danceDesigner.scene.getObjectByName("SplineObject" + j)) {
+                danceDesigner.scene.remove(danceDesigner.scene.getObjectByName("SplineObject" + j));
+              }
+              while (danceDesigner.scene.getObjectByName("Spline" + j)) {
+                danceDesigner.scene.remove(danceDesigner.scene.getObjectByName("Spline" + j));
+              }
+            }
+            // while (danceDesigner.scene.getObjectByName("Spline")) {
+            //   danceDesigner.scene.remove(danceDesigner.scene.getObjectByName("Spline"));
+            // }
+            // while (danceDesigner.scene.getObjectByName("SplineObject")) {
+            //   danceDesigner.scene.remove(danceDesigner.scene.getObjectByName("SplineObject"));
+            // }
+          }
+        }
+
+        //  else {
+        //   // console.log("REMOVING ", i);
+        //   while (danceDesigner.scene.getObjectByName("Path")) {
+        //     danceDesigner.scene.remove(danceDesigner.scene.getObjectByName("Path"));
+        //   }
+        // }
+      }
+    }
+
     for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
       var d = danceDesigner.s.dancers[i];
 
@@ -1024,9 +1121,11 @@ function animate() {
           } else if (t > currKeyFramePos.end && t < nextKeyFramePos.start) {
             var diff = nextKeyFramePos.start - currKeyFramePos.end;
             var frac = (t - currKeyFramePos.end) / diff;
-            d.mesh.position.x = currKeyFramePos.position.x + (frac * (nextKeyFramePos.position.x - currKeyFramePos.position.x));
-            d.mesh.position.y = currKeyFramePos.position.y + (frac * (nextKeyFramePos.position.y - currKeyFramePos.position.y));
-            d.mesh.position.z = currKeyFramePos.position.z + (frac * (nextKeyFramePos.position.z - currKeyFramePos.position.z));
+            // console.log(d.curve);
+            currKeyFramePos.curve.getPoint(frac, d.mesh.position);
+            // d.mesh.position.x = currKeyFramePos.position.x + (frac * (nextKeyFramePos.position.x - currKeyFramePos.position.x));
+            // d.mesh.position.y = currKeyFramePos.position.y + (frac * (nextKeyFramePos.position.y - currKeyFramePos.position.y));
+            // d.mesh.position.z = currKeyFramePos.position.z + (frac * (nextKeyFramePos.position.z - currKeyFramePos.position.z));
           } else if (t == nextKeyFramePos.start ||
             (t > nextKeyFramePos.start && t < nextKeyFramePos.end) ||
           (t == nextKeyFramePos.end)) {
@@ -1051,89 +1150,7 @@ function animate() {
       }
     }
 
-    var d = danceDesigner.s.dancers[0];
-    if (d) {
-      for (var i = 0; i < d.keyframePositions.length - 1; i++) {
-        var currKeyFramePos = d.keyframePositions[i];
-        var nextKeyFramePos = d.keyframePositions[i+1];
-        if (t == oldT) {
-          break;
-        } else {
 
-          // while (danceDesigner.scene.getObjectByName("Path")) {
-          //   danceDesigner.scene.remove(danceDesigner.scene.getObjectByName("Path"));
-          // }
-
-          for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
-            while (danceDesigner.scene.getObjectByName("SplineObject" + j)) {
-              danceDesigner.scene.remove(danceDesigner.scene.getObjectByName("SplineObject" + j));
-            }
-          }
-          while (danceDesigner.scene.getObjectByName("Spline")) {
-            danceDesigner.scene.remove(danceDesigner.scene.getObjectByName("Spline"));
-          }
-
-          danceDesigner.splines = [];
-          danceDesigner.splineHelperObjects = [];
-
-          if (t > currKeyFramePos.end && t < nextKeyFramePos.start) {
-            for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
-              var curDancer = danceDesigner.s.dancers[j];
-              currKeyFramePos = curDancer.keyframePositions[i];
-              nextKeyFramePos = curDancer.keyframePositions[i+1];
-              // var geometry = new THREE.Geometry();
-              // geometry.vertices.push(new THREE.Vector3(curDancer.keyframePositions[i].position.x, -0.99, curDancer.keyframePositions[i].position.z),
-              // new THREE.Vector3(curDancer.keyframePositions[i+1].position.x, -0.99, curDancer.keyframePositions[i+1].position.z));
-              // var line = new MeshLine();
-              // line.setGeometry(geometry, function (p) {return p + 0.3;} );
-              // var material = new MeshLineMaterial( {
-              //   color: curDancer.mesh.material.color,
-              //   // transparent: true,
-              //   // opacity: 0.7
-              //  } );
-              //  // console.log("WORKS ", i);
-              // var mesh = new THREE.Mesh(line.geometry, material);
-              // mesh.name = "Path";
-              // danceDesigner.scene.add(mesh);
-
-              setCurves(curDancer, j, currKeyFramePos, nextKeyFramePos);
-
-            }
-            oldT = t;
-            break;
-            // TODO: NEED TO HANDLE DIRECT CHANGES, from one transition stage to the next
-
-          } else if ((i == d.keyframePositions.length - 2 && t > nextKeyFramePos.end)
-          || (t >= currKeyFramePos.start && t <= currKeyFramePos.end)
-          || (t >= nextKeyFramePos.start && t <= nextKeyFramePos.end)) {
-            // console.log(nextKeyFramePos);
-            console.log("removing", d.keyframePositions);
-            // console.log(t);
-            while (danceDesigner.scene.getObjectByName("Path")) {
-              danceDesigner.scene.remove(danceDesigner.scene.getObjectByName("Path"));
-            }
-            for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
-              while (danceDesigner.scene.getObjectByName("SplineObject" + j)) {
-                danceDesigner.scene.remove(danceDesigner.scene.getObjectByName("SplineObject" + j));
-              }
-            }
-            while (danceDesigner.scene.getObjectByName("Spline")) {
-              danceDesigner.scene.remove(danceDesigner.scene.getObjectByName("Spline"));
-            }
-            // while (danceDesigner.scene.getObjectByName("SplineObject")) {
-            //   danceDesigner.scene.remove(danceDesigner.scene.getObjectByName("SplineObject"));
-            // }
-          }
-        }
-
-        //  else {
-        //   // console.log("REMOVING ", i);
-        //   while (danceDesigner.scene.getObjectByName("Path")) {
-        //     danceDesigner.scene.remove(danceDesigner.scene.getObjectByName("Path"));
-        //   }
-        // }
-      }
-    }
 
   }
   requestAnimationFrame( animate );
@@ -1141,7 +1158,7 @@ function animate() {
   update();
 }
 
-function setCurves(dancer, index, currKeyFramePos, nextKeyFramePos) {
+function setCurves(dancer, index, currKeyFramePos, nextKeyFramePos, posIndex) {
 
   var pos = [ new THREE.Vector3( currKeyFramePos.position.x, 0, currKeyFramePos.position.z ),
     new THREE.Vector3( ((3 * currKeyFramePos.position.x + nextKeyFramePos.position.x) / 4), 0, ((3 * currKeyFramePos.position.z + nextKeyFramePos.position.z) / 4) ),
@@ -1176,12 +1193,12 @@ function setCurves(dancer, index, currKeyFramePos, nextKeyFramePos) {
      opacity: 0.35
    } ) );
    curve.mesh.castShadow = true;
-   curve.mesh.name = "Spline";
+   curve.mesh.name = "Spline" + index;
 
-   danceDesigner.splines.push(curve);
-   console.log("Splines: ", danceDesigner.splines)
+   // danceDesigner.splines.push(curve);
+   currKeyFramePos.curve = curve;
    danceDesigner.scene.add( curve.mesh );
-   updateSplineOutline(index);
+   updateSplineOutline(index, posIndex);
 
 
    // for ( var k in danceDesigner.splines ) {
@@ -1444,6 +1461,7 @@ var next_available_id = 0;
 var userData;
 var inc = 0;
 var txSprites = [];
+var bestFitIndex = 0;
 
 var elements = document.getElementsByClassName("launchModal");
 for (var i = 0; i < elements.length; i++) {
@@ -2275,6 +2293,16 @@ function update() {
   document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes;
   keyframes = danceDesigner.s.keyframes.length;
   danceDesigner.controls.update();
+
+  if (danceDesigner.s.dancers[0]) {
+    var kf = danceDesigner.s.dancers[0].keyframePositions[0];
+    i = 0;
+    while (kf.start < t) {
+      bestFitIndex = i;
+      i++;
+      kf = danceDesigner.s.dancers[0].keyframePositions[i];
+    }
+  }
 
   if (document.getElementById("quantity")) {
     document.getElementById("quantity").addEventListener("change", function(e) {
