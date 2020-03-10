@@ -236,7 +236,7 @@ var danceDesigner = {
       side: THREE.DoubleSide,
     });
     var floor = new THREE.Mesh( geometry, material );
-    floor.rotation.x = Math.PI / 2;
+    floor.rotation.x = - Math.PI / 2;
     floor.position.z = -10;
     floor.position.y = -1;
     floor.receiveShadow = true;
@@ -1416,9 +1416,11 @@ async function addNewKeyFrame(t) {
         var newPos = new THREE.Vector3(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z);
       }
       var currKeyFramePos = await dancer.addKFPosition(d.keyframePositions[oldKeyFrameIndex].start, d.keyframePositions[oldKeyFrameIndex].end, newPos);
-      // TODO: Update spline path. Not sure if this is correct.
+      // TODO: Update spline path. Not sure if this is correct. THIS IS CURRENTLY WRONG.
       if (bestFitIndex < dancer.keyframePositions.length - 1) {
         setCurves(dancer, i, dancer.keyframePositions[bestFitIndex], dancer.keyframePositions[bestFitIndex + 1], bestFitIndex);
+        console.log('update spline outline for existing spline');
+        // updateSplineOutline(i, bestFitIndex);
       }
     }
   }
