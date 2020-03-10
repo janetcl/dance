@@ -646,10 +646,13 @@ var TimelineEditor = function () {
 
 };
 
-function addSplineObject( position, index ) {
+function addSplineObject( position, index, splineObjectNumber, dancerColor ) {
 
-  var material = new THREE.MeshLambertMaterial( { color: Math.random() * 0xffffff } );
-  var geometry = new THREE.BoxBufferGeometry( 1, 1, 1 );
+  // TODO: programmatically lighten the color so it goes from light to dark as the dancer moves (convey direction);
+  // mix it with white and multiply by the splineObjectNumber
+  // var color = dancerColor;
+  var material = new THREE.MeshLambertMaterial( { color: dancerColor } );
+  var geometry = new THREE.BoxBufferGeometry( 0.5, 0.5, 0.5 );
   var object = new THREE.Mesh( geometry, material );
 
   object.position.copy( position );
@@ -1056,9 +1059,11 @@ function animate() {
         if (t == oldT) {
           break;
         } else {
-          while (danceDesigner.scene.getObjectByName("Path")) {
-            danceDesigner.scene.remove(danceDesigner.scene.getObjectByName("Path"));
-          }
+
+          // while (danceDesigner.scene.getObjectByName("Path")) {
+          //   danceDesigner.scene.remove(danceDesigner.scene.getObjectByName("Path"));
+          // }
+
           for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
             while (danceDesigner.scene.getObjectByName("SplineObject" + j)) {
               danceDesigner.scene.remove(danceDesigner.scene.getObjectByName("SplineObject" + j));
@@ -1076,20 +1081,20 @@ function animate() {
               var curDancer = danceDesigner.s.dancers[j];
               currKeyFramePos = curDancer.keyframePositions[i];
               nextKeyFramePos = curDancer.keyframePositions[i+1];
-              var geometry = new THREE.Geometry();
-              geometry.vertices.push(new THREE.Vector3(curDancer.keyframePositions[i].position.x, -0.99, curDancer.keyframePositions[i].position.z),
-              new THREE.Vector3(curDancer.keyframePositions[i+1].position.x, -0.99, curDancer.keyframePositions[i+1].position.z));
-              var line = new MeshLine();
-              line.setGeometry(geometry, function (p) {return p + 0.3;} );
-              var material = new MeshLineMaterial( {
-                color: curDancer.mesh.material.color,
-                // transparent: true,
-                // opacity: 0.7
-               } );
-               // console.log("WORKS ", i);
-              var mesh = new THREE.Mesh(line.geometry, material);
-              mesh.name = "Path";
-              danceDesigner.scene.add(mesh);
+              // var geometry = new THREE.Geometry();
+              // geometry.vertices.push(new THREE.Vector3(curDancer.keyframePositions[i].position.x, -0.99, curDancer.keyframePositions[i].position.z),
+              // new THREE.Vector3(curDancer.keyframePositions[i+1].position.x, -0.99, curDancer.keyframePositions[i+1].position.z));
+              // var line = new MeshLine();
+              // line.setGeometry(geometry, function (p) {return p + 0.3;} );
+              // var material = new MeshLineMaterial( {
+              //   color: curDancer.mesh.material.color,
+              //   // transparent: true,
+              //   // opacity: 0.7
+              //  } );
+              //  // console.log("WORKS ", i);
+              // var mesh = new THREE.Mesh(line.geometry, material);
+              // mesh.name = "Path";
+              // danceDesigner.scene.add(mesh);
 
               setCurves(curDancer, j, currKeyFramePos, nextKeyFramePos);
 
@@ -1146,7 +1151,7 @@ function setCurves(dancer, index, currKeyFramePos, nextKeyFramePos) {
 
    for ( var i = 0; i < danceDesigner.splinePointsLength; i ++ ) {
 
-     addSplineObject( pos[ i ] , index);
+     addSplineObject( pos[ i ] , index, i, dancer.mesh.material.color);
 
    }
 
