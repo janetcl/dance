@@ -17,7 +17,6 @@ class Dancer {
     this.mesh.position.x = 0;
     this.mesh.position.y = 0;
     this.mesh.position.z = 0;
-    this.curve = null;
   }
 
   updateName(name) {
@@ -512,6 +511,7 @@ var danceDesigner = {
       var intersects = danceDesigner.raycaster.intersectObject(danceDesigner.plane);
       newPosThreeVector = danceDesigner.stagePlane.projectPoint(intersects[0].point, danceDesigner.selectionPath.position);
       danceDesigner.selectionPath.position.set(newPosThreeVector.x, newPosThreeVector.y, newPosThreeVector.z);
+      console.log("updateSplineOutline");
       updateSplineOutline(danceDesigner.selectionPath.name.slice(12), bestFitIndex);
     }
   },
@@ -541,6 +541,7 @@ var danceDesigner = {
       justHitUndo = false;
     }
     if (danceDesigner.selectionPath) {
+      console.log("updateSplineOutline");
       updateSplineOutline(danceDesigner.selectionPath.name.slice(12), bestFitIndex);
       // Push to Undo Buffer
       addToUndoBuffer();
@@ -710,6 +711,7 @@ function updateSplineOutline(index, arg) {
 
     danceDesigner.s.dancers[index].keyframePositions[arg].curve = spline;
     position.needsUpdate = true;
+    autoSave();
 
 }
 
@@ -724,6 +726,23 @@ function hideCurves(currKeyFramePos) {
   currKeyFramePos.curve.mesh.visible = false;
   for (var i = 0; i < currKeyFramePos.splineHelperObjects.length; i++) {
     currKeyFramePos.splineHelperObjects[i].visible = false;
+  }
+}
+
+function hideAllCurves() {
+  for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+    var curDancer = danceDesigner.s.dancers[i];
+    console.log(curDancer);
+    for (var j = 0; j < curDancer.keyframePositions.length; j++) {
+      if (curDancer.keyframePositions[j].curve) {
+        console.log("hiding ", curDancer.keyframePositions[j]);
+        var currKeyFramePos = curDancer.keyframePositions[j];
+        currKeyFramePos.curve.mesh.visible = false;
+        for (var k = 0; k < currKeyFramePos.splineHelperObjects.length; k++) {
+          currKeyFramePos.splineHelperObjects[k].visible = false;
+        }
+      }
+    }
   }
 }
 
@@ -743,30 +762,6 @@ function exportSpline() {
   prompt( 'copy and paste code', code );
 
 }
-
-// function load( new_positions ) {
-//
-//   while ( new_positions.length > danceDesigner.positions.length ) {
-//
-//     addPoint();
-//
-//   }
-//
-//   while ( new_positions.length < danceDesigner.positions.length ) {
-//
-//     removePoint();
-//
-//   }
-//
-//   for ( var i = 0; i < danceDesigner.positions.length; i ++ ) {
-//
-//     danceDesigner.positions[ i ].copy( new_positions[ i ] );
-//
-//   }
-//
-//   updateSplineOutline();
-//
-// }
 
 var timeline = new TimelineEditor();
 document.getElementById( 'timelineEditor' ).appendChild( timeline.container.dom );
@@ -980,8 +975,15 @@ String.prototype.format = function () {
 
 };
 
+var showPaths = document.getElementById("showCurves");
+document.getElementById("showCurves").addEventListener("change", function(e) {
+  if (!this.checked) {
+    hideAllCurves();
+  }
+});
 
 var oldT = 0;
+
 function animate() {
 
   t = wavesurfer.getCurrentTime();
@@ -1024,13 +1026,22 @@ function animate() {
             currKeyFramePos = curDancer.keyframePositions[i];
             nextKeyFramePos = curDancer.keyframePositions[i+1];
             if (currKeyFramePos.curve) {
-              showCurves(currKeyFramePos);
+              if (showPaths) {
+                showCurves(currKeyFramePos);
+              } else {
+                hideCurves(currKeyFramePos);
+              }
+              console.log("updateSplineOutline");
               updateSplineOutline(j, i);
             }
           }
         } else {
-          if (currKeyFramePos.curve) {
-            hideCurves(currKeyFramePos);
+          for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
+            var curDancer = danceDesigner.s.dancers[j];
+            currKeyFramePos = curDancer.keyframePositions[i];
+            if (currKeyFramePos.curve) {
+              hideCurves(currKeyFramePos);
+            }
           }
         }
       }
@@ -1051,6 +1062,7 @@ function animate() {
       } else {
         d.mesh.material.emissive.set( 0x000000 );
       }
+
       if (d.keyframePositions.length == 1) {
         var lastIndex = d.keyframePositions.length - 1;
         d.mesh.position.x = d.keyframePositions[lastIndex].position.x;
@@ -1070,8 +1082,12 @@ function animate() {
             var diff = nextKeyFramePos.start - currKeyFramePos.end;
             var frac = (t - currKeyFramePos.end) / diff;
             if (currKeyFramePos.curve) {
-              // console.log("currKeyFramePos", currKeyFramePos.curve);
-              showCurves(currKeyFramePos);
+              // if (showPaths) {
+              //   showCurves(currKeyFramePos);
+              // } else {
+              //   console.log("HIDE CURVES");
+              //   hideCurves(currKeyFramePos);
+              // }
               currKeyFramePos.curve.getPoint(frac, d.mesh.position);
             } else {
               d.mesh.position.x = currKeyFramePos.position.x + (frac * (nextKeyFramePos.position.x - currKeyFramePos.position.x));
@@ -1087,19 +1103,6 @@ function animate() {
           }
         }
       }
-
-      // for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
-      //   if (i != j) {
-      //     if (Math.abs(d.mesh.position.x - danceDesigner.s.dancers[j].mesh.position.x) < 1
-      //     && Math.abs(d.mesh.position.z - danceDesigner.s.dancers[j].mesh.position.z) < 1) {
-      //       console.log("t" , t);
-      //       console.log(d);
-      //       console.log(danceDesigner.s.dancers[j]);
-      //       // TODO: COLLISION
-      //       // document.body.style.backgroundColor = "red";
-      //     }
-      //   }
-      // }
 
     }
 
@@ -1154,6 +1157,7 @@ function setCurvesOldDance(dancer, index, currKeyFramePos, posIndex, oldCurve) {
 
   currKeyFramePos.positions = [];
   currKeyFramePos.splineHelperObjects = [];
+  console.log(oldCurve);
 
    for ( var i = 0; i < oldCurve.points.length; i ++ ) {
 
@@ -2130,6 +2134,7 @@ $(document).on('click', '.danceBtn', async function(){
     for (var i = 0; i < thisDancer.keyframePositions.length - 1; i++) {
       var currKeyFramePos = newDancer.keyframePositions[i];
       // Set the curve
+      console.log(thisDancer.keyframePositions[i]);
       setCurvesOldDance(newDancer, j, currKeyFramePos, i, thisDancer.keyframePositions[i].curve);
     }
 
@@ -2245,6 +2250,7 @@ function update() {
   document.getElementById("Time").innerHTML = "Current Time: " + currentTimeFormatted(t);
   play = wavesurfer.isPlaying();
   document.getElementById("playbackSpeed").innerHTML = playbackSpeed + "x";
+  showPaths = document.getElementById("showCurves").checked;
 
   for (var i = 0; i < txSprites.length; i++) {
     var txSprite = txSprites[i].txSprite;
