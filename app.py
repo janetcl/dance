@@ -362,6 +362,7 @@ def save_audio():
     audio = request.files['audio']
     response = cloudinary.uploader.upload(audio, resource_type = "video")
     audioURL, options = cloudinary.utils.cloudinary_url(response['public_id'], resource_type="video")
+    db.session.commit()
     return jsonify({"Success": "Nicely done", "audioURL": audioURL})
 
 @app.route("/getDances", methods = ["GET"])
@@ -376,6 +377,21 @@ def get_dances():
     else:
         print("No dances")
         return jsonify({"dances": dances, "next_available_id": next_available_id})
+
+@app.route("/deleteDance", methods = ["POST"])
+@login_required
+def delete_dance():
+    id = request.json['dance_id']
+    # Practice getting the dances for the given user
+    dance = db.session.query(Dance).filter(Dance.id == id).first()
+    if dance:
+        db.session.delete(dance)
+        db.session.commit()
+        print("Deleted dance: ", dance)
+        return jsonify({"Success": "Nicely done"})
+    else:
+        print("No matching dance found")
+        return jsonify({"Success": "Nicely done"})
 
 @app.route("/logout")
 @login_required

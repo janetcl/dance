@@ -307,8 +307,6 @@ var danceDesigner = {
       }
       var isMovingAKeyFrame = false;
       var lastKeyframeT = 0;
-  		function onMouseMove( event ) {
-  		}
   		async function onMouseUp( event ) {
 
         // if (isMovingAKeyFrame) {
@@ -434,25 +432,27 @@ var danceDesigner = {
       // Set the raycaster position
       danceDesigner.raycaster.set( danceDesigner.camera.position, vector.sub( danceDesigner.camera.position ).normalize() );
       // Find all intersected objects
-      var intersects = danceDesigner.raycaster.intersectObjects(danceDesigner.dancersArr);
-      if (intersects.length > 0) {
-        // Disable the controls
-        danceDesigner.controls.enabled = false;
-        // Set the selection - first intersected object
-        danceDesigner.selection = intersects[0].object;
+      if (dancersEditable)
+      {
+        var intersects = danceDesigner.raycaster.intersectObjects(danceDesigner.dancersArr);
+        if (intersects.length > 0) {
+          // Disable the controls
+          danceDesigner.controls.enabled = false;
+          // Set the selection - first intersected object
+          danceDesigner.selection = intersects[0].object;
 
-        for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-          if ((Math.abs(danceDesigner.s.dancers[i].mesh.position.x - intersects[0].object.position.x) < 1) &&
-          (Math.abs(danceDesigner.s.dancers[i].mesh.position.y - intersects[0].object.position.y) < 1) &&
-          (Math.abs(danceDesigner.s.dancers[i].mesh.position.z - intersects[0].object.position.z) < 1)) {
-            danceDesigner.movingDancer = danceDesigner.s.dancers[i];
+          for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+            if ((Math.abs(danceDesigner.s.dancers[i].mesh.position.x - intersects[0].object.position.x) < 1) &&
+            (Math.abs(danceDesigner.s.dancers[i].mesh.position.y - intersects[0].object.position.y) < 1) &&
+            (Math.abs(danceDesigner.s.dancers[i].mesh.position.z - intersects[0].object.position.z) < 1)) {
+              danceDesigner.movingDancer = danceDesigner.s.dancers[i];
+            }
           }
+          // Calculate the offset
+          var intersects = danceDesigner.raycaster.intersectObject(danceDesigner.plane);
+          // danceDesigner.offset.copy(intersects[0].point).sub(danceDesigner.plane.position);
         }
-        // Calculate the offset
-        var intersects = danceDesigner.raycaster.intersectObject(danceDesigner.plane);
-        // danceDesigner.offset.copy(intersects[0].point).sub(danceDesigner.plane.position);
       }
-
       var intersectsSplines = danceDesigner.raycaster.intersectObjects(danceDesigner.splineHelperObjects);
       if (intersectsSplines.length > 0) {
         // Disable the controls
@@ -1022,6 +1022,7 @@ document.getElementById("showCurves").addEventListener("change", function(e) {
 });
 
 var oldT = 0;
+var dancersEditable = true;
 
 function animate() {
 
@@ -1067,6 +1068,7 @@ function animate() {
             if (currKeyFramePos.curve) {
               curDancer.mesh.material.transparent = showPaths;
               if (showPaths) {
+                dancersEditable = false;
                 curDancer.mesh.material.opacity = 0.5;
                 showCurves(currKeyFramePos);
               } else {
@@ -2018,22 +2020,84 @@ $(document).on('click', '.createNewDance', function() {
   });
 });
 
+var deletingDance = false;
+
 // TODO: Finish this
 $(document).on('click', '.deleteDance', async function() {
-  console.log(this.id);
-  var id = this.id.substring(5);
-  console.log(id);
-  for (var i = 0; i < usersDances.length; i++) {
-    if (usersDances[i].id == id) {
-      var selectedDance = usersDances[i];
-      console.log(selectedDance);
+  deletingDance = true;
+  var delete_dance_id = this.id.substring(6);
+  const data = {
+   "dance_id": delete_dance_id
+  };
+
+  // Delete the dance in the database
+  fetch('/deleteDance', {
+    method: 'POST', // or 'PUT'
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
+  .then((response) => response.json())
+  .then((data) => {
+    console.log('Success:', data);
+    return;
+  })
+  .catch((error) => {
+    console.error('Error:', error);
+  });
+
+  fetch('/getDances', {
+    method: 'GET', // or 'PUT'
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+  .then((response) => response.json())
+  .then((myBlob) => {
+    next_available_id = myBlob.next_available_id;
+    usersDances = myBlob.dances;
+    var innerHTML = '<div class="container"><div class="row">';
+    if (usersDances.length == 0) {
+      innerHTML +=
+      `<div class="col">
+        <p style="color: black;">You haven't created any dances yet. 😔</p>
+        </div>`;
     }
-  }
+    else {
+        for (var i = 0; i < usersDances.length; i++) {
+        innerHTML +=
+        `<div class="col-4 text-center danceBtn" style="justify-content: center;">
+          <div class="row" style="justify-content: center;">
+            <button type="button" id="${usersDances[i].id}" class="btn btn-light">
+              ${usersDances[i].dance_name}
+            </button>
+          </div>
+          <div class="row" style="justify-content: center;">
+            <img src=${usersDances[i].image} width="250"/>
+          </div>
+          <div class="row" style="justify-content: center;">
+            <button type="button" id="DELETE${usersDances[i].id}" class="btn deleteDance btn-danger">
+              Delete
+            </button>
+          </div>
+        </div>`;
+      }
+    }
+    innerHTML += '</div></div>';
+    document.getElementById("modal-body").innerHTML = innerHTML;
+  });
+
 });
 
 $(document).on('click', '.danceBtn', async function(){
 
   await clearTheStage();
+
+  if (deletingDance) {
+    deletingDance = false;
+    return;
+  }
 
   for (var i = 0; i < usersDances.length; i++) {
     if (usersDances[i].id == this.children[0].children[0].id) {
