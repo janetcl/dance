@@ -281,23 +281,6 @@ var danceDesigner = {
     var stageNormalVector = new THREE.Vector3(0, 1, 0);
     this.stagePlane = new THREE.Plane(stageNormalVector);
 
-    // Create small renderer for timeline
-    // var width2 = window.innerWidth / 6;
-    // var height2 = window.innerHeight / 6;
-    // var viewAngle2 = 45;
-    // this.camera2 = new THREE.PerspectiveCamera( viewAngle2, width2 / height2, nearClipping, farClipping );
-    // this.renderer2 = new THREE.WebGLRenderer();
-    // this.renderer2.setSize( width2, height2 );
-    // document.body.appendChild( this.renderer2.domElement );
-    // this.camera2.position.z = -10;
-    // this.camera2.position.y = 30;
-    // this.camera2.lookAt(new THREE.Vector3(0, 0, -10));
-
-    // let timelineSection = document.getElementById("timelineSection");
-    // Create new canvas
-    // let canvas = create("canvas", {class: "timelineCanvas"});
-    // document.getElementById('timelineSection').appendChild(canvas);
-    // this.renderers.push({renderer: this.renderer2, scene: this.scene.clone(), time: 0});
   },
   onDocumentMouseDown: function (event) {
     // event.preventDefault();
@@ -307,91 +290,6 @@ var danceDesigner = {
       }
       var isMovingAKeyFrame = false;
       var lastKeyframeT = 0;
-  		async function onMouseUp( event ) {
-
-        // if (isMovingAKeyFrame) {
-        //
-        //   t = Math.round(t);
-        //
-        //   if (lastKeyframeT == 0) {
-        //     // What do you do if the user is moving the first keyframe?
-        //     // Automatically create a new keyframe at time = 0 to replace it
-        //     alert("Cannot move first key frame.");
-        //   }
-        //
-        //   var lastKeyframeIndex = 0;
-        //   var currentTimeLessIndex = 0;
-        //   // console.log(danceDesigner.s.keyframes);
-        //   // Determine where the current time is in the keyframes[] array if it exists
-        //   for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
-        //     if (danceDesigner.s.keyframes[i] == lastKeyframeT) {
-        //       lastKeyframeIndex = i;
-        //     }
-        //     if (danceDesigner.s.keyframes[i] < t) {
-        //       currentTimeLessIndex = i;
-        //     }
-        //   }
-        //   var keyframeAdjust = null;
-        //   var secondToLastT = danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 2];
-        //
-        //   // Adjust all of the dancers' positions appropriately.
-        //   for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-        //     danceDesigner.s.dancers[i].updateKeyFrame(lastKeyframeT, t, t + 2);
-        //     // await danceDesigner.s.dancers[i].updatePositions();
-        //     // Case where the keyframe moved was previously the last keyframe in the routine.
-        //     if (lastKeyframeIndex == danceDesigner.s.keyframes.length - 1) {
-        //       if (t > lastKeyframeT) {
-        //         danceDesigner.maxT = t;
-        //         keyframeAdjust = "Move Last Extend Routine";
-        //       } else {
-        //         // Case where old last position is moving between two other positions
-        //         if (t < secondToLastT) {
-        //           danceDesigner.maxT = secondToLastT;
-        //           keyframeAdjust = "Move Last New Order";
-        //         }
-        //         // Case where the last position is still the last posiition
-        //         else {
-        //           danceDesigner.maxT = t;
-        //           keyframeAdjust = "Move Last Keep Order";
-        //         }
-        //       }
-        //     } else {
-        //       // Case where the keyframe being moved was previously not the last keyframe in the routine.
-        //       if (t > danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 1]) {
-        //         danceDesigner.maxT = t;
-        //         // Move the position to a new ending position in the routine
-        //         keyframeAdjust = "Move Middle Position To New End";
-        //       } else {
-        //         keyframeAdjust = "Move Middle Position To New Middle";
-        //       }
-        //     }
-        //   }
-        //
-        //   // Adjust the stage's keyframes appropriately
-        //   if (keyframeAdjust == "Move Last Keep Order" || keyframeAdjust == "Move Last Extend Routine") {
-        //     danceDesigner.s.keyframes[lastKeyframeIndex] = t;
-        //   } else {
-        //     danceDesigner.s.keyframes[lastKeyframeIndex] = t;
-        //     danceDesigner.s.keyframes.sort(function(a, b) {
-        //       return a - b;
-        //     });
-        //   }
-        //
-        //   isMovingAKeyFrame = false;
-        //
-        //   // PUSH TO UNDO BUFFER
-        //   await addToUndoBuffer();
-        //   timeline.updateSetKeyframeTimeMark(lastKeyframeT, t);
-        //   justHitUndo = false;
-        // }
-
-        // t = ((event.offsetX + timeline.scroller.scrollLeft) / timeline.scale);
-  			onMouseMove( event );
-  			document.removeEventListener( 'mousemove', onMouseMove );
-  			document.removeEventListener( 'mouseup', onMouseUp );
-  		}
-
-      // t = ((event.offsetX + timeline.scroller.scrollLeft) / timeline.scale);
       var lessT = Math.round(t - 1);
       t = Math.round(t);
       var greaterT = Math.round(t + 1);
@@ -416,9 +314,6 @@ var danceDesigner = {
 
         }
       }
-
-  		document.addEventListener( 'mousemove', onMouseMove, false );
-  		document.addEventListener( 'mouseup', onMouseUp, false );
 
     } else if (event.clientX > danceDesigner.rendererWidth || event.clientY > (danceDesigner.rendererHeight + 32)) {
       danceDesigner.controls.enabled = false;
@@ -511,7 +406,6 @@ var danceDesigner = {
       var intersects = danceDesigner.raycaster.intersectObject(danceDesigner.plane);
       newPosThreeVector = danceDesigner.stagePlane.projectPoint(intersects[0].point, danceDesigner.selectionPath.position);
       danceDesigner.selectionPath.position.set(newPosThreeVector.x, newPosThreeVector.y, newPosThreeVector.z);
-      console.log("updateSplineOutline");
       updateSplineOutline(danceDesigner.selectionPath.name.slice(12), bestFitIndex);
     }
   },
@@ -661,9 +555,6 @@ var TimelineEditor = function () {
 
 function addSplineObject( keyframe, position, index, splineObjectNumber, dancerColor ) {
 
-  // TODO: programmatically lighten the color so it goes from light to dark as the dancer moves (convey direction);
-  // mix it with white and multiply by the splineObjectNumber
-  // var color = dancerColor;
   var material = new THREE.MeshLambertMaterial( { color: dancerColor } );
   var geometry = new THREE.BoxBufferGeometry( 0.5, 0.5, 0.5 );
   var object = new THREE.Mesh( geometry, material );
@@ -715,7 +606,6 @@ function updateSplineOutline(index, arg) {
 
     danceDesigner.s.dancers[index].keyframePositions[arg].curve = spline;
     position.needsUpdate = true;
-    autoSave();
 
 }
 
@@ -740,7 +630,7 @@ function updateSplineOutlineCreateMesh(index, arg) {
 
     currKeyFramePos.curve = curve;
     danceDesigner.scene.add( currKeyFramePos.curve.mesh );
-    currKeyFramePos.curve.mesh.visible = false;
+    currKeyFramePos.curve.mesh.visible = true;
     // for ( var i = 0; i < ARC_SEGMENTS; i ++ ) {
     //
     //   var t = i / ( ARC_SEGMENTS - 1 );
@@ -1029,6 +919,7 @@ function animate() {
   t = wavesurfer.getCurrentTime();
 
   if (t > danceDesigner.maxT) {
+    dancersEditable = true;
     for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
 
       var d = danceDesigner.s.dancers[i];
@@ -1036,6 +927,7 @@ function animate() {
       d.mesh.position.x = d.keyframePositions[lastIndex].position.x;
       d.mesh.position.y = d.keyframePositions[lastIndex].position.y;
       d.mesh.position.z = d.keyframePositions[lastIndex].position.z;
+      d.mesh.material.transparent = false;
       // for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
       //   if (i != j) {
       //     if (Math.abs(d.mesh.position.x - danceDesigner.s.dancers[j].mesh.position.x) < 1
@@ -1071,10 +963,10 @@ function animate() {
                 dancersEditable = false;
                 curDancer.mesh.material.opacity = 0.5;
                 showCurves(currKeyFramePos);
+                updateSplineOutline(j, i);
               } else {
                 hideCurves(currKeyFramePos);
               }
-              // updateSplineOutline(j, i);
             }
           }
         } else {
@@ -1189,18 +1081,17 @@ function setCurves(dancer, index, currKeyFramePos, nextKeyFramePos, posIndex) {
 
    currKeyFramePos.curve = curve;
    danceDesigner.scene.add( currKeyFramePos.curve.mesh );
-   currKeyFramePos.curve.mesh.visible = false;
+   currKeyFramePos.curve.mesh.visible = true;
 }
 
-function setCurvesOldDance(dancer, index, currKeyFramePos, posIndex, oldCurve) {
+function setCurvesOldDance(dancer, index, currKeyFramePos, posIndex, oldPoints) {
 
   currKeyFramePos.positions = [];
   currKeyFramePos.splineHelperObjects = [];
-  console.log(oldCurve);
 
-   for ( var i = 0; i < oldCurve.points.length; i ++ ) {
+   for ( var i = 0; i < oldPoints.length; i ++ ) {
 
-      var newPos = new THREE.Vector3(oldCurve.points[i][0], 0, oldCurve.points[i][2]);
+      var newPos = new THREE.Vector3(oldPoints[i].x, 0, oldPoints[i].z);
       addSplineObjectOldDance( currKeyFramePos, newPos, index, i, dancer.mesh.material.color);
       currKeyFramePos.positions.push( currKeyFramePos.splineHelperObjects[ i ].position );
 
@@ -1220,7 +1111,7 @@ function setCurvesOldDance(dancer, index, currKeyFramePos, posIndex, oldCurve) {
 
    currKeyFramePos.curve = curve;
    danceDesigner.scene.add( currKeyFramePos.curve.mesh );
-   currKeyFramePos.curve.mesh.visible = false;
+   currKeyFramePos.curve.mesh.visible = true;
 }
 
 
@@ -1264,11 +1155,23 @@ function autoSave() {
   var dancersInfo = [];
   for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
       var dancer = danceDesigner.s.dancers[i];
+      var keyframePositionsInfo = [];
+      for (var j = 0; j < dancer.keyframePositions.length; j++) {
+        var kf = dancer.keyframePositions[j];
+        var keyframePositionInfo = {
+          "start": kf.start,
+          "end": kf.end,
+          "position": kf.position,
+          "splineHelperObjects": kf.splineHelperObjects,
+          "positions": kf.positions
+        }
+        keyframePositionsInfo.push(keyframePositionInfo);
+      }
       // Store the color, name, positions, kfpositions for each dancer
       var dancerInfo = {
         "name": dancer.name,
         "color": dancer.mesh.material.color,
-        "keyframePositions": dancer.keyframePositions
+        "keyframePositions": keyframePositionsInfo
       }
       dancersInfo.push(dancerInfo);
   }
@@ -1287,6 +1190,8 @@ function autoSave() {
    "audioURL": audioURL,
   };
 
+  console.log(data);
+
   document.getElementById("savedStatus").innerHTML = "Saving your changes..."
 
 
@@ -1301,6 +1206,7 @@ function autoSave() {
   .then((data) => {
     // console.log('Success:', data);
     document.getElementById("savedStatus").innerHTML = "Saved!"
+    console.log("NEW ID: ", data.id);
     return;
   })
   .catch((error) => {
@@ -1480,8 +1386,8 @@ async function addNewKeyFrame(t) {
 var justHitUndo = false;
 var newDancerNumber = 1;
 var usersDances = [];
-var dance_id = 0;
-var next_available_id = 0;
+var dance_id = -1;
+var next_available_id;
 var userData;
 var inc = 0;
 var txSprites = [];
@@ -1669,10 +1575,12 @@ if (event.target.id === "addDancer") {
   }
 }
 
-async function initNewDance(numDancers) {
+async function initNewDance(danceName, numDancers) {
 
   await clearTheStage();
   timeline.addTimeMark(0, 2);
+
+  document.getElementById("dance_name").value = danceName;
 
   // Set default silent audio
   file = '/static/files/default.mp3';
@@ -1922,7 +1830,6 @@ document.getElementById("playbackSpeed").addEventListener("click", async functio
 });
 
 $(document).on('click', '.createNewDance', function() {
-  dance_id = next_available_id;
 
   // TODO: Guide to a new modal to specify stage dimensions(stretch goal) and audio.
   // TODO: Add secondary modal to specify the dancer's init positions.
@@ -1933,6 +1840,10 @@ $(document).on('click', '.createNewDance', function() {
   `<div class="container">
     <div class="row">
       <div class="col-12">
+        <p style="color: black;">
+          Dance Name:
+          <input type="text" id="danceName" name="Dance Name" style="width: 200px;">
+        </p>
         <p style="color: black;">
           Number of Dancers:
           <input type="number" id="quantity" name="quantity" min="1" max="20" value="2" style="color: black; width: 100px;">
@@ -1974,7 +1885,8 @@ $(document).on('click', '.createNewDance', function() {
 
   document.getElementById("createFinal").addEventListener("click", async function() {
     var numDancers = document.getElementById("quantity").value;
-    await initNewDance(numDancers);
+    var danceName = document.getElementById("danceName").value;
+    await initNewDance(danceName, numDancers);
     autoSave();
   });
 
@@ -2116,6 +2028,10 @@ $(document).on('click', '.danceBtn', async function(){
     document.getElementById("audioFileName").innerHTML = selectedDance.audioFileName;
   }
 
+  console.log("THIS ID: ", selectedDance.id);
+
+  dance_id = selectedDance.id;
+
   // Load in the new dance
   danceDesigner.splineHelperObjects = [];
   var newDancers = JSON.parse(selectedDance.dancers);
@@ -2135,7 +2051,13 @@ $(document).on('click', '.danceBtn', async function(){
 
     // console.log(thisDancer.keyframePositions);
     for (var k = 0; k < thisDancer.keyframePositions.length; k++) {
-      newDancer.addKFPosition(thisDancer.keyframePositions[k].start, thisDancer.keyframePositions[k].end, thisDancer.keyframePositions[k].position);
+      newDancer.addKFPosition(
+        thisDancer.keyframePositions[k].start,
+        thisDancer.keyframePositions[k].end,
+        thisDancer.keyframePositions[k].position,
+        thisDancer.keyframePositions[k].splineHelperObjects,
+        thisDancer.keyframePositions[k].positions
+      );
     }
 
     newDancer.mesh.position.x = posDefault.x;
@@ -2163,8 +2085,8 @@ $(document).on('click', '.danceBtn', async function(){
     for (var i = 0; i < thisDancer.keyframePositions.length - 1; i++) {
       var currKeyFramePos = newDancer.keyframePositions[i];
       // Set the curve
-      console.log(thisDancer.keyframePositions[i]);
-      setCurvesOldDance(newDancer, j, currKeyFramePos, i, thisDancer.keyframePositions[i].curve);
+      // console.log(thisDancer.keyframePositions[i]);
+      setCurvesOldDance(newDancer, j, currKeyFramePos, i, thisDancer.keyframePositions[i].positions);
     }
 
     // Increment new dancer count
@@ -2192,8 +2114,6 @@ $(document).on('click', '.danceBtn', async function(){
 // TODO: Fix how the thumbnail image is saved to resize despite screen size differences,
 // so it is always the same size in the modal.
 
-// TODO: why does login not work on heroku? getting a 401 error.
-
 async function clearTheStage() {
 
   // Clear the dancers
@@ -2211,6 +2131,13 @@ async function clearTheStage() {
   // Clear the time marks from the timeline
   timeline.removeTimeMarks();
   danceDesigner.splineHelperObjects = [];
+
+  danceDesigner.s.dancers = [];
+  danceDesigner.s.keyframes = [];
+
+  //TODO: Reset the dance id.
+  
+  // danc_id = -1;
 
   return;
 }
@@ -2233,7 +2160,7 @@ function saveAsImage() {
 }
 
 $(document).keydown(function(event) {
-  if (event.keyCode == 32 && event.target.id !== "dance_name") {
+  if (event.keyCode == 32 && event.target.id !== "dance_name" && event.target.id !=="danceName") {
     var playButton = document.getElementById("play");
     var playButtonIcon = document.getElementById("playIcon");
     playButtonIcon.classList.toggle("fa-pause");
@@ -2328,6 +2255,10 @@ function update() {
       `<div class="container">
         <div class="row">
           <div class="col-12">
+            <p style="color: black;">
+              Dance Name:
+              <input type="text" id="danceName" name="Dance Name" style="width: 200px;">
+            </p>
             <p style="color: black;">
               Number of Dancers:
               <input type="number" id="quantity" name="quantity" min="1" max="20" value="${e.target.value}" style="color: black; width: 100px;">

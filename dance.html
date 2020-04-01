@@ -42,14 +42,7 @@
              </div>
            </div>
          </div>
-         <div class="row ml-1 mt-1">
-           <div class="col-6">
-             <button class="btn btn-light" id="addDancer">Add Dancer</button>
-           </div>
-           <div class="col-6">
-             <p id="savedStatus"></p>
-           </div>
-         </div>
+
 
         <!-- Modal -->
         <div class="modal fade" id="dancesModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
@@ -70,35 +63,34 @@
         </div>
 
 
-         <div class="row ml-1 mt-2">
-           <canvas id="0">
-            </canvas>
-         </div>
-         <div class="row ml-1 mt-2">
-           <!-- <p id="dance_name" style="color: black;">Dance Name</p> -->
-           <input type="text" style="color: black;" id="dance_name" value="Dance Name">
-         </div>
-         <div class="row ml-1 mt-1">
+        <div class="row ml-1 mt-2">
+          <input type="text" style="color: black;" id="dance_name" value="Dance Name">
+        </div>
+        <div class="row ml-1 mt-2">
+          <canvas id="0">
+           </canvas>
+        </div>
+        <div class="row ml-1 mt-1">
+          <div class="col-6" style="padding-left: 0">
+            <button class="btn btn-outline-light" id="addDancer">Add Dancer</button>
+          </div>
+          <div class="col-6">
+            <p id="savedStatus"></p>
+          </div>
+        </div>
+         <!-- <div class="row ml-1 mt-1">
            <button class="btn btn-outline-danger" id="video">Export</button>
-         </div>
+         </div> -->
          <div class="row ml-1 mt-1" style="align-self: flex-end; align-items: flex-end;">
-           <!-- <div id="player">
-             <div class="slidecontainer">
-              <input type="range" min="1" max="100" value="50" class="slider" id="volume">
-             </div>
-           </div> -->
            <div class="bottomBar" id="bottomBar">
             <div id="waveform">
-                <!-- <input type="file" id="fileinput"/> -->
                 <label class="btn btn-outline-warning btn-file">
                     Upload music <input type="file" id="fileinput" style="display: none;">
                 </label>
                 <p id="audioFileName"></p>
             </div>
+
             <div class="row" style="justify-content: center;">
-              <!-- <button class="playButton" style="width:50px; color: white;" id="play"><i class="fas fa-play" id="playIcon"></i></button>
-              <button class="playButton" style="width: 50px; color: white;" id="undo"><i class="fas fa-undo"></i></button>
-              <button class="playButton" style="width: 50px; color: white;" id="delete"><i class="fas fa-trash"></i></button> -->
               <div class="col-4">
                 <button class="playButton" style="width:50px; color: white;" id="play"><i class="fas fa-play" id="playIcon"></i></button>
               </div>
@@ -108,11 +100,11 @@
               <div class="col-4">
                 <button class="playButton" style="width: 50px; color: white;" id="delete"><i class="fas fa-trash"></i></button>
               </div>
-
             </div>
+
             <div class="row">
               <div class="col-12">
-                <input data-action="zoom" id="playbackSlider" type="range" min="0" max="500" value="100" />
+                <input data-action="zoom" id="playbackSlider" type="range" min="0" max="500" step="5" value="100" />
                 <div class="col-6">
                   <div style="overflow: hidden;">
                     <p style="float: left;">Playback:</p>
@@ -128,12 +120,10 @@
                 </div>
               </div>
             </div>
+
            </div>
          </div>
        </div>
-
-
-
 
      <div class="danceBtn" style="visible: hidden; position: absolute;">
      </div>
@@ -145,43 +135,6 @@
    </div>
  </div>
 
-<!--
-
-   <div style="width:100%;height:60px;text-align: center; color:white; font-weight: bolder;" class="ui top">Dance Designer</div>
-   <div class="ui">
-     <p style="margin-left:20px; width: 250px;" id="keyFrames" class="ui"></p>
-     <div class="mainRenderer">
-       <canvas id="renderer">
-       </canvas>
-     </div>
-     <button style="margin-top:50px; right:130px; width: 60px;" id="addDancer" class="ui">Add Dancer</button>
-     <button style="margin-top:100px; right:130px; width: 60px;" id="saveDance" class="ui">Save Dance</button>
-     <p style="margin-top:140px; right:130px; width: 60px;" class="ui">Welcome, {{name}}</p>
-     <p style="margin-top:150px; right:130px; width: 60px;" class="ui">{{email}}</p>
-     <div id="player">
-       <div class="slidecontainer">
-        <input type="range" min="1" max="100" value="50" class="slider" id="volume">
-       </div>
-       <i class="fa fa-volume-down"></i>
-       <input type="range" min="1" max="100" value="50" class="slider" id="volume">
-       <i class="fa fa-volume-up"></i>
-     </div>
-     <div class="bottomBar" id="bottomBar">
-      <div id="waveform">
-          <input type="file" id="fileinput"/>
-      </div>
-      <button class="ui playButton" style="margin-bottom:10px; right:100px; width:50px;" id="play"><i class="fas fa-play" id="playIcon"></i></button>
-      <button class="ui playButton" style="margin-bottom:10px; right:60px; width: 50px;" id="undo"><i class="fas fa-undo"></i></button>
-      <button class="ui playButton" style="margin-bottom:10px; right:10px; width: 50px;" id="delete"><i class="fas fa-trash"></i></button>
-     </div>
-   </div>
-   <div id="timelineEditor">
-   </div>
-   <div class="ui time">
-     <p style="text-align:right;" id="Time" class="ui time"></p>
-     <canvas id="0">
-      </canvas>
-   </div> -->
    <script type="text/javascript"
         src="{{ url_for('static', filename='js/three.js') }}"></script>
    <script type="text/javascript"
@@ -190,17 +143,9 @@
         src="{{ url_for('static', filename='js/Dancer.js') }}"></script>
    <script type="text/javascript"
         src="{{ url_for('static', filename='js/THREE.MeshLine.js') }}"></script>
-   <script type="text/javascript" src="{{ url_for('static', filename='js/jscolor.js') }}"></script>
-   <!-- <script type="module"
-        src="{{ url_for('static', filename='js/WaveSurferTimeline.js') }}"></script>
-   <script type="module"
-        src="{{ url_for('static', filename='js/WaveSurferCursor.js') }}"></script>
-   <script type="module"
-        src="{{ url_for('static', filename='js/WaveSurferRegions.js') }}"></script> -->
-  <!-- <script type="module" src="{{ url_for('static', filename='js/EffectComposer.js') }}"></script> -->
-  <!-- <script type="module" src="{{ url_for('static', filename='js/TransformControls.js') }}"></script> -->
-
-  <script type="text/javascript"
+   <script type="text/javascript"
+        src="{{ url_for('static', filename='js/jscolor.js') }}"></script>
+   <script type="text/javascript"
         src="{{ url_for('static', filename='js/signals.min.js') }}"></script>
    <script type="text/javascript"
         src="{{ url_for('static', filename='js/ui.js') }}"></script>

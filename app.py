@@ -35,6 +35,7 @@ import cloudinary.uploader
 import cloudinary.api
 import cloudinary.utils
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import func
 
 cloudinary.config(
   cloud_name = "hdcz0vo9p",
@@ -333,9 +334,18 @@ def save_dance():
     response = cloudinary.uploader.upload(imageStream)
     imageURL, options = cloudinary.utils.cloudinary_url(response['public_id'])
 
+    print("OLD ID: \n")
+    print(id)
+    print("\n")
+
     # # Doesn't exist? Add it to the database.
-    if not db.session.query(Dance).filter(Dance.id == id).count():
-        id = db.session.query(Dance).count()
+    if id < 0 or not db.session.query(Dance).filter(Dance.id == id).count():
+        # id = db.session.query(Dance).count()
+        max_id = db.session.query(func.max(Dance.id)).scalar()
+        id = max_id + 1
+        print("Not in the database: \n")
+        print(id)
+        print("\n")
         dance = Dance(id, user_id, user_email, dance_name, dancers, keyframes, number_of_keyframes, imageURL, audioFileName, audioURL)
         db.session.add(dance)
         db.session.commit()
@@ -353,7 +363,7 @@ def save_dance():
         dance.audioURL = audioURL
         db.session.commit()
 
-    return jsonify({"Success": "Nicely done"})
+    return jsonify({"Success": "Nicely done", "id": id})
 
 @app.route("/saveAudio", methods = ["POST"])
 @login_required
