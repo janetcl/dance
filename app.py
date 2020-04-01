@@ -227,10 +227,8 @@ def fbCallback():
     # Begin user session by logging the user in
     login_user(user)
 
-    return render_template('dance.html',
-        name=name,
-        email=email,
-        avatar_url=picture_url)
+    # Send user to dance page
+    return redirect("/")
 
 def get_google_provider_cfg():
     return requests.get(GOOGLE_DISCOVERY_URL).json()
@@ -314,14 +312,8 @@ def googleCallback():
     # Begin user session by logging the user in
     login_user(user)
 
-    dances = db.session.query(Dance).filter(Dance.user_id == current_user.id).all()
-
     # Send user to dance page
-    return render_template('dance.html',
-        name=current_user.name,
-        email=current_user.email,
-        avatar_url=current_user.profile_pic,
-        dances=dances)
+    return redirect("/")
 
 @app.route("/saveDance", methods = ["POST"])
 @login_required
@@ -359,8 +351,6 @@ def save_dance():
         dance.image = imageURL
         dance.audioFileName = audioFileName
         dance.audioURL = audioURL
-        # print("\nDance\n")
-        # print("AFTER: \n", dance.dancers)
         db.session.commit()
 
     return jsonify({"Success": "Nicely done"})

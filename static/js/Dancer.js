@@ -541,8 +541,12 @@ var danceDesigner = {
       justHitUndo = false;
     }
     if (danceDesigner.selectionPath) {
-      console.log("updateSplineOutline");
-      updateSplineOutline(danceDesigner.selectionPath.name.slice(12), bestFitIndex);
+      var index = danceDesigner.selectionPath.name.slice(12);
+      if (danceDesigner.s.dancers[index].keyframePositions[bestFitIndex].curve.mesh) {
+        updateSplineOutline(danceDesigner.selectionPath.name.slice(12), bestFitIndex);
+      } else {
+        updateSplineOutlineCreateMesh(danceDesigner.selectionPath.name.slice(12), bestFitIndex);
+      }
       // Push to Undo Buffer
       addToUndoBuffer();
       autoSave();
@@ -711,6 +715,41 @@ function updateSplineOutline(index, arg) {
 
     danceDesigner.s.dancers[index].keyframePositions[arg].curve = spline;
     position.needsUpdate = true;
+    autoSave();
+
+}
+
+function updateSplineOutlineCreateMesh(index, arg) {
+
+    var currKeyFramePos = danceDesigner.s.dancers[index].keyframePositions[arg];
+    console.log(currKeyFramePos);
+
+    var geometry = new THREE.BufferGeometry();
+    geometry.setAttribute( 'position', new THREE.BufferAttribute( new Float32Array( ARC_SEGMENTS * 3 ), 3 ) );
+
+    var curve = new THREE.CatmullRomCurve3( currKeyFramePos.positions );
+    curve.curveType = 'centripetal';
+    curve.mesh = new THREE.Line( geometry.clone(), new THREE.LineBasicMaterial( {
+      color: dancer.mesh.material.color,
+      opacity: 0.35
+    } ) );
+    curve.mesh.castShadow = true;
+    curve.mesh.name = "Spline" + index;
+    var splineMesh = spline.mesh;
+    var position = splineMesh.geometry.attributes.position;
+
+    currKeyFramePos.curve = curve;
+    danceDesigner.scene.add( currKeyFramePos.curve.mesh );
+    currKeyFramePos.curve.mesh.visible = false;
+    // for ( var i = 0; i < ARC_SEGMENTS; i ++ ) {
+    //
+    //   var t = i / ( ARC_SEGMENTS - 1 );
+    //   var point = new THREE.Vector3();
+    //   spline.getPoint( t, point );
+    //   position.setXYZ( i, point.x, point.y, point.z );
+    //
+    // }
+    // position.needsUpdate = true;
     autoSave();
 
 }
@@ -1026,21 +1065,25 @@ function animate() {
             currKeyFramePos = curDancer.keyframePositions[i];
             nextKeyFramePos = curDancer.keyframePositions[i+1];
             if (currKeyFramePos.curve) {
+              curDancer.mesh.material.transparent = showPaths;
               if (showPaths) {
+                curDancer.mesh.material.opacity = 0.5;
                 showCurves(currKeyFramePos);
               } else {
                 hideCurves(currKeyFramePos);
               }
-              console.log("updateSplineOutline");
-              updateSplineOutline(j, i);
+              // updateSplineOutline(j, i);
             }
           }
         } else {
           for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
             var curDancer = danceDesigner.s.dancers[j];
-            currKeyFramePos = curDancer.keyframePositions[i];
-            if (currKeyFramePos.curve) {
-              hideCurves(currKeyFramePos);
+            curDancer.mesh.material.transparent = false;
+            if (curDancer.keyframePositions[i]) {
+              currKeyFramePos = curDancer.keyframePositions[i];
+              if (currKeyFramePos.curve) {
+                hideCurves(currKeyFramePos);
+              }
             }
           }
         }
@@ -1082,12 +1125,6 @@ function animate() {
             var diff = nextKeyFramePos.start - currKeyFramePos.end;
             var frac = (t - currKeyFramePos.end) / diff;
             if (currKeyFramePos.curve) {
-              // if (showPaths) {
-              //   showCurves(currKeyFramePos);
-              // } else {
-              //   console.log("HIDE CURVES");
-              //   hideCurves(currKeyFramePos);
-              // }
               currKeyFramePos.curve.getPoint(frac, d.mesh.position);
             } else {
               d.mesh.position.x = currKeyFramePos.position.x + (frac * (nextKeyFramePos.position.x - currKeyFramePos.position.x));
@@ -1627,79 +1664,7 @@ if (event.target.id === "addDancer") {
     lightAngle = 0;
     play = true;
     wavesurfer.playPause();
-  } else if (event.target.id === "editPaths") {
-    // TODO: Implement this.
-    var d = danceDesigner.s.dancers[0];
-    if (d) {
-      for (var i = 0; i < d.keyframePositions.length - 1; i++) {
-        var currKeyFramePos = d.keyframePositions[i];
-        var nextKeyFramePos = d.keyframePositions[i+1];
-        if (t > currKeyFramePos.end && t < nextKeyFramePos.start) {
-
-          editPaths(t);
-          // for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
-          //   var curDancer = danceDesigner.s.dancers[j];
-          //   var geometry = new THREE.Geometry();
-          //   geometry.vertices.push(new THREE.Vector3(curDancer.keyframePositions[i].position.x, -0.99, curDancer.keyframePositions[i].position.z),
-          //   new THREE.Vector3(curDancer.keyframePositions[i+1].position.x, -0.99, curDancer.keyframePositions[i+1].position.z));
-          //   var line = new MeshLine();
-          //   line.setGeometry(geometry, function (p) {return p + 0.3;} );
-          //   var material = new MeshLineMaterial( {
-          //     color: curDancer.mesh.material.color,
-          //     // transparent: true,
-          //     // opacity: 0.7
-          //    } );
-          //    // console.log("WORKS ", i);
-          //   var mesh = new THREE.Mesh(line.geometry, material);
-          //   mesh.name = "Path";
-          //   danceDesigner.scene.add(mesh);
-          // }
-          // break;
-
-
-        } else {
-          console.log("edit paths!");
-        }
-      }
-    }
-
   }
-}
-
-function editPaths(time) {
-  var innerHTML =
-  `<div class="container">
-    <div class="row">
-      <div class="col-12">
-        <p style="color: black;">
-          WHEEEEE
-          <input type="number" id="quantity" name="quantity" min="1" max="20" value="2" style="color: black; width: 100px;">
-        </p>
-      </div>
-      <div class="container">
-        <div class="row">
-          <div class="col-12">
-            <p style="color: black;">
-              Edit the dancers' names and colors below!
-            </p>
-          </div>
-        </div>
-        <div class="row">
-          <div class="col-6" id="Dancer1">
-            <input type="text" value="Dancer1">
-            <input type="color">
-          </div>
-          <div class="col-6" id="Dancer2">
-            <input type="text" value="Dancer2">
-            <input type="color">
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>`;
-
-  document.getElementById("modal-body").innerHTML = innerHTML;
-  $('#dancesModal').modal('show');
 }
 
 async function initNewDance(numDancers) {
