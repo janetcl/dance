@@ -18,11 +18,11 @@
            <div class="col-4">
              <p style="margin-top: 5px; margin-left: 10px; position: absolute;" id="keyFrames"></p>
            </div>
-           <div class="col-4" style="justify-content: center;">
+           <div class="col-4" style="text-align: center;">
              <p class="title">Dance Studio</p>
            </div>
            <div class="col-4" style="justify-content: flex-end; align-items: flex-end;">
-             <p style="margin-top: 5px; align-self: flex-end; position: absolute; text-align:right;" id="Time" class="time"></p>
+             <p style="margin-top: 5px; position: absolute; right: 24px; text-align:right;" id="Time" class="time"></p>
            </div>
          </div>
          <canvas id="renderer">
@@ -31,14 +31,14 @@
        <div class="col-special">
          <div class="topBar">
            <div class="row">
-             <div class="col-3 launchModal">
+             <div class="col-2 launchModal" style="padding-right: 0px;">
                <img src="{{avatar_url}}" style="width: 32px; height: 32px; margin-top: 4px; margin-left: 4px;"></img>
              </div>
-             <div class="col-7 launchModal">
-               <p style="align-self: right; text-align: left; color: black;">Welcome, {{name}}!</p>
+             <div class="col-8 launchModal" style="padding-left: 12px;">
+               <p style="align-self: right; text-align: left; color: black; font-size: 26px;">Hi, {{name}}!</p>
              </div>
-             <div class="col-2">
-               <a href="/logout"><i class="fas fa-power-off" style="color: blue; margin-right: 10px;"></i></a>
+             <div class="col-2" style="padding-left: 0px; font-size: 26px;">
+               <a href="/logout"><i class="fas fa-power-off" style="color: #454ADE;"></i></a>
              </div>
            </div>
          </div>
@@ -90,34 +90,42 @@
                 <p id="audioFileName"></p>
             </div>
 
-            <div class="row" style="justify-content: center;">
-              <div class="col-4">
-                <button class="playButton" style="width:50px; color: white;" id="play"><i class="fas fa-play" id="playIcon"></i></button>
+            <div class="ml-0 col-12" style="padding-left: 5px;">
+              <input type="checkbox" id="showCurves" name="showCurves"> Edit Paths
+            </div>
+
+            <div class="row mt-4">
+              <div class="col-6">
+                <div style="overflow: hidden;">
+                  <p style="float: left;">Playback:</p>
+                  <p style="float: right;" id="playbackSpeed">1x</p>
+                </div>
               </div>
-              <div class="col-4">
-                <button class="playButton" style="width: 50px; color: white;" id="undo"><i class="fas fa-undo"></i></button>
+              <div class="col-6">
+                <input data-action="zoom" id="playbackSlider" type="range" min="0" max="500" step="5" value="100" style="width: 100px;"/>
               </div>
-              <div class="col-4">
-                <button class="playButton" style="width: 50px; color: white;" id="delete"><i class="fas fa-trash"></i></button>
+
+              <div class="col-12">
+                <div style="overflow: hidden;">
+                  <p style="float: left;">Zoom:</p>
+                  <input style="margin-left:1rem; width: 100px;" data-action="zoom" id="zoomSlider" type="range" min="0" max="200" value="100"/>
+                </div>
               </div>
             </div>
 
-            <div class="row">
-              <div class="col-12">
-                <input data-action="zoom" id="playbackSlider" type="range" min="0" max="500" step="5" value="100" />
-                <div class="col-6">
-                  <div style="overflow: hidden;">
-                    <p style="float: left;">Playback:</p>
-                    <p style="float: right;" id="playbackSpeed">1x</p>
-                  </div>
-                </div>
-                <input type="checkbox" id="showCurves" name="showCurves"> Edit Paths
+
+            <div class="row justify-content-between" style="position:absolute; bottom: 21%;">
+              <div class="col-3">
+                <button class="playButton" style="width: 40px; color: white;" id="play"><i class="fas fa-play" id="playIcon"></i></button>
               </div>
-              <div class="col-8">
-                <div style="overflow: hidden;">
-                  <p style="float: left;">Zoom:</p>
-                  <input style="float: right;" data-action="zoom" id="zoomSlider" type="range" min="0" max="200" value="100" />
-                </div>
+              <div class="col-3">
+                <button class="playButton" style="width: 40px; color: white;" id="undo"><i class="fas fa-undo"></i></button>
+              </div>
+              <div class="col-3">
+                <button class="playButton" style="width: 40px; color: white;" id="redo"><i class="fas fa-redo"></i></button>
+              </div>
+              <div class="col-3">
+                <button class="playButton" style="width: 40px; color: white;" id="delete"><i class="fas fa-trash"></i></button>
               </div>
             </div>
 
@@ -125,12 +133,12 @@
          </div>
        </div>
 
-     <div class="danceBtn" style="visible: hidden; position: absolute;">
-     </div>
+       <div class="danceBtn" style="visible: hidden; position: absolute;">
+       </div>
 
-     <div class="row timelineBar" style="margin-left: 0px;">
-       <div id="timelineEditor">
-     </div>
+       <div class="row timelineBar" style="margin-left: 0px;">
+         <div id="timelineEditor">
+       </div>
 
    </div>
  </div>
