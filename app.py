@@ -337,7 +337,10 @@ def save_dance():
     # # Doesn't exist? Add it to the database.
     if id < 0 or not db.session.query(Dance).filter(Dance.id == id).count():
         # id = db.session.query(Dance).count()
-        max_id = db.session.query(func.max(Dance.id)).scalar()
+        if db.session.query(Dance).count() == 0:
+            max_id = -1
+        else:
+            max_id = db.session.query(func.max(Dance.id)).scalar()
         id = max_id + 1
         dance = Dance(id, user_id, user_email, dance_name, dancers, keyframes, number_of_keyframes, imageURL, audioFileName, audioURL)
         db.session.add(dance)
