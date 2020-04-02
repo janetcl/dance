@@ -436,12 +436,8 @@ var danceDesigner = {
       justHitUndo = false;
     }
     if (danceDesigner.selectionPath) {
-      // FIX SELECTION PATH
       var objectIndex = danceDesigner.selectionPath.name.slice(12).split("_");
       var index = objectIndex[0];
-      console.log("objectIndex: ", index);
-      // var index = danceDesigner.selectionPath.name.slice(12);
-      // console.log(index);
       if (danceDesigner.s.dancers[index].keyframePositions[bestFitIndex].curve.mesh) {
         updateSplineOutline(index, bestFitIndex);
       } else {
