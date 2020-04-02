@@ -2,11 +2,6 @@ import TimelinePlugin from './WaveSurferTimeline.js';
 import CursorPlugin from './WaveSurferCursor.js';
 import RegionsPlugin from './WaveSurferRegions.js';
 import { TransformControls } from './TransformControls.js';
-// import { DragControls } from './DragControls.js';
-// import EffectComposer from './EffectComposer.js';
-// const jsc = require("./jscolor");
-// import * as jsc from './jscolor.js';
-
 class Dancer {
 
   constructor(name, mesh) {
