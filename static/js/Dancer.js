@@ -1638,6 +1638,7 @@ if (event.target.id === "addDancer") {
           danceDesigner.scene.remove( oldSplineObjects );
           oldSplineObjects = danceDesigner.scene.getObjectByName("SplineObject" + i + "_" + dancer.keyframePositions[keyframeIndex].start);
         }
+        dancer.removeKeyFrame(keyframeStart);
 
       } else {
 
@@ -1653,6 +1654,8 @@ if (event.target.id === "addDancer") {
 
         console.log('set curves for keyframe index - 1: ', keyframeIndex - 1);
         // Update the curves for the previous frame
+        dancer.removeKeyFrame(keyframeStart);
+
         setCurves(
           danceDesigner.s.dancers[i],
           i,
@@ -1664,7 +1667,6 @@ if (event.target.id === "addDancer") {
         console.log("result: ", danceDesigner.s.dancers[i].keyframePositions[keyframeIndex - 1]);
       }
 
-      dancer.removeKeyFrame(keyframeStart);
     }
 
     // Filter existing keyframes to remove keyframe mark
