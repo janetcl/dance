@@ -918,7 +918,6 @@ wavesurfer.on('region-update-end', function(r, e) {
   }
 
   //TODO: still need to fix this. sometimes keyframe positions are not updating properly.
-  // the entire dance isn't saving with the new keyframes.
 
   timeline.updateKeyframeTimeMark(parseFloat(r.id), r.start, r.end);
   r.update({id: r.start});
@@ -933,6 +932,17 @@ wavesurfer.on('region-update-end', function(r, e) {
   for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
     if (danceDesigner.s.keyframes[i] == oldStart) {
       danceDesigner.s.keyframes[i] = r.start;
+      for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
+        var d = danceDesigner.s.dancers[j];
+        console.log(d.keyframePositions);
+        for (var k = 0; k < d.keyframePositions.length - 1; k++) {
+          setCurves(d, j, d.keyframePositions[k], d.keyframePositions[k + 1], k);
+        }
+        // Update the curves for the last frame
+        d.keyframePositions[d.keyframePositions.length - 1].curve = undefined;
+        d.keyframePositions[d.keyframePositions.length - 1].positions = [];
+        d.keyframePositions[d.keyframePositions.length - 1].splineHelperObjects = [];
+      }
     }
   }
   danceDesigner.s.keyframes.sort(function(a, b) {
@@ -1444,23 +1454,12 @@ async function addNewKeyFrame(t) {
       }
 
       var currKeyFramePos = await dancer.addKFPosition(d.keyframePositions[oldKeyFrameIndex].start, d.keyframePositions[oldKeyFrameIndex].end, newPos);
-      // if (bestFitIndex < dancer.keyframePositions.length - 1) {
-      //   // resetCurve(currKeyFramePos);
-      //   // updateSplineOutline(i, bestFitIndex);
-      //   if (dancer.keyframePositions[bestFitIndex].curve.mesh) {
-      //     updateSplineOutline(i, bestFitIndex);
-      //   } else {
-      //     updateSplineOutlineCreateMesh(i, bestFitIndex);
-      //   }
-      //   console.log('RESET CURRENT CURVE');
-      // }
-      if (bestFitIndex > 0) {
-        setCurves(dancer, i, dancer.keyframePositions[bestFitIndex - 1], dancer.keyframePositions[bestFitIndex], bestFitIndex - 1);
+      if (oldKeyFrameIndex > 0) {
+        setCurves(dancer, i, dancer.keyframePositions[oldKeyFrameIndex - 1], dancer.keyframePositions[oldKeyFrameIndex], oldKeyFrameIndex - 1);
         console.log('RESET PREV CURVE');
-      } else if (bestFitIndex < dancer.keyframePositions.length - 1) {
-        setCurves(dancer, i, dancer.keyframePositions[bestFitIndex], dancer.keyframePositions[bestFitIndex + 1], bestFitIndex);
+      } else if (oldKeyFrameIndex < dancer.keyframePositions.length - 1) {
+        setCurves(dancer, i, dancer.keyframePositions[oldKeyFrameIndex], dancer.keyframePositions[oldKeyFrameIndex + 1], oldKeyFrameIndex);
       }
-       // setCurves(dancer, i, dancer.keyframePositions[bestFitIndex], dancer.keyframePositions[bestFitIndex + 1], bestFitIndex);
     }
   }
 
