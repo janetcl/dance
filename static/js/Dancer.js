@@ -327,8 +327,7 @@ var danceDesigner = {
       // Set the raycaster position
       danceDesigner.raycaster.set( danceDesigner.camera.position, vector.sub( danceDesigner.camera.position ).normalize() );
       // Find all intersected objects
-      if (dancersEditable)
-      {
+      if (dancersEditable) {
         var intersects = danceDesigner.raycaster.intersectObjects(danceDesigner.dancersArr);
         if (intersects.length > 0) {
           // Disable the controls
@@ -555,7 +554,12 @@ var TimelineEditor = function () {
 
 function addSplineObject( keyframe, position, index, splineObjectNumber, dancerColor ) {
 
-  var material = new THREE.MeshLambertMaterial( { color: dancerColor } );
+  if (splineObjectNumber == 0 || splineObjectNumber == 4) {
+    var gray = new THREE.Color( 0xff0000 );
+    material = new THREE.MeshLambertMaterial( { color: gray.sub(dancerColor) } );
+  } else {
+    var material = new THREE.MeshLambertMaterial( { color: dancerColor } );
+  }
   var geometry = new THREE.BoxBufferGeometry( 0.5, 0.5, 0.5 );
   var object = new THREE.Mesh( geometry, material );
 
@@ -565,7 +569,9 @@ function addSplineObject( keyframe, position, index, splineObjectNumber, dancerC
   object.name = "SplineObject" + index;
   danceDesigner.scene.add( object );
   object.visible = false;
-  danceDesigner.splineHelperObjects.push(object);
+  if (splineObjectNumber !== 0 && splineObjectNumber !== 4) {
+    danceDesigner.splineHelperObjects.push(object);
+  }
   keyframe.splineHelperObjects.push( object );
   return object;
 
@@ -588,6 +594,54 @@ function addSplineObjectOldDance( keyframe, position, index, splineObjectNumber,
   return object;
 
 }
+
+// function resetCurve(dancer, index, currKeyFramePos, nextKeyFramePos) {
+//
+//   curve.mesh.name = "Spline" + index + currKeyFramePos.start;
+//   var oldCurve = danceDesigner.scene.getObjectByName("Spline" + index + currKeyFramePos.start);
+//   danceDesigner.scene.remove( oldCurve );
+//   setCurves(dancer, index, currKeyFramePos, nextKeyFramePos);
+//   function setCurves(dancer, index, currKeyFramePos, nextKeyFramePos, ) {
+//
+//     var pos = [ new THREE.Vector3( currKeyFramePos.position.x, 0, currKeyFramePos.position.z ),
+//       new THREE.Vector3( ((3 * currKeyFramePos.position.x + nextKeyFramePos.position.x) / 4), 0, ((3 * currKeyFramePos.position.z + nextKeyFramePos.position.z) / 4) ),
+//       new THREE.Vector3( ((currKeyFramePos.position.x + nextKeyFramePos.position.x) / 2), 0, ((currKeyFramePos.position.z + nextKeyFramePos.position.z) / 2) ),
+//       new THREE.Vector3( ((currKeyFramePos.position.x + 3 * nextKeyFramePos.position.x) / 4), 0, ((currKeyFramePos.position.z + 3 * nextKeyFramePos.position.z) / 4) ),
+//       new THREE.Vector3( nextKeyFramePos.position.x, 0, nextKeyFramePos.position.z ) ];
+//
+//      currKeyFramePos.splineHelperObjects = [];
+//
+//      for ( var i = 0; i < danceDesigner.splinePointsLength; i ++ ) {
+//
+//        addSplineObject( currKeyFramePos, pos[ i ] , index, i, dancer.mesh.material.color);
+//
+//      }
+//
+//      currKeyFramePos.positions = [];
+//
+//      for ( var i = 0; i < danceDesigner.splinePointsLength; i ++ ) {
+//
+//        currKeyFramePos.positions.push( currKeyFramePos.splineHelperObjects[ i ].position );
+//
+//      }
+//
+//      var geometry = new THREE.BufferGeometry();
+//      geometry.setAttribute( 'position', new THREE.BufferAttribute( new Float32Array( ARC_SEGMENTS * 3 ), 3 ) );
+//
+//      var curve = new THREE.CatmullRomCurve3( currKeyFramePos.positions );
+//      curve.curveType = 'centripetal';
+//      curve.mesh = new THREE.Line( geometry.clone(), new THREE.LineBasicMaterial( {
+//        color: dancer.mesh.material.color,
+//        opacity: 0.35
+//      } ) );
+//      curve.mesh.castShadow = true;
+//      curve.mesh.name = "Spline" + index + currKeyFramePos;
+//
+//      currKeyFramePos.curve = curve;
+//      danceDesigner.scene.add( currKeyFramePos.curve.mesh );
+//      currKeyFramePos.curve.mesh.visible = true;
+//   }
+// }
 
 function updateSplineOutline(index, arg) {
 
@@ -612,7 +666,6 @@ function updateSplineOutline(index, arg) {
 function updateSplineOutlineCreateMesh(index, arg) {
 
     var currKeyFramePos = danceDesigner.s.dancers[index].keyframePositions[arg];
-    console.log(currKeyFramePos);
 
     var geometry = new THREE.BufferGeometry();
     geometry.setAttribute( 'position', new THREE.BufferAttribute( new Float32Array( ARC_SEGMENTS * 3 ), 3 ) );
@@ -661,10 +714,8 @@ function hideCurves(currKeyFramePos) {
 function hideAllCurves() {
   for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
     var curDancer = danceDesigner.s.dancers[i];
-    console.log(curDancer);
     for (var j = 0; j < curDancer.keyframePositions.length; j++) {
       if (curDancer.keyframePositions[j].curve) {
-        console.log("hiding ", curDancer.keyframePositions[j]);
         var currKeyFramePos = curDancer.keyframePositions[j];
         currKeyFramePos.curve.mesh.visible = false;
         for (var k = 0; k < currKeyFramePos.splineHelperObjects.length; k++) {
@@ -809,7 +860,6 @@ wavesurfer.on('region-out', function(r, e) {
 });
 
 wavesurfer.on('region-update-end', function(r, e) {
-  // console.log(parseFloat(r.id));
   var oldStart = parseFloat(r.id);
   var dancer = danceDesigner.s.dancers[0];
 
@@ -904,15 +954,18 @@ String.prototype.format = function () {
 
 };
 
+var dancersEditable = true;
 var showPaths = document.getElementById("showCurves");
 document.getElementById("showCurves").addEventListener("change", function(e) {
   if (!this.checked) {
+    dancersEditable = true;
     hideAllCurves();
+  } else {
+    dancersEditable = false;
   }
 });
 
 var oldT = 0;
-var dancersEditable = true;
 
 function animate() {
 
@@ -959,17 +1012,21 @@ function animate() {
             nextKeyFramePos = curDancer.keyframePositions[i+1];
             if (currKeyFramePos.curve) {
               curDancer.mesh.material.transparent = showPaths;
+              // console.log("SHOW PATHS: ", showPaths);
               if (showPaths) {
                 dancersEditable = false;
                 curDancer.mesh.material.opacity = 0.5;
+                // console.log("SHOW PATHS BUT DANCERS NOT EDITABLE")
                 showCurves(currKeyFramePos);
                 updateSplineOutline(j, i);
               } else {
+                dancersEditable = true;
                 hideCurves(currKeyFramePos);
               }
             }
           }
         } else {
+          dancersEditable = true;
           for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
             var curDancer = danceDesigner.s.dancers[j];
             curDancer.mesh.material.transparent = false;
@@ -1077,7 +1134,7 @@ function setCurves(dancer, index, currKeyFramePos, nextKeyFramePos, posIndex) {
      opacity: 0.35
    } ) );
    curve.mesh.castShadow = true;
-   curve.mesh.name = "Spline" + index;
+   curve.mesh.name = "Spline" + index + currKeyFramePos.start;
 
    currKeyFramePos.curve = curve;
    danceDesigner.scene.add( currKeyFramePos.curve.mesh );
@@ -1107,7 +1164,7 @@ function setCurvesOldDance(dancer, index, currKeyFramePos, posIndex, oldPoints) 
      opacity: 0.35
    } ) );
    curve.mesh.castShadow = true;
-   curve.mesh.name = "Spline" + index;
+   curve.mesh.name = "Spline" + index + currKeyFramePos.start;
 
    currKeyFramePos.curve = curve;
    danceDesigner.scene.add( currKeyFramePos.curve.mesh );
@@ -1190,10 +1247,7 @@ function autoSave() {
    "audioURL": audioURL,
   };
 
-  console.log(data);
-
   document.getElementById("savedStatus").innerHTML = "Saving your changes..."
-
 
   fetch('/saveDance', {
     method: 'POST', // or 'PUT'
@@ -1204,9 +1258,8 @@ function autoSave() {
   })
   .then((response) => response.json())
   .then((data) => {
-    // console.log('Success:', data);
     document.getElementById("savedStatus").innerHTML = "Saved!"
-    console.log("NEW ID: ", data.id);
+    dance_id = data.id;
     return;
   })
   .catch((error) => {
@@ -1348,10 +1401,26 @@ async function addNewKeyFrame(t) {
       }
 
       // Add spline path
-      await dancer.addKFPosition(t, t + len, newPos);
-      if (bestFitIndex < dancer.keyframePositions.length - 1) {
+      var currKeyFramePos = await dancer.addKFPosition(t, t + len, newPos);
+
+      var currIndex = 0;
+      for (var j = 0; j < dancer.keyframePositions.length; j++) {
+        if (dancer.keyframePositions[j].start === currKeyFramePos.start) {
+          currIndex = j;
+          break;
+        }
+      }
+      console.log("currIndex: ", currIndex);
+      console.log("best fit index: ", bestFitIndex);
+      if (currIndex < dancer.keyframePositions.length - 1) {
         console.log("setting curves");
-        setCurves(dancer, i, dancer.keyframePositions[bestFitIndex], dancer.keyframePositions[bestFitIndex + 1], bestFitIndex);
+        // best fit index
+        setCurves(dancer, i, dancer.keyframePositions[currIndex], dancer.keyframePositions[currIndex + 1], currIndex);
+      }
+      if (currIndex > 0) {
+        setCurves(dancer, i, dancer.keyframePositions[currIndex - 1], dancer.keyframePositions[currIndex], currIndex - 1);
+        console.log('RESET PREV CURVE');
+        console.log(dancer.keyframePositions);
       }
     }
   } else {
@@ -1370,13 +1439,24 @@ async function addNewKeyFrame(t) {
         var dancerMesh = dancer.mesh;
         var newPos = new THREE.Vector3(dancerMesh.position.x, dancerMesh.position.y, dancerMesh.position.z);
       }
+
       var currKeyFramePos = await dancer.addKFPosition(d.keyframePositions[oldKeyFrameIndex].start, d.keyframePositions[oldKeyFrameIndex].end, newPos);
       // TODO: Update spline path. Not sure if this is correct. THIS IS CURRENTLY WRONG.
-      if (bestFitIndex < dancer.keyframePositions.length - 1) {
-        setCurves(dancer, i, dancer.keyframePositions[bestFitIndex], dancer.keyframePositions[bestFitIndex + 1], bestFitIndex);
-        console.log('update spline outline for existing spline');
-        // updateSplineOutline(i, bestFitIndex);
+      // if (bestFitIndex < dancer.keyframePositions.length - 1) {
+      //   // resetCurve(currKeyFramePos);
+      //   // updateSplineOutline(i, bestFitIndex);
+      //   if (dancer.keyframePositions[bestFitIndex].curve.mesh) {
+      //     updateSplineOutline(i, bestFitIndex);
+      //   } else {
+      //     updateSplineOutlineCreateMesh(i, bestFitIndex);
+      //   }
+      //   console.log('RESET CURRENT CURVE');
+      // }
+      if (bestFitIndex > 0) {
+        setCurves(dancer, i, dancer.keyframePositions[bestFitIndex - 1], dancer.keyframePositions[bestFitIndex], bestFitIndex - 1);
+        console.log('RESET PREV CURVE');
       }
+       setCurves(dancer, i, dancer.keyframePositions[bestFitIndex], dancer.keyframePositions[bestFitIndex + 1], bestFitIndex);
     }
   }
 
@@ -1444,7 +1524,6 @@ if (event.target.id === "addDancer") {
       }
     );
     txSprites.push({"txSprite": txSprite, "dancerMesh": newDancer.mesh});
-    console.log(txSprite);
     danceDesigner.scene.add( txSprite );
 
     // Increment new dancer count
@@ -1922,8 +2001,6 @@ $(document).on('click', '.createNewDance', function() {
     innerHTML += '</div></div>';
     document.getElementById("modal-body").innerHTML = innerHTML;
 
-    console.log(document.getElementById("closeModalButton"))
-
     var footerHTML =
     `<button type="button" id="createNewDance" class="createNewDance btn btn-primary">Create new dance</button>`;
 
@@ -2028,8 +2105,6 @@ $(document).on('click', '.danceBtn', async function(){
     document.getElementById("audioFileName").innerHTML = selectedDance.audioFileName;
   }
 
-  console.log("THIS ID: ", selectedDance.id);
-
   dance_id = selectedDance.id;
 
   // Load in the new dance
@@ -2049,7 +2124,6 @@ $(document).on('click', '.danceBtn', async function(){
     var posDefault = thisDancer.keyframePositions[0].position;
     newDancer.addKFPosition(0, 2, posDefault);
 
-    // console.log(thisDancer.keyframePositions);
     for (var k = 0; k < thisDancer.keyframePositions.length; k++) {
       newDancer.addKFPosition(
         thisDancer.keyframePositions[k].start,
@@ -2085,7 +2159,6 @@ $(document).on('click', '.danceBtn', async function(){
     for (var i = 0; i < thisDancer.keyframePositions.length - 1; i++) {
       var currKeyFramePos = newDancer.keyframePositions[i];
       // Set the curve
-      // console.log(thisDancer.keyframePositions[i]);
       setCurvesOldDance(newDancer, j, currKeyFramePos, i, thisDancer.keyframePositions[i].positions);
     }
 
@@ -2136,8 +2209,7 @@ async function clearTheStage() {
   danceDesigner.s.keyframes = [];
 
   //TODO: Reset the dance id.
-  
-  // danc_id = -1;
+  // dance_id = -1;
 
   return;
 }
