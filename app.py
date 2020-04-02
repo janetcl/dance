@@ -48,8 +48,8 @@ app = Flask(__name__, template_folder='.')
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 
 # Toggle between these two to switch between local testing and Heroku
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/dance'
-# heroku = Heroku(app)
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/dance'
+heroku = Heroku(app)
 
 db = SQLAlchemy(app)
 
@@ -334,18 +334,11 @@ def save_dance():
     response = cloudinary.uploader.upload(imageStream)
     imageURL, options = cloudinary.utils.cloudinary_url(response['public_id'])
 
-    print("OLD ID: \n")
-    print(id)
-    print("\n")
-
     # # Doesn't exist? Add it to the database.
     if id < 0 or not db.session.query(Dance).filter(Dance.id == id).count():
         # id = db.session.query(Dance).count()
         max_id = db.session.query(func.max(Dance.id)).scalar()
         id = max_id + 1
-        print("Not in the database: \n")
-        print(id)
-        print("\n")
         dance = Dance(id, user_id, user_email, dance_name, dancers, keyframes, number_of_keyframes, imageURL, audioFileName, audioURL)
         db.session.add(dance)
         db.session.commit()
