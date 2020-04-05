@@ -748,6 +748,8 @@ document.getElementById( 'timelineEditor' ).appendChild( timeline.container.dom 
 var wavesurfer = WaveSurfer.create({
     container: timeline.scroller,
     scrollParent: true,
+    cursorColor: "#f00",
+    cursorWidth: 2,
     waveColor: 'violet',
     progressColor: 'purple',
     barWidth: 2,
