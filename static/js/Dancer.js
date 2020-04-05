@@ -877,6 +877,7 @@ wavesurfer.on('region-update-end', async function(r, e) {
 
   var keyframeIndex = 0;
   console.log("old start: ", oldStart);
+  // PROBLEM: Old start is not updating properly.
 
   for (var i = 0; i < dancer.keyframePositions.length; i++) {
     // Cannot have two keyframes starting in the same place.
@@ -894,7 +895,6 @@ wavesurfer.on('region-update-end', async function(r, e) {
         }
       }
       keyframeIndex = i;
-      continue;
     } else if (r.start > dancer.keyframePositions[i].start) {
       // Frame is the same as original
       if (r.end == dancer.keyframePositions[i].end && dancer.keyframePositions[i].start == oldStart) {
@@ -918,7 +918,8 @@ wavesurfer.on('region-update-end', async function(r, e) {
       if (r.end == dancer.keyframePositions[i].end) {
         // dancer.keyframePositions[i] is the same keyframe
         keyframeIndex = i;
-      } else if (r.end >= dancer.keyframePositions[i].start && r.end >= dancer.keyframePositions[i].end) {
+      } else if ((r.end >= dancer.keyframePositions[i].start || r.end >= dancer.keyframePositions[i].end)
+        && dancer.keyframePositions[i].start != oldStart) {
         // dancer.keyframePositions[i] is a different keyframe
         console.log("i ",  i);
         console.log(dancer.keyframePositions);
@@ -938,13 +939,14 @@ wavesurfer.on('region-update-end', async function(r, e) {
   //TODO: still need to fix this. sometimes keyframe positions are not updating properly.
 
   timeline.updateKeyframeTimeMark(parseFloat(r.id), r.start, r.end);
-  await r.update({id: r.start});
+  // await r.update({id: r.start});
+  r.id = r.start;
 
   // Update the keyframe positions
   for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
     var d = danceDesigner.s.dancers[i];
-    console.log("keyframeIndex ", keyframeIndex);
-    console.log("oldStart", oldStart);
+    // console.log("keyframeIndex ", keyframeIndex);
+    // console.log("oldStart", oldStart);
     await d.updateKeyFrame(keyframeIndex == 0 ? oldStart : d.keyframePositions[keyframeIndex].start, r.start, r.end);
     console.log(d.keyframePositions);
   }
@@ -958,6 +960,7 @@ wavesurfer.on('region-update-end', async function(r, e) {
         for (var k = 0; k < d.keyframePositions.length - 1; k++) {
           setCurves(d, j, d.keyframePositions[k], d.keyframePositions[k + 1], k);
         }
+        console.log("AFTER ", d.keyframePositions);
         // Update the curves for the last frame
         d.keyframePositions[d.keyframePositions.length - 1].curve = undefined;
         d.keyframePositions[d.keyframePositions.length - 1].positions = [];
@@ -1001,134 +1004,6 @@ document.getElementById("showCurves").addEventListener("change", function(e) {
 var oldT = 0;
 
 function animate() {
-
-  t = wavesurfer.getCurrentTime();
-
-  if (t > danceDesigner.maxT) {
-    dancersEditable = true;
-    for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-
-      var d = danceDesigner.s.dancers[i];
-      var lastIndex = d.keyframePositions.length - 1;
-      d.mesh.position.x = d.keyframePositions[lastIndex].position.x;
-      d.mesh.position.y = d.keyframePositions[lastIndex].position.y;
-      d.mesh.position.z = d.keyframePositions[lastIndex].position.z;
-      d.mesh.material.transparent = false;
-      // for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
-      //   if (i != j) {
-      //     if (Math.abs(d.mesh.position.x - danceDesigner.s.dancers[j].mesh.position.x) < 1
-      //     && Math.abs(d.mesh.position.z - danceDesigner.s.dancers[j].mesh.position.z) < 1) {
-      //       // TODO: COLLISION
-      //       // document.body.style.backgroundColor = "red";
-      //     }
-      //   }
-      // }
-      if (lastIndex > 0) {
-        if (d.keyframePositions[lastIndex - 1].curve) {
-          hideCurves(d.keyframePositions[lastIndex - 1]);
-        }
-      }
-    }
-  } else {
-
-    // Determine which curves to render
-    var d = danceDesigner.s.dancers[0];
-    if (d) {
-      for (var i = 0; i < d.keyframePositions.length - 1; i++) {
-        var currKeyFramePos = d.keyframePositions[i];
-        var nextKeyFramePos = d.keyframePositions[i+1];
-
-        if (t > currKeyFramePos.end && t < nextKeyFramePos.start) {
-          for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
-            var curDancer = danceDesigner.s.dancers[j];
-            currKeyFramePos = curDancer.keyframePositions[i];
-            nextKeyFramePos = curDancer.keyframePositions[i+1];
-            // console.log(currKeyFramePos.curve);
-            if (currKeyFramePos.curve) {
-              curDancer.mesh.material.transparent = showPaths;
-              if (showPaths) {
-                dancersEditable = false;
-                curDancer.mesh.material.opacity = 0.5;
-                showCurves(currKeyFramePos);
-                updateSplineOutline(j, i);
-              } else {
-                dancersEditable = true;
-                hideCurves(currKeyFramePos);
-              }
-            } else {
-              dancersEditable = !showPaths;
-            }
-          }
-        } else {
-          dancersEditable = true;
-          for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
-            var curDancer = danceDesigner.s.dancers[j];
-            curDancer.mesh.material.transparent = false;
-            if (curDancer.keyframePositions[i]) {
-              currKeyFramePos = curDancer.keyframePositions[i];
-              if (currKeyFramePos.curve) {
-                hideCurves(currKeyFramePos);
-              }
-            }
-          }
-        }
-      }
-    }
-
-    for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
-      var d = danceDesigner.s.dancers[i];
-
-      if (d == danceDesigner.movingDancer) {
-        console.log("MOVING DANCER");
-        d.mesh.material.emissive.set( 0xaaaaaa );
-        if (danceDesigner.newPos) {
-          d.mesh.position.x = danceDesigner.newPos.x;
-          d.mesh.position.y = danceDesigner.newPos.y;
-          d.mesh.position.z = danceDesigner.newPos.z;
-        }
-        continue;
-      } else {
-        d.mesh.material.emissive.set( 0x000000 );
-      }
-
-      if (d.keyframePositions.length == 1) {
-        var lastIndex = d.keyframePositions.length - 1;
-        d.mesh.position.x = d.keyframePositions[lastIndex].position.x;
-        d.mesh.position.y = d.keyframePositions[lastIndex].position.y;
-        d.mesh.position.z = d.keyframePositions[lastIndex].position.z;
-      } else {
-        for (var j = 0; j < d.keyframePositions.length - 1; j++) {
-          var currKeyFramePos = d.keyframePositions[j];
-          var nextKeyFramePos = d.keyframePositions[j+1];
-          if (t == currKeyFramePos.start ||
-            (t > currKeyFramePos.start && t < currKeyFramePos.end) ||
-          (t == currKeyFramePos.end)) {
-            d.mesh.position.x = currKeyFramePos.position.x;
-            d.mesh.position.y = currKeyFramePos.position.y;
-            d.mesh.position.z = currKeyFramePos.position.z;
-          } else if (t > currKeyFramePos.end && t < nextKeyFramePos.start) {
-            var diff = nextKeyFramePos.start - currKeyFramePos.end;
-            var frac = (t - currKeyFramePos.end) / diff;
-            if (currKeyFramePos.curve) {
-              currKeyFramePos.curve.getPoint(frac, d.mesh.position);
-            } else {
-              d.mesh.position.x = currKeyFramePos.position.x + (frac * (nextKeyFramePos.position.x - currKeyFramePos.position.x));
-              d.mesh.position.y = currKeyFramePos.position.y + (frac * (nextKeyFramePos.position.y - currKeyFramePos.position.y));
-              d.mesh.position.z = currKeyFramePos.position.z + (frac * (nextKeyFramePos.position.z - currKeyFramePos.position.z));
-            }
-          } else if (t == nextKeyFramePos.start ||
-            (t > nextKeyFramePos.start && t < nextKeyFramePos.end) ||
-          (t == nextKeyFramePos.end)) {
-            d.mesh.position.x = nextKeyFramePos.position.x;
-            d.mesh.position.y = nextKeyFramePos.position.y;
-            d.mesh.position.z = nextKeyFramePos.position.z;
-          }
-        }
-      }
-
-    }
-
-  }
   requestAnimationFrame( animate );
   render();
   update();
@@ -2450,6 +2325,133 @@ function update() {
 
     });
   }
+  t = wavesurfer.getCurrentTime();
+
+  if (t > danceDesigner.maxT) {
+    dancersEditable = true;
+    for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+
+      var d = danceDesigner.s.dancers[i];
+      var lastIndex = d.keyframePositions.length - 1;
+      d.mesh.position.x = d.keyframePositions[lastIndex].position.x;
+      d.mesh.position.y = d.keyframePositions[lastIndex].position.y;
+      d.mesh.position.z = d.keyframePositions[lastIndex].position.z;
+      d.mesh.material.transparent = false;
+      // for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
+      //   if (i != j) {
+      //     if (Math.abs(d.mesh.position.x - danceDesigner.s.dancers[j].mesh.position.x) < 1
+      //     && Math.abs(d.mesh.position.z - danceDesigner.s.dancers[j].mesh.position.z) < 1) {
+      //       // TODO: COLLISION
+      //       // document.body.style.backgroundColor = "red";
+      //     }
+      //   }
+      // }
+      if (lastIndex > 0) {
+        if (d.keyframePositions[lastIndex - 1].curve) {
+          hideCurves(d.keyframePositions[lastIndex - 1]);
+        }
+      }
+    }
+  } else {
+
+    // Determine which curves to render
+    var d = danceDesigner.s.dancers[0];
+    if (d) {
+      for (var i = 0; i < d.keyframePositions.length - 1; i++) {
+        var currKeyFramePos = d.keyframePositions[i];
+        var nextKeyFramePos = d.keyframePositions[i+1];
+
+        if (t > currKeyFramePos.end && t < nextKeyFramePos.start) {
+          for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
+            var curDancer = danceDesigner.s.dancers[j];
+            currKeyFramePos = curDancer.keyframePositions[i];
+            nextKeyFramePos = curDancer.keyframePositions[i+1];
+            // console.log(currKeyFramePos.curve);
+            if (currKeyFramePos.curve) {
+              curDancer.mesh.material.transparent = showPaths;
+              if (showPaths) {
+                dancersEditable = false;
+                curDancer.mesh.material.opacity = 0.5;
+                showCurves(currKeyFramePos);
+                updateSplineOutline(j, i);
+              } else {
+                dancersEditable = true;
+                hideCurves(currKeyFramePos);
+              }
+            } else {
+              dancersEditable = !showPaths;
+            }
+          }
+        } else {
+          dancersEditable = true;
+          for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
+            var curDancer = danceDesigner.s.dancers[j];
+            curDancer.mesh.material.transparent = false;
+            if (curDancer.keyframePositions[i]) {
+              currKeyFramePos = curDancer.keyframePositions[i];
+              if (currKeyFramePos.curve) {
+                hideCurves(currKeyFramePos);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+      var d = danceDesigner.s.dancers[i];
+
+      if (d == danceDesigner.movingDancer) {
+        console.log("MOVING DANCER");
+        d.mesh.material.emissive.set( 0xaaaaaa );
+        if (danceDesigner.newPos) {
+          d.mesh.position.x = danceDesigner.newPos.x;
+          d.mesh.position.y = danceDesigner.newPos.y;
+          d.mesh.position.z = danceDesigner.newPos.z;
+        }
+        continue;
+      } else {
+        d.mesh.material.emissive.set( 0x000000 );
+      }
+
+      if (d.keyframePositions.length == 1) {
+        var lastIndex = d.keyframePositions.length - 1;
+        d.mesh.position.x = d.keyframePositions[lastIndex].position.x;
+        d.mesh.position.y = d.keyframePositions[lastIndex].position.y;
+        d.mesh.position.z = d.keyframePositions[lastIndex].position.z;
+      } else {
+        for (var j = 0; j < d.keyframePositions.length - 1; j++) {
+          var currKeyFramePos = d.keyframePositions[j];
+          var nextKeyFramePos = d.keyframePositions[j+1];
+          if (t == currKeyFramePos.start ||
+            (t > currKeyFramePos.start && t < currKeyFramePos.end) ||
+          (t == currKeyFramePos.end)) {
+            d.mesh.position.x = currKeyFramePos.position.x;
+            d.mesh.position.y = currKeyFramePos.position.y;
+            d.mesh.position.z = currKeyFramePos.position.z;
+          } else if (t > currKeyFramePos.end && t < nextKeyFramePos.start) {
+            var diff = nextKeyFramePos.start - currKeyFramePos.end;
+            var frac = (t - currKeyFramePos.end) / diff;
+            if (currKeyFramePos.curve) {
+              currKeyFramePos.curve.getPoint(frac, d.mesh.position);
+            } else {
+              d.mesh.position.x = currKeyFramePos.position.x + (frac * (nextKeyFramePos.position.x - currKeyFramePos.position.x));
+              d.mesh.position.y = currKeyFramePos.position.y + (frac * (nextKeyFramePos.position.y - currKeyFramePos.position.y));
+              d.mesh.position.z = currKeyFramePos.position.z + (frac * (nextKeyFramePos.position.z - currKeyFramePos.position.z));
+            }
+          } else if (t == nextKeyFramePos.start ||
+            (t > nextKeyFramePos.start && t < nextKeyFramePos.end) ||
+          (t == nextKeyFramePos.end)) {
+            d.mesh.position.x = nextKeyFramePos.position.x;
+            d.mesh.position.y = nextKeyFramePos.position.y;
+            d.mesh.position.z = nextKeyFramePos.position.z;
+          }
+        }
+      }
+
+    }
+
+  }
 }
 
 $(document).ready(function() {
@@ -2457,8 +2459,6 @@ $(document).ready(function() {
   document.getElementById("closeModalButton").style.display = "none";
   document.getElementById("closeModalButton").disabled = true;
 });
-
-// TODO: For some reason the name isn't saving.
 
 function loadInitModal() {
   fetch('/getDances', {
