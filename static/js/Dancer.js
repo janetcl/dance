@@ -1152,7 +1152,8 @@ function autoSave() {
   var theseDancers = JSON.stringify(dancersInfo);
   var theseKeyframes = JSON.stringify(danceDesigner.s.keyframes);
   var dance_name= document.getElementById("danceNameFinal").innerHTML;
-
+  var audioFileName = document.getElementById("audioFileName").innerHTML;
+  
   const data = {
    "dance_id": dance_id,
    "dance_name": dance_name,
