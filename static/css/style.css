@@ -31,11 +31,14 @@ body {
   background-color: #E1F5FE;
   height: 40px;
 }
+
 .title {
   margin-top: 5px;
   font-family: "Courier New", Courier, monospace;
   font-size: 25px;
   text-align: center;
+  left: 27%;
+  right: auto;
   font-weight: bolder;
   position: absolute;
   width: 12em;

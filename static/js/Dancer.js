@@ -1213,7 +1213,6 @@ async function addToUndoBuffer() {
   }
 }
 
-document.getElementById("dance_name").addEventListener("change", autoSave, false);
 
 function autoSave() {
   // Autosave the dance.
@@ -1243,7 +1242,7 @@ function autoSave() {
   }
   var theseDancers = JSON.stringify(dancersInfo);
   var theseKeyframes = JSON.stringify(danceDesigner.s.keyframes);
-  var dance_name= document.getElementById("dance_name").value;
+  var dance_name= document.getElementById("danceNameFinal").innerHTML;
 
   const data = {
    "dance_id": dance_id,
@@ -1696,12 +1695,22 @@ if (event.target.id === "addDancer") {
   }
 }
 
+document.getElementById("editDanceName").addEventListener("click", async function() {
+  document.getElementById("dance_name").value = document.getElementById("danceNameFinal").innerHTML;
+});
+
+document.getElementById("saveDanceName").addEventListener("click", async function() {
+  document.getElementById("danceNameFinal").innerHTML = document.getElementById("dance_name").value;
+  autoSave();
+});
+
+
 async function initNewDance(danceName, numDancers) {
 
   await clearTheStage();
   timeline.addTimeMark(0, 2);
 
-  document.getElementById("dance_name").value = danceName;
+  document.getElementById("danceNameFinal").innerHTML = danceName;
 
   // Set default silent audio
   file = '/static/files/default.mp3';
@@ -2135,7 +2144,7 @@ $(document).on('click', '.danceBtn', async function(){
       var selectedDance = usersDances[i];
     }
   }
-  document.getElementById("dance_name").value = selectedDance.dance_name;
+  document.getElementById("danceNameFinal").innerHTML = selectedDance.dance_name;
   danceDesigner.s.dancers = [];
 
   wavesurfer.load(selectedDance.audioURL);
