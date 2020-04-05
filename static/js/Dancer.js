@@ -42,13 +42,19 @@ class Dancer {
     return;
   }
 
-  updateKeyFrame(oldStart, newStart, newEnd) {
+  async updateKeyFrame(oldStart, newStart, newEnd) {
     var pos;
+    // pos = this.keyframePositions[oldStart].position;
+    console.log("oldStart " , oldStart);
     for (var i = 0; i < this.keyframePositions.length; i++) {
+      console.log("this.keyframePositions[i].start ", this.keyframePositions[i].start);
         if (this.keyframePositions[i].start === oldStart) {
             pos = this.keyframePositions[i].position;
+            console.log(pos);
         }
     }
+    console.log("newStart ", newStart);
+    console.log("newEnd ", newEnd);
     this.removeKeyFrame(oldStart);
     this.addKFPosition(newStart, newEnd, pos);
     return;
@@ -859,15 +865,18 @@ wavesurfer.on('region-out', function(r, e) {
   r.update({color: "rgba(118,255,161, 0.8)"});
 });
 
-wavesurfer.on('region-update-end', function(r, e) {
+wavesurfer.on('region-update-end', async function(r, e) {
   var oldStart = parseFloat(r.id);
   var dancer = danceDesigner.s.dancers[0];
 
   if (oldStart == 0 && r.start !== 0) {
     alert("Cannot move the first keyframe!");
-    r.update({id: oldStart, start: oldStart, end: dancer.keyframePositions[0].end});
+    r.update({id: 0, start: 0, end: dancer.keyframePositions[0].end});
     return;
   }
+
+  var keyframeIndex = 0;
+  console.log("old start: ", oldStart);
 
   for (var i = 0; i < dancer.keyframePositions.length; i++) {
     // Cannot have two keyframes starting in the same place.
@@ -884,9 +893,15 @@ wavesurfer.on('region-update-end', function(r, e) {
           }
         }
       }
+      keyframeIndex = i;
+      continue;
     } else if (r.start > dancer.keyframePositions[i].start) {
-      if ((r.end <= dancer.keyframePositions[i].end || r.start <= dancer.keyframePositions[i].end)
-      && dancer.keyframePositions[i].start != oldStart) {
+      // Frame is the same as original
+      if (r.end == dancer.keyframePositions[i].end && dancer.keyframePositions[i].start == oldStart) {
+        keyframeIndex = i;
+      } else if ((r.end < dancer.keyframePositions[i].end || r.start <= dancer.keyframePositions[i].end)
+        && dancer.keyframePositions[i].start != oldStart) {
+        console.log("i ",  i);
         console.log(dancer.keyframePositions);
         alert("Keyframes cannot overlap!");
         // Reset the keyframes to its old position
@@ -899,7 +914,13 @@ wavesurfer.on('region-update-end', function(r, e) {
         }
       }
     } else if (r.start < dancer.keyframePositions[i].start) {
-      if (r.end >= dancer.keyframePositions[i].start && dancer.keyframePositions[i].start != oldStart) {
+      // Case where starting position got moved back.
+      if (r.end == dancer.keyframePositions[i].end) {
+        // dancer.keyframePositions[i] is the same keyframe
+        keyframeIndex = i;
+      } else if (r.end >= dancer.keyframePositions[i].start && r.end >= dancer.keyframePositions[i].end) {
+        // dancer.keyframePositions[i] is a different keyframe
+        console.log("i ",  i);
         console.log(dancer.keyframePositions);
         alert("Keyframes cannot overlap!");
         // Reset the keyframes to its old position
@@ -917,12 +938,14 @@ wavesurfer.on('region-update-end', function(r, e) {
   //TODO: still need to fix this. sometimes keyframe positions are not updating properly.
 
   timeline.updateKeyframeTimeMark(parseFloat(r.id), r.start, r.end);
-  r.update({id: r.start});
+  await r.update({id: r.start});
 
   // Update the keyframe positions
   for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
     var d = danceDesigner.s.dancers[i];
-    d.updateKeyFrame(oldStart, r.start, r.end);
+    console.log("keyframeIndex ", keyframeIndex);
+    console.log("oldStart", oldStart);
+    await d.updateKeyFrame(keyframeIndex == 0 ? oldStart : d.keyframePositions[keyframeIndex].start, r.start, r.end);
     console.log(d.keyframePositions);
   }
 
@@ -2340,7 +2363,7 @@ function update() {
   }
 
   document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes;
-  keyframes = danceDesigner.s.keyframes.length;
+  keyframes = danceDesigner.s.keyframes.length + 1;
   danceDesigner.controls.update();
 
   if (danceDesigner.s.dancers[0]) {
