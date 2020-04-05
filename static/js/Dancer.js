@@ -329,6 +329,7 @@ var danceDesigner = {
       danceDesigner.raycaster.set( danceDesigner.camera.position, vector.sub( danceDesigner.camera.position ).normalize() );
       // Find all intersected objects
       if (dancersEditable) {
+        console.log("DANCERS ARE EDITABLE");
         var intersects = danceDesigner.raycaster.intersectObjects(danceDesigner.dancersArr);
         if (intersects.length > 0) {
           // Disable the controls
@@ -406,8 +407,9 @@ var danceDesigner = {
       var intersects = danceDesigner.raycaster.intersectObject(danceDesigner.plane);
       newPosThreeVector = danceDesigner.stagePlane.projectPoint(intersects[0].point, danceDesigner.selectionPath.position);
       danceDesigner.selectionPath.position.set(newPosThreeVector.x, newPosThreeVector.y, newPosThreeVector.z);
-      var objectIndex = danceDesigner.selectionPath.name.slice(12).split("_");
-      console.log("objectIndex[0]: ", objectIndex[0]);
+      var objectIndex = danceDesigner.selectionPath.name.slice(12);
+      objectIndex = objectIndex.split("_");
+      console.log("objectIndex ", objectIndex);
       updateSplineOutline(objectIndex[0], bestFitIndex);
     }
   },
@@ -570,7 +572,7 @@ function addSplineObject( keyframe, position, index, splineObjectNumber, dancerC
   object.position.copy( position );
   object.castShadow = true;
   object.receiveShadow = true;
-  object.name = "SplineObject" + index + "_" + keyframe.start;
+  object.name = "SplineObject" + String(index) + "_" + keyframe.start;
   danceDesigner.scene.add( object );
   object.visible = false;
   if (splineObjectNumber !== 0 && splineObjectNumber !== 4) {
@@ -583,17 +585,24 @@ function addSplineObject( keyframe, position, index, splineObjectNumber, dancerC
 
 function addSplineObjectOldDance( keyframe, position, index, splineObjectNumber, dancerColor ) {
 
-  var material = new THREE.MeshLambertMaterial( { color: dancerColor } );
+  if (splineObjectNumber == 0 || splineObjectNumber == 4) {
+    var gray = new THREE.Color( 0xff0000 );
+    material = new THREE.MeshLambertMaterial( { color: gray.sub(dancerColor) } );
+  } else {
+    var material = new THREE.MeshLambertMaterial( { color: dancerColor } );
+  }
   var geometry = new THREE.BoxBufferGeometry( 0.5, 0.5, 0.5 );
   var object = new THREE.Mesh( geometry, material );
 
   object.position.copy( position );
   object.castShadow = true;
   object.receiveShadow = true;
-  object.name = "SplineObject" + index + keyframe.start;
+  object.name = "SplineObject" + String(index) + "_" + keyframe.start;
   danceDesigner.scene.add( object );
   object.visible = false;
-  danceDesigner.splineHelperObjects.push(object);
+  if (splineObjectNumber !== 0 && splineObjectNumber !== 4) {
+    danceDesigner.splineHelperObjects.push(object);
+  }
   keyframe.splineHelperObjects.push( object );
   return object;
 
@@ -2230,13 +2239,6 @@ function update() {
   play = wavesurfer.isPlaying();
   document.getElementById("playbackSpeed").innerHTML = playbackSpeed + "x";
   showPaths = document.getElementById("showCurves").checked;
-
-  for (var i = 0; i < txSprites.length; i++) {
-    var txSprite = txSprites[i].txSprite;
-    var dancerMesh = txSprites[i].dancerMesh;
-    txSprite.position.set(dancerMesh.position.x, dancerMesh.position.y + 1.4, dancerMesh.position.z);
-  }
-
   document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes;
   keyframes = danceDesigner.s.keyframes.length + 1;
   danceDesigner.controls.update();
@@ -2366,7 +2368,6 @@ function update() {
             var curDancer = danceDesigner.s.dancers[j];
             currKeyFramePos = curDancer.keyframePositions[i];
             nextKeyFramePos = curDancer.keyframePositions[i+1];
-            // console.log(currKeyFramePos.curve);
             if (currKeyFramePos.curve) {
               curDancer.mesh.material.transparent = showPaths;
               if (showPaths) {
@@ -2382,6 +2383,7 @@ function update() {
               dancersEditable = !showPaths;
             }
           }
+          break;
         } else {
           dancersEditable = true;
           for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
@@ -2448,10 +2450,15 @@ function update() {
           }
         }
       }
-
     }
-
   }
+
+  for (var i = 0; i < txSprites.length; i++) {
+    var txSprite = txSprites[i].txSprite;
+    var dancerMesh = txSprites[i].dancerMesh;
+    txSprite.position.set(dancerMesh.position.x, dancerMesh.position.y + 1.4, dancerMesh.position.z);
+  }
+
 }
 
 $(document).ready(function() {
