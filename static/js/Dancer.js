@@ -1153,7 +1153,7 @@ function autoSave() {
   var theseKeyframes = JSON.stringify(danceDesigner.s.keyframes);
   var dance_name= document.getElementById("danceNameFinal").innerHTML;
   var audioFileName = document.getElementById("audioFileName").innerHTML;
-  
+
   const data = {
    "dance_id": dance_id,
    "dance_name": dance_name,
@@ -2243,6 +2243,7 @@ function update() {
   document.getElementById("keyFrames").innerHTML = "Total Keyframes: " + keyframes;
   keyframes = danceDesigner.s.keyframes.length + 1;
   danceDesigner.controls.update();
+  t = wavesurfer.getCurrentTime();
 
   if (danceDesigner.s.dancers[0]) {
     var kf = danceDesigner.s.dancers[0].keyframePositions[0];
@@ -2328,7 +2329,6 @@ function update() {
 
     });
   }
-  t = wavesurfer.getCurrentTime();
 
   if (t > danceDesigner.maxT) {
     dancersEditable = true;
