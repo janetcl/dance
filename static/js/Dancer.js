@@ -1602,8 +1602,15 @@ if (event.target.id === "addDancer") {
     var playButtonIcon = document.getElementById("playIcon");
     playButtonIcon.classList.toggle("fa-pause");
     playButtonIcon.classList.toggle("fa-play");
-    lightAngle = 0;
-    play = true;
+    wavesurfer.playPause();
+  } else if (event.target.id === "playBeginning") {
+    console.log("PLAY BEGINNING");
+    var playButtonIcon = document.getElementById("playIcon");
+    if (! wavesurfer.isPlaying()) {
+      playButtonIcon.classList.replace("fa-play", "fa-pause");
+    }
+    wavesurfer.stop();
+    // wavesurfer.seekTo(0);
     wavesurfer.playPause();
   }
 }
