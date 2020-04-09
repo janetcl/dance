@@ -127,9 +127,6 @@ FB_TOKEN_URL = "https://graph.facebook.com/oauth/access_token"
 FB_SCOPE = ["email"]
 
 # Google Login
-# GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
-# GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
-
 GOOGLE_CLIENT_ID = "966768610728-t9b4b1t6gbth733k5el104tgt85edfb1.apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET = "ndTjBKN3gSvsxW_zGxgD8Mfw"
 
@@ -327,14 +324,13 @@ def googleCallback():
     # if current_user.is_authenticated:
     #     return redirect("/")
     # else:
-    dances = db.session.query(Dance).filter(Dance.user_id == id).all()
+    # dances = db.session.query(Dance).filter(Dance.user_id == id).all()
 
     # Send user to dance page
     return render_template('dance.html',
         name=name,
         email=email,
-        avatar_url=profile_pic,
-        dances=dances)
+        avatar_url=profile_pic)
 
 @app.route("/saveDance", methods = ["POST"])
 @login_required
@@ -367,9 +363,7 @@ def save_dance():
         db.session.commit()
     else:
         # # If in the database, update the dance with the new values.
-        # print("\nAlready in database\n")
         dance = db.session.query(Dance).filter(Dance.id == id).first()
-        # print("BEFORE: \n", dance.dancers)
         dance.dance_name = dance_name
         dance.dancers = dancers
         dance.keyframes = keyframes
