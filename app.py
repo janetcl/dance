@@ -321,16 +321,16 @@ def googleCallback():
     login_user(user)
 
     # Send user to dance page
-    if current_user.is_authenticated:
-        return redirect("/")
-    else:
+    # if current_user.is_authenticated:
+    #     return redirect("/")
+    # else:
     # dances = db.session.query(Dance).filter(Dance.user_id == id).all()
 
-        # Send user to dance page
-        return render_template('dance.html',
-            name=name,
-            email=email,
-            avatar_url=profile_pic)
+    # Send user to dance page
+    return render_template('dance.html',
+        name=name,
+        email=email,
+        avatar_url=profile_pic)
 
 @app.route("/saveDance", methods = ["POST"])
 @login_required
