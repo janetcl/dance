@@ -860,7 +860,8 @@ wavesurfer.on('region-mouseenter', function(r, e) {
 });
 
 wavesurfer.on('region-mouseleave', function(r, e) {
-  // TODO: do this in a better way. only checks
+  // TODO: do this in a better way.
+  // Upon making the keyframe, make it yellow so its clear you are editing that keyframe.
   if (wavesurfer.getCurrentTime() > r.end || wavesurfer.getCurrentTime() < r.start) {
     r.update({color: "rgba(118,255,161, 0.8)"});
   }
@@ -885,9 +886,6 @@ wavesurfer.on('region-update-end', async function(r, e) {
   }
 
   var keyframeIndex = 0;
-  console.log("old start: ", oldStart);
-  // PROBLEM: Old start is not updating properly.
-
   for (var i = 0; i < dancer.keyframePositions.length; i++) {
     // Cannot have two keyframes starting in the same place.
     if (r.start == dancer.keyframePositions[i].start) {
@@ -967,6 +965,8 @@ wavesurfer.on('region-update-end', async function(r, e) {
         var d = danceDesigner.s.dancers[j];
         console.log(d.keyframePositions);
         for (var k = 0; k < d.keyframePositions.length - 1; k++) {
+          // TODO: remove the existing splines from the stage
+          // TODO: if there is no crossover/changing order for keyframes, preserve the curves!
           setCurves(d, j, d.keyframePositions[k], d.keyframePositions[k + 1], k);
         }
         console.log("AFTER ", d.keyframePositions);
@@ -1063,6 +1063,9 @@ function setCurvesOldDance(dancer, index, currKeyFramePos, posIndex, oldPoints) 
 
   currKeyFramePos.positions = [];
   currKeyFramePos.splineHelperObjects = [];
+  if (!oldPoints) {
+    return;
+  }
 
    for ( var i = 0; i < oldPoints.length; i ++ ) {
 
@@ -2119,6 +2122,7 @@ $(document).on('click', '.danceBtn', async function(){
 
     for (var i = 0; i < thisDancer.keyframePositions.length - 1; i++) {
       var currKeyFramePos = newDancer.keyframePositions[i];
+      console.log(currKeyFramePos);
       // Set the curve
       setCurvesOldDance(newDancer, j, currKeyFramePos, i, thisDancer.keyframePositions[i].positions);
     }
@@ -2244,6 +2248,18 @@ function update() {
   keyframes = danceDesigner.s.keyframes.length + 1;
   danceDesigner.controls.update();
   t = wavesurfer.getCurrentTime();
+
+  for (var i = 0; i < wavesurfer.regions.list.length; i++) {
+    var r = wavesurfer.regions.list[i];
+    if (t < r.start || t > r.end) {
+      // Yellow
+      r.update({color: "rgba(255,222,67, 0.8)"});
+    }
+    else {
+      // Green UNLESS the mouse is hovering over the current time...
+      r.update({color: "rgba(118,255,161, 0.8)"});
+    }
+  }
 
   if (danceDesigner.s.dancers[0]) {
     var kf = danceDesigner.s.dancers[0].keyframePositions[0];
@@ -2384,7 +2400,7 @@ function update() {
               dancersEditable = !showPaths;
             }
           }
-          break;
+          // break;
         } else {
           dancersEditable = true;
           for (var j = 0; j < danceDesigner.s.dancers.length; j++) {

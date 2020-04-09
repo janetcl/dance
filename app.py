@@ -48,8 +48,8 @@ app = Flask(__name__, template_folder='.')
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 
 # Toggle between these two to switch between local testing and Heroku
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/dance'
-# heroku = Heroku(app)
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/dance'
+heroku = Heroku(app)
 
 db = SQLAlchemy(app)
 
@@ -229,7 +229,17 @@ def fbCallback():
     login_user(user)
 
     # Send user to dance page
-    return redirect("/")
+    if current_user.is_authenticated:
+        return redirect("/")
+    else:
+        dances = db.session.query(Dance).filter(Dance.user_id == id).all()
+
+        # Send user to dance page
+        return render_template('dance.html',
+            name=name,
+            email=email,
+            avatar_url=profile_pic,
+            dances=dances)
 
 def get_google_provider_cfg():
     return requests.get(GOOGLE_DISCOVERY_URL).json()
@@ -314,7 +324,17 @@ def googleCallback():
     login_user(user)
 
     # Send user to dance page
-    return redirect("/")
+    if current_user.is_authenticated:
+        return redirect("/")
+    else:
+        dances = db.session.query(Dance).filter(Dance.user_id == id).all()
+
+        # Send user to dance page
+        return render_template('dance.html',
+            name=name,
+            email=email,
+            avatar_url=profile_pic,
+            dances=dances)
 
 @app.route("/saveDance", methods = ["POST"])
 @login_required
