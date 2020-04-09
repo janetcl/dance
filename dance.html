@@ -134,24 +134,19 @@
 
             <div class="row" style="position:absolute; bottom: 21%;">
               <div class="col-2">
-                <button class="playButton tooltip" style="width: 40px; color: white;" id="play"><i class="fas fa-play" id="playIcon"></i></button>
-                <!-- <span class="tooltiptext">Play</span> -->
+                <button class="playButton" style="width: 40px; color: white;" data-toggle="tooltip" data-placement="top" title="Play/Pause" id="play"><i class="fas fa-play" id="playIcon"></i></button>
               </div>
               <div class="col-2">
-                <button class="playButton tooltip" style="width: 40px; color: white;" id="playBeginning"><i class="fas fa-play-circle" id="playBeginningIcon"></i></button>
-                <!-- <span class="tooltiptext">Play from beginning</span> -->
+                <button class="playButton" style="width: 40px; color: white;" data-toggle="tooltip" data-placement="top" title="Play from beginning" id="playBeginning"><i class="fas fa-play-circle" id="playBeginningIcon"></i></button>
               </div>
               <div class="col-2">
-                <button class="playButton tooltip" style="width: 40px; color: white;" id="undo"><i class="fas fa-undo"></i></button>
-                <!-- <span class="tooltiptext">Undo</span> -->
+                <button class="playButton" style="width: 40px; color: white;" data-toggle="tooltip" data-placement="top" title="Undo" id="undo"><i class="fas fa-undo"></i></button>
               </div>
               <div class="col-2">
-                <button class="playButton tooltip" style="width: 40px; color: white;" id="redo"><i class="fas fa-redo"></i></button>
-                <!-- <span class="tooltiptext">Redo</span> -->
+                <button class="playButton" style="width: 40px; color: white;" data-toggle="tooltip" data-placement="top" title="Redo" id="redo"><i class="fas fa-redo"></i></button>
               </div>
               <div class="col-2">
-                <button class="playButton tooltip" style="width: 40px; color: white;" id="delete"><i class="fas fa-trash"></i></button>
-                <!-- <span class="tooltiptext">Delete Keyframe</span> -->
+                <button class="playButton" style="width: 40px; color: white;" data-toggle="tooltip" data-placement="top" title="Delete keyframe" id="delete"><i class="fas fa-trash"></i></button>
               </div>
             </div>
 
@@ -189,6 +184,9 @@
    <script type="text/javascript"
         src="{{ url_for('static', filename='js/jquery-3.2.1.min.js') }}"></script>
    <script type="text/javascript"
+        src="{{ url_for('static', filename='js/popper.js') }}"></script>
+   <script type="text/javascript"
         src="{{ url_for('static', filename='js/bootstrap.js') }}"></script>
+
  </body>
 </html>

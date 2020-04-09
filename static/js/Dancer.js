@@ -1597,13 +1597,13 @@ if (event.target.id === "addDancer") {
     danceDesigner.maxT = 0;
     keyframes = 0;
     justHitUndo = false;
-  } else if (event.target.id === "play") {
+  } else if (event.target.id === "play" || event.target.id === "playIcon") {
     var playButton = document.getElementById("play");
     var playButtonIcon = document.getElementById("playIcon");
     playButtonIcon.classList.toggle("fa-pause");
     playButtonIcon.classList.toggle("fa-play");
     wavesurfer.playPause();
-  } else if (event.target.id === "playBeginning") {
+  } else if (event.target.id === "playBeginning" || event.target.id === "playBeginningIcon") {
     console.log("PLAY BEGINNING");
     var playButtonIcon = document.getElementById("playIcon");
     if (! wavesurfer.isPlaying()) {
@@ -2548,6 +2548,7 @@ function initializeLesson() {
   danceDesigner.init();
   animate(0, 0);
   t = 0;
+  $('[data-toggle="tooltip"]').tooltip();
 }
 if (window.addEventListener)
   window.addEventListener('load', initializeLesson, false);
