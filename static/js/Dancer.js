@@ -2533,8 +2533,6 @@ function loadInitModal() {
   })
   .catch((error) => {
     console.error('Error:', error);
-    console.log(response);
-    console.log(myBlob);
   });
 }
 
