@@ -34,30 +34,50 @@ class Dancer {
     return keyframePosition;
   }
 
-  removeKeyFrame(start) {
+  async addKeyFramePosition(start, end, pos, curve, positions, splineHelperObjects) {
     // Filter existing positions to make sure each time has only one position
     this.keyframePositions = this.keyframePositions.filter(function(kfp, index, arr){
+        return (kfp.start !== start && kfp.end !== end);
+    });
+    var keyframePosition = {start: start, end: end, position: pos,
+      curve: curve, positions: positions, splineHelperObjects: splineHelperObjects}
+    this.keyframePositions.push(keyframePosition);
+    // Sort all positions in time order
+    this.keyframePositions.sort(function(a, b) {return a.start - b.start});
+    return keyframePosition;
+  }
+
+  removeKeyFrame(start) {
+    // Filter existing positions to make sure each time has only one position
+    var i;
+    this.keyframePositions = this.keyframePositions.filter(function(kfp, index, arr){
+        if (kfp.start == start) {
+          i = index;
+        }
         return kfp.start !== start;
     });
-    return;
+    return i;
   }
 
   async updateKeyFrame(oldStart, newStart, newEnd) {
-    var pos;
-    // pos = this.keyframePositions[oldStart].position;
-    console.log("oldStart " , oldStart);
+    var pos, curve, positions, splineHelperObjects;
     for (var i = 0; i < this.keyframePositions.length; i++) {
-      console.log("this.keyframePositions[i].start ", this.keyframePositions[i].start);
         if (this.keyframePositions[i].start === oldStart) {
             pos = this.keyframePositions[i].position;
-            console.log(pos);
+            curve = this.keyframePositions[i].curve;
+            positions = this.keyframePositions[i].positions;
+            splineHelperObjects = this.keyframePositions[i].splineHelperObjects;
         }
     }
-    console.log("newStart ", newStart);
-    console.log("newEnd ", newEnd);
     this.removeKeyFrame(oldStart);
-    this.addKFPosition(newStart, newEnd, pos);
-    return;
+    var newIndex;
+    this.addKeyFramePosition(newStart, newEnd, pos, curve, positions, splineHelperObjects);
+    for (var i = 0; i < this.keyframePositions.length; i++) {
+        if (this.keyframePositions[i].start === newStart) {
+          newIndex = i;
+        }
+    }
+    return newIndex;
   }
 
   getPosAt(t) {
@@ -409,7 +429,7 @@ var danceDesigner = {
       danceDesigner.selectionPath.position.set(newPosThreeVector.x, newPosThreeVector.y, newPosThreeVector.z);
       var objectIndex = danceDesigner.selectionPath.name.slice(12);
       objectIndex = objectIndex.split("_");
-      console.log("objectIndex ", objectIndex);
+      // console.log("objectIndex ", objectIndex);
       updateSplineOutline(objectIndex[0], bestFitIndex);
     }
   },
@@ -885,6 +905,13 @@ wavesurfer.on('region-update-end', async function(r, e) {
     return;
   }
 
+  var keyframePosition;
+  for (var i = 0; i < dancer.keyframePositions.length; i++) {
+    if (dancer.keyframePositions[i].start == oldStart) {
+      keyframePosition = i;
+    }
+  }
+
   var keyframeIndex = 0;
   for (var i = 0; i < dancer.keyframePositions.length; i++) {
     // Cannot have two keyframes starting in the same place.
@@ -946,35 +973,36 @@ wavesurfer.on('region-update-end', async function(r, e) {
   //TODO: still need to fix this. sometimes keyframe positions are not updating properly.
 
   timeline.updateKeyframeTimeMark(parseFloat(r.id), r.start, r.end);
-  // await r.update({id: r.start});
   r.id = r.start;
 
   // Update the keyframe positions
   for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
     var d = danceDesigner.s.dancers[i];
-    // console.log("keyframeIndex ", keyframeIndex);
     // console.log("oldStart", oldStart);
-    await d.updateKeyFrame(keyframeIndex == 0 ? oldStart : d.keyframePositions[keyframeIndex].start, r.start, r.end);
-    console.log(d.keyframePositions);
+    var changedPosition = await d.updateKeyFrame(keyframeIndex == 0 ? oldStart : d.keyframePositions[keyframeIndex].start, r.start, r.end);
+    // console.log("changedPosition: ", changedPosition);
+    // console.log("keyframeIndex", keyframeIndex);
+    // console.log("keyframePosition ", keyframePosition);
+    for (var k = 0; k < d.keyframePositions.length - 1; k++) {
+      // if there is no crossover/changing order for keyframes, preserve the curves!
+      if (((k !== (changedPosition - 1)) || (k !== changedPosition)) &&
+      ((changedPosition - keyframePosition) !== 0)) {
+        // console.log('setting curves');
+        setCurves(d, i, d.keyframePositions[k], d.keyframePositions[k + 1], k);
+      }
+    }
+
+    // Update the curves for the last frame
+    d.keyframePositions[d.keyframePositions.length - 1].curve = undefined;
+    d.keyframePositions[d.keyframePositions.length - 1].positions = [];
+    d.keyframePositions[d.keyframePositions.length - 1].splineHelperObjects = [];
+    // console.log("AFTER ", d.keyframePositions);
+
   }
 
   for (var i = 0; i < danceDesigner.s.keyframes.length; i++) {
     if (danceDesigner.s.keyframes[i] == oldStart) {
       danceDesigner.s.keyframes[i] = r.start;
-      for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
-        var d = danceDesigner.s.dancers[j];
-        console.log(d.keyframePositions);
-        for (var k = 0; k < d.keyframePositions.length - 1; k++) {
-          // TODO: remove the existing splines from the stage
-          // TODO: if there is no crossover/changing order for keyframes, preserve the curves!
-          setCurves(d, j, d.keyframePositions[k], d.keyframePositions[k + 1], k);
-        }
-        console.log("AFTER ", d.keyframePositions);
-        // Update the curves for the last frame
-        d.keyframePositions[d.keyframePositions.length - 1].curve = undefined;
-        d.keyframePositions[d.keyframePositions.length - 1].positions = [];
-        d.keyframePositions[d.keyframePositions.length - 1].splineHelperObjects = [];
-      }
     }
   }
   danceDesigner.s.keyframes.sort(function(a, b) {
@@ -1482,7 +1510,7 @@ if (event.target.id === "addDancer") {
 
     justHitUndo = true;
 
-  } else if (event.target.id === "delete") {
+  } else if (event.target.id === "delete" || event.target.id === "deleteIcon") {
 
     // TODO: Update deletion
     // for (var i = 0; i < wavesurfer.regions.list.length; i++) {
@@ -1604,13 +1632,11 @@ if (event.target.id === "addDancer") {
     playButtonIcon.classList.toggle("fa-play");
     wavesurfer.playPause();
   } else if (event.target.id === "playBeginning" || event.target.id === "playBeginningIcon") {
-    console.log("PLAY BEGINNING");
     var playButtonIcon = document.getElementById("playIcon");
     if (! wavesurfer.isPlaying()) {
       playButtonIcon.classList.replace("fa-play", "fa-pause");
     }
     wavesurfer.stop();
-    // wavesurfer.seekTo(0);
     wavesurfer.playPause();
   }
 }
@@ -2382,16 +2408,20 @@ function update() {
 
     // Determine which curves to render
     var d = danceDesigner.s.dancers[0];
+    var withinAKeyframe = true;
     if (d) {
       for (var i = 0; i < d.keyframePositions.length - 1; i++) {
         var currKeyFramePos = d.keyframePositions[i];
         var nextKeyFramePos = d.keyframePositions[i+1];
 
         if (t > currKeyFramePos.end && t < nextKeyFramePos.start) {
+          withinAKeyframe = false;
           for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
             var curDancer = danceDesigner.s.dancers[j];
             currKeyFramePos = curDancer.keyframePositions[i];
             nextKeyFramePos = curDancer.keyframePositions[i+1];
+            // console.log("i ", i);
+            // console.log("showPaths", showPaths);
             if (currKeyFramePos.curve) {
               curDancer.mesh.material.transparent = showPaths;
               if (showPaths) {
@@ -2403,20 +2433,25 @@ function update() {
                 dancersEditable = true;
                 hideCurves(currKeyFramePos);
               }
+              // console.log("dancersEditable with showPaths ", dancersEditable);
             } else {
               dancersEditable = !showPaths;
+              // console.log("dancersEditable no showPaths", dancersEditable);
             }
           }
           // break;
         } else {
-          dancersEditable = true;
-          for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
-            var curDancer = danceDesigner.s.dancers[j];
-            curDancer.mesh.material.transparent = false;
-            if (curDancer.keyframePositions[i]) {
-              currKeyFramePos = curDancer.keyframePositions[i];
-              if (currKeyFramePos.curve) {
-                hideCurves(currKeyFramePos);
+          if (withinAKeyframe) {
+            console.log("within a keyframe");
+            dancersEditable = true;
+            for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
+              var curDancer = danceDesigner.s.dancers[j];
+              curDancer.mesh.material.transparent = false;
+              if (curDancer.keyframePositions[i]) {
+                currKeyFramePos = curDancer.keyframePositions[i];
+                if (currKeyFramePos.curve) {
+                  hideCurves(currKeyFramePos);
+                }
               }
             }
           }
