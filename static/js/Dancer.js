@@ -455,7 +455,7 @@ var danceDesigner = {
 
       // Push to Undo Buffer
       addToUndoBuffer();
-      autoSave();
+      // autoSave();
       justHitUndo = false;
     }
     if (danceDesigner.selectionPath) {
@@ -468,7 +468,7 @@ var danceDesigner = {
       }
       // Push to Undo Buffer
       addToUndoBuffer();
-      autoSave();
+      // autoSave();
     }
     danceDesigner.movingDancer = null;
     // Enable the controls
@@ -717,16 +717,7 @@ function updateSplineOutlineCreateMesh(index, arg) {
     currKeyFramePos.curve = curve;
     danceDesigner.scene.add( currKeyFramePos.curve.mesh );
     currKeyFramePos.curve.mesh.visible = true;
-    // for ( var i = 0; i < ARC_SEGMENTS; i ++ ) {
-    //
-    //   var t = i / ( ARC_SEGMENTS - 1 );
-    //   var point = new THREE.Vector3();
-    //   spline.getPoint( t, point );
-    //   position.setXYZ( i, point.x, point.y, point.z );
-    //
-    // }
-    // position.needsUpdate = true;
-    autoSave();
+    // autoSave();
 
 }
 
@@ -923,7 +914,7 @@ wavesurfer.on('region-update-end', async function(r, e) {
         for (var j = 0; j < dancer.keyframePositions.length; j++) {
           if (dancer.keyframePositions[j].start == oldStart) {
             r.update({id: oldStart, start: oldStart, end: dancer.keyframePositions[j].end});
-            autoSave();
+            // autoSave();
             return;
           }
         }
@@ -942,7 +933,7 @@ wavesurfer.on('region-update-end', async function(r, e) {
         for (var j = 0; j < dancer.keyframePositions.length; j++) {
           if (dancer.keyframePositions[j].start == oldStart) {
             r.update({id: oldStart, start: oldStart, end: dancer.keyframePositions[j].end});
-            autoSave();
+            // autoSave();
             return;
           }
         }
@@ -962,7 +953,7 @@ wavesurfer.on('region-update-end', async function(r, e) {
         for (var j = 0; j < dancer.keyframePositions.length; j++) {
           if (dancer.keyframePositions[j].start == oldStart) {
             r.update({id: oldStart, start: oldStart, end: dancer.keyframePositions[j].end});
-            autoSave();
+            // autoSave();
             return;
           }
         }
@@ -1011,7 +1002,7 @@ wavesurfer.on('region-update-end', async function(r, e) {
 
   // TODO: Fix the bug where there is some position undefined after moving keyframes around. Why is this happening?
 
-  autoSave();
+  // autoSave();
 });
 
 String.prototype.format = function () {
@@ -1420,8 +1411,6 @@ for (var i = 0; i < elements.length; i++) {
     }, false);
 }
 
-// TODO: Add an X arrow if the modal is loaded from an existing dance
-
 // Handle button clicking
 async function onButtonClick(event) {
 
@@ -1467,7 +1456,9 @@ if (event.target.id === "addDancer") {
     // Increment new dancer count
     newDancerNumber++;
 
-  } else if (event.target.id === "undo") {
+  } else if (event.target.id === "saveDance") {
+    autoSave();
+  } else if (event.target.id === "undo" || event.target.id === "undoIcon") {
 
     if (!justHitUndo) {
       // console.log('DID NOT JUST HIT UNDO');
@@ -1612,7 +1603,7 @@ if (event.target.id === "addDancer") {
     timeline.removeTimeMark(keyframeStart);
 
     await addToUndoBuffer();
-    autoSave();
+    // autoSave();
 
     justHitUndo = false;
   } else if (event.target.id === "clear") {
@@ -1647,7 +1638,7 @@ document.getElementById("editDanceName").addEventListener("click", async functio
 
 document.getElementById("saveDanceName").addEventListener("click", async function() {
   document.getElementById("danceNameFinal").innerHTML = document.getElementById("dance_name").value;
-  autoSave();
+  // autoSave();
 });
 
 
@@ -1963,7 +1954,7 @@ $(document).on('click', '.createNewDance', function() {
     var numDancers = document.getElementById("quantity").value;
     var danceName = document.getElementById("danceName").value;
     await initNewDance(danceName, numDancers);
-    autoSave();
+    // autoSave();
   });
 
   document.getElementById("goBack").addEventListener("click", function(userData) {
@@ -2326,6 +2317,7 @@ function update() {
 
         newDancers.push(child);
       }
+      var danceName = document.getElementById("danceName").value;
 
       var innerHTML =
       `<div class="container">
@@ -2333,7 +2325,7 @@ function update() {
           <div class="col-12">
             <p style="color: black;">
               Dance Name:
-              <input type="text" id="danceName" name="Dance Name" style="width: 200px;">
+              <input type="text" id="danceName" name="Dance Name" value="${danceName}" style="width: 200px;">
             </p>
             <p style="color: black;">
               Number of Dancers:
@@ -2420,8 +2412,6 @@ function update() {
             var curDancer = danceDesigner.s.dancers[j];
             currKeyFramePos = curDancer.keyframePositions[i];
             nextKeyFramePos = curDancer.keyframePositions[i+1];
-            // console.log("i ", i);
-            // console.log("showPaths", showPaths);
             if (currKeyFramePos.curve) {
               curDancer.mesh.material.transparent = showPaths;
               if (showPaths) {
@@ -2433,16 +2423,12 @@ function update() {
                 dancersEditable = true;
                 hideCurves(currKeyFramePos);
               }
-              // console.log("dancersEditable with showPaths ", dancersEditable);
             } else {
               dancersEditable = !showPaths;
-              // console.log("dancersEditable no showPaths", dancersEditable);
             }
           }
-          // break;
         } else {
           if (withinAKeyframe) {
-            console.log("within a keyframe");
             dancersEditable = true;
             for (var j = 0; j < danceDesigner.s.dancers.length; j++) {
               var curDancer = danceDesigner.s.dancers[j];
