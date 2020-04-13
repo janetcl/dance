@@ -84,7 +84,6 @@ class Dancer {
     t = wavesurfer.getCurrentTime();
 
     if (t > danceDesigner.maxT) {
-
       var lastIndex = this.keyframePositions.length - 1;
       return this.keyframePositions[lastIndex].position;
     } else {
@@ -349,7 +348,6 @@ var danceDesigner = {
       danceDesigner.raycaster.set( danceDesigner.camera.position, vector.sub( danceDesigner.camera.position ).normalize() );
       // Find all intersected objects
       if (dancersEditable) {
-        console.log("DANCERS ARE EDITABLE");
         var intersects = danceDesigner.raycaster.intersectObjects(danceDesigner.dancersArr);
         if (intersects.length > 0) {
           // Disable the controls
@@ -969,11 +967,11 @@ wavesurfer.on('region-update-end', async function(r, e) {
   // Update the keyframe positions
   for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
     var d = danceDesigner.s.dancers[i];
-    // console.log("oldStart", oldStart);
+    console.log("oldStart", oldStart);
     var changedPosition = await d.updateKeyFrame(keyframeIndex == 0 ? oldStart : d.keyframePositions[keyframeIndex].start, r.start, r.end);
-    // console.log("changedPosition: ", changedPosition);
-    // console.log("keyframeIndex", keyframeIndex);
-    // console.log("keyframePosition ", keyframePosition);
+    console.log("changedPosition: ", changedPosition);
+    console.log("keyframeIndex", keyframeIndex);
+    console.log("keyframePosition ", keyframePosition);
     for (var k = 0; k < d.keyframePositions.length - 1; k++) {
       // if there is no crossover/changing order for keyframes, preserve the curves!
       if (((k !== (changedPosition - 1)) || (k !== changedPosition)) &&
@@ -987,7 +985,7 @@ wavesurfer.on('region-update-end', async function(r, e) {
     d.keyframePositions[d.keyframePositions.length - 1].curve = undefined;
     d.keyframePositions[d.keyframePositions.length - 1].positions = [];
     d.keyframePositions[d.keyframePositions.length - 1].splineHelperObjects = [];
-    // console.log("AFTER ", d.keyframePositions);
+    console.log("AFTER ", d.keyframePositions);
 
   }
 
@@ -1000,9 +998,12 @@ wavesurfer.on('region-update-end', async function(r, e) {
     return a - b;
   });
 
+  danceDesigner.maxT = danceDesigner.s.keyframes[danceDesigner.s.keyframes.length - 1];
+
   // TODO: Fix the bug where there is some position undefined after moving keyframes around. Why is this happening?
 
   // autoSave();
+  update();
 });
 
 String.prototype.format = function () {
@@ -1033,8 +1034,8 @@ var oldT = 0;
 
 function animate() {
   requestAnimationFrame( animate );
-  render();
   update();
+  render();
 }
 
 function setCurves(dancer, index, currKeyFramePos, nextKeyFramePos, posIndex) {
@@ -2399,12 +2400,12 @@ function update() {
   } else {
 
     // Determine which curves to render
-    var d = danceDesigner.s.dancers[0];
+    var d1 = danceDesigner.s.dancers[0];
     var withinAKeyframe = true;
-    if (d) {
-      for (var i = 0; i < d.keyframePositions.length - 1; i++) {
-        var currKeyFramePos = d.keyframePositions[i];
-        var nextKeyFramePos = d.keyframePositions[i+1];
+    if (d1) {
+      for (var i = 0; i < d1.keyframePositions.length - 1; i++) {
+        var currKeyFramePos = d1.keyframePositions[i];
+        var nextKeyFramePos = d1.keyframePositions[i+1];
 
         if (t > currKeyFramePos.end && t < nextKeyFramePos.start) {
           withinAKeyframe = false;
@@ -2449,7 +2450,7 @@ function update() {
       var d = danceDesigner.s.dancers[i];
 
       if (d == danceDesigner.movingDancer) {
-        console.log("MOVING DANCER");
+        // console.log("MOVING DANCER");
         d.mesh.material.emissive.set( 0xaaaaaa );
         if (danceDesigner.newPos) {
           d.mesh.position.x = danceDesigner.newPos.x;
@@ -2460,7 +2461,6 @@ function update() {
       } else {
         d.mesh.material.emissive.set( 0x000000 );
       }
-
       if (d.keyframePositions.length == 1) {
         var lastIndex = d.keyframePositions.length - 1;
         d.mesh.position.x = d.keyframePositions[lastIndex].position.x;
@@ -2476,6 +2476,7 @@ function update() {
             d.mesh.position.x = currKeyFramePos.position.x;
             d.mesh.position.y = currKeyFramePos.position.y;
             d.mesh.position.z = currKeyFramePos.position.z;
+            break;
           } else if (t > currKeyFramePos.end && t < nextKeyFramePos.start) {
             var diff = nextKeyFramePos.start - currKeyFramePos.end;
             var frac = (t - currKeyFramePos.end) / diff;
@@ -2486,12 +2487,14 @@ function update() {
               d.mesh.position.y = currKeyFramePos.position.y + (frac * (nextKeyFramePos.position.y - currKeyFramePos.position.y));
               d.mesh.position.z = currKeyFramePos.position.z + (frac * (nextKeyFramePos.position.z - currKeyFramePos.position.z));
             }
+            break;
           } else if (t == nextKeyFramePos.start ||
             (t > nextKeyFramePos.start && t < nextKeyFramePos.end) ||
           (t == nextKeyFramePos.end)) {
             d.mesh.position.x = nextKeyFramePos.position.x;
             d.mesh.position.y = nextKeyFramePos.position.y;
             d.mesh.position.z = nextKeyFramePos.position.z;
+            break;
           }
         }
       }
