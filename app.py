@@ -48,8 +48,8 @@ app = Flask(__name__, template_folder='.')
 app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
 
 # Toggle between these two to switch between local testing and Heroku
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/dance'
-heroku = Heroku(app)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/dance'
+# heroku = Heroku(app)
 
 db = SQLAlchemy(app)
 
@@ -414,7 +414,7 @@ def delete_dance():
         return jsonify({"Success": "Nicely done"})
 
 @app.route("/logout")
-@login_required
+
 def logout():
     logout_user()
     return redirect(url_for("index"))

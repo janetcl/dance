@@ -51,6 +51,11 @@ body {
 .col-special {
   width: 20%;
   height: 80%;
+  overflow: auto;
+}
+
+.specialHeight {
+  max-height: 70vh;
 }
 
 .main {

@@ -2,6 +2,8 @@ import TimelinePlugin from './WaveSurferTimeline.js';
 import CursorPlugin from './WaveSurferCursor.js';
 import RegionsPlugin from './WaveSurferRegions.js';
 import { TransformControls } from './TransformControls.js';
+// import cloudinary from “cloudinary-core”;
+// var cl = new cloudinary.Cloudinary({cloud_name: "hdcz0vo9p", secure: true});
 class Dancer {
 
   constructor(name, mesh) {
@@ -453,7 +455,7 @@ var danceDesigner = {
 
       // Push to Undo Buffer
       addToUndoBuffer();
-      // autoSave();
+      autoSave();
       justHitUndo = false;
     }
     if (danceDesigner.selectionPath) {
@@ -466,7 +468,7 @@ var danceDesigner = {
       }
       // Push to Undo Buffer
       addToUndoBuffer();
-      // autoSave();
+      autoSave();
     }
     danceDesigner.movingDancer = null;
     // Enable the controls
@@ -715,7 +717,7 @@ function updateSplineOutlineCreateMesh(index, arg) {
     currKeyFramePos.curve = curve;
     danceDesigner.scene.add( currKeyFramePos.curve.mesh );
     currKeyFramePos.curve.mesh.visible = true;
-    // autoSave();
+    autoSave();
 
 }
 
@@ -839,6 +841,13 @@ document.getElementById("fileinput").addEventListener('change', function(e){
         var formData = new FormData();
         formData.append('audio', audio);
 
+        // cloudinary.uploader.upload_large(audio, { resource_type: "video" },
+        // function(error, result) {
+        //   console.log(result, error);
+        //   audioURL = result.url;
+        //   formData.append('audioURL', audioURL);
+        //  });
+
         fetch('/saveAudio', {
           method: 'POST', // or 'PUT'
           body: formData,
@@ -906,13 +915,12 @@ wavesurfer.on('region-update-end', async function(r, e) {
     // Cannot have two keyframes starting in the same place.
     if (r.start == dancer.keyframePositions[i].start) {
       if (r.start !== oldStart) {
-        console.log(dancer.keyframePositions);
         alert("Keyframes cannot overlap!");
         // Reset the keyframes to its old position
         for (var j = 0; j < dancer.keyframePositions.length; j++) {
           if (dancer.keyframePositions[j].start == oldStart) {
             r.update({id: oldStart, start: oldStart, end: dancer.keyframePositions[j].end});
-            // autoSave();
+            autoSave();
             return;
           }
         }
@@ -924,14 +932,12 @@ wavesurfer.on('region-update-end', async function(r, e) {
         keyframeIndex = i;
       } else if ((r.end < dancer.keyframePositions[i].end || r.start <= dancer.keyframePositions[i].end)
         && dancer.keyframePositions[i].start != oldStart) {
-        console.log("i ",  i);
-        console.log(dancer.keyframePositions);
         alert("Keyframes cannot overlap!");
         // Reset the keyframes to its old position
         for (var j = 0; j < dancer.keyframePositions.length; j++) {
           if (dancer.keyframePositions[j].start == oldStart) {
             r.update({id: oldStart, start: oldStart, end: dancer.keyframePositions[j].end});
-            // autoSave();
+            autoSave();
             return;
           }
         }
@@ -944,14 +950,12 @@ wavesurfer.on('region-update-end', async function(r, e) {
       } else if ((r.end >= dancer.keyframePositions[i].start || r.end >= dancer.keyframePositions[i].end)
         && dancer.keyframePositions[i].start != oldStart) {
         // dancer.keyframePositions[i] is a different keyframe
-        console.log("i ",  i);
-        console.log(dancer.keyframePositions);
         alert("Keyframes cannot overlap!");
         // Reset the keyframes to its old position
         for (var j = 0; j < dancer.keyframePositions.length; j++) {
           if (dancer.keyframePositions[j].start == oldStart) {
             r.update({id: oldStart, start: oldStart, end: dancer.keyframePositions[j].end});
-            // autoSave();
+            autoSave();
             return;
           }
         }
@@ -959,24 +963,17 @@ wavesurfer.on('region-update-end', async function(r, e) {
     }
   }
 
-  //TODO: still need to fix this. sometimes keyframe positions are not updating properly.
-
   timeline.updateKeyframeTimeMark(parseFloat(r.id), r.start, r.end);
   r.id = r.start;
 
   // Update the keyframe positions
   for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
     var d = danceDesigner.s.dancers[i];
-    console.log("oldStart", oldStart);
     var changedPosition = await d.updateKeyFrame(keyframeIndex == 0 ? oldStart : d.keyframePositions[keyframeIndex].start, r.start, r.end);
-    console.log("changedPosition: ", changedPosition);
-    console.log("keyframeIndex", keyframeIndex);
-    console.log("keyframePosition ", keyframePosition);
     for (var k = 0; k < d.keyframePositions.length - 1; k++) {
       // if there is no crossover/changing order for keyframes, preserve the curves!
       if (((k !== (changedPosition - 1)) || (k !== changedPosition)) &&
       ((changedPosition - keyframePosition) !== 0)) {
-        // console.log('setting curves');
         setCurves(d, i, d.keyframePositions[k], d.keyframePositions[k + 1], k);
       }
     }
@@ -985,7 +982,6 @@ wavesurfer.on('region-update-end', async function(r, e) {
     d.keyframePositions[d.keyframePositions.length - 1].curve = undefined;
     d.keyframePositions[d.keyframePositions.length - 1].positions = [];
     d.keyframePositions[d.keyframePositions.length - 1].splineHelperObjects = [];
-    console.log("AFTER ", d.keyframePositions);
 
   }
 
@@ -1002,7 +998,7 @@ wavesurfer.on('region-update-end', async function(r, e) {
 
   // TODO: Fix the bug where there is some position undefined after moving keyframes around. Why is this happening?
 
-  // autoSave();
+  autoSave();
   update();
 });
 
@@ -1189,6 +1185,7 @@ function autoSave() {
   };
 
   document.getElementById("savedStatus").innerHTML = "Saving your changes..."
+  document.getElementById("savedStatus").style.color = "yellow";
 
   fetch('/saveDance', {
     method: 'POST', // or 'PUT'
@@ -1200,17 +1197,18 @@ function autoSave() {
   .then((response) => response.json())
   .then((data) => {
     document.getElementById("savedStatus").innerHTML = "Saved!"
+    document.getElementById("savedStatus").style.color = "white";
     dance_id = data.id;
     return;
   })
   .catch((error) => {
-    document.getElementById("savedStatus").innerHTML = "Error: unable to save changes."
+    document.getElementById("savedStatus").innerHTML = "Error: unable to save changes. Try again."
+    document.getElementById("savedStatus").style.color = "#ff0000";
     // console.error('Error:', error);
   });
 }
 
 function retrieveUndo() {
-  // console.log("Undo buffer length: ", undoBuffer.length);
   if (undoBuffer.length == 0) {
     return;
   }
@@ -1350,17 +1348,12 @@ async function addNewKeyFrame(t) {
           break;
         }
       }
-      console.log("currIndex: ", currIndex);
-      console.log("best fit index: ", bestFitIndex);
       if (currIndex < dancer.keyframePositions.length - 1) {
-        console.log("setting curves");
         // best fit index
         setCurves(dancer, i, dancer.keyframePositions[currIndex], dancer.keyframePositions[currIndex + 1], currIndex);
       }
       if (currIndex > 0) {
         setCurves(dancer, i, dancer.keyframePositions[currIndex - 1], dancer.keyframePositions[currIndex], currIndex - 1);
-        console.log('RESET PREV CURVE');
-        console.log(dancer.keyframePositions);
       }
     }
   } else {
@@ -1383,7 +1376,6 @@ async function addNewKeyFrame(t) {
       var currKeyFramePos = await dancer.addKFPosition(d.keyframePositions[oldKeyFrameIndex].start, d.keyframePositions[oldKeyFrameIndex].end, newPos);
       if (oldKeyFrameIndex > 0) {
         setCurves(dancer, i, dancer.keyframePositions[oldKeyFrameIndex - 1], dancer.keyframePositions[oldKeyFrameIndex], oldKeyFrameIndex - 1);
-        console.log('RESET PREV CURVE');
       } else if (oldKeyFrameIndex < dancer.keyframePositions.length - 1) {
         setCurves(dancer, i, dancer.keyframePositions[oldKeyFrameIndex], dancer.keyframePositions[oldKeyFrameIndex + 1], oldKeyFrameIndex);
       }
@@ -1452,6 +1444,7 @@ if (event.target.id === "addDancer") {
       }
     );
     txSprites.push({"txSprite": txSprite, "dancerMesh": newDancer.mesh});
+    newDancer.sprite = txSprite;
     danceDesigner.scene.add( txSprite );
 
     // Increment new dancer count
@@ -1462,7 +1455,6 @@ if (event.target.id === "addDancer") {
   } else if (event.target.id === "undo" || event.target.id === "undoIcon") {
 
     if (!justHitUndo) {
-      // console.log('DID NOT JUST HIT UNDO');
       var oldState = retrieveUndo();
       if (oldState == null) {
         alert("Cannot undo any further.");
@@ -1551,7 +1543,6 @@ if (event.target.id === "addDancer") {
         danceDesigner.maxT = danceDesigner.s.keyframes[keyframeIndex - 1];
 
         // Update the curves for the last frame
-        console.log(dancer.keyframePositions[keyframeIndex - 1]);
         dancer.keyframePositions[keyframeIndex - 1].curve = undefined;
         dancer.keyframePositions[keyframeIndex - 1].positions = [];
         dancer.keyframePositions[keyframeIndex - 1].splineHelperObjects = [];
@@ -1578,7 +1569,6 @@ if (event.target.id === "addDancer") {
           oldSplineObjects = danceDesigner.scene.getObjectByName("SplineObject" + i + "_" + dancer.keyframePositions[keyframeIndex].start);
         }
 
-        console.log('set curves for keyframe index - 1: ', keyframeIndex - 1);
         // Update the curves for the previous frame
 
         setCurves(
@@ -1588,8 +1578,6 @@ if (event.target.id === "addDancer") {
           danceDesigner.s.dancers[i].keyframePositions[keyframeIndex + 1],
           keyframeIndex - 1
         );
-
-        console.log("result: ", danceDesigner.s.dancers[i].keyframePositions[keyframeIndex - 1]);
       }
 
       dancer.removeKeyFrame(keyframeStart);
@@ -1604,7 +1592,7 @@ if (event.target.id === "addDancer") {
     timeline.removeTimeMark(keyframeStart);
 
     await addToUndoBuffer();
-    // autoSave();
+    autoSave();
 
     justHitUndo = false;
   } else if (event.target.id === "clear") {
@@ -1632,16 +1620,6 @@ if (event.target.id === "addDancer") {
     wavesurfer.playPause();
   }
 }
-
-document.getElementById("editDanceName").addEventListener("click", async function() {
-  document.getElementById("dance_name").value = document.getElementById("danceNameFinal").innerHTML;
-});
-
-document.getElementById("saveDanceName").addEventListener("click", async function() {
-  document.getElementById("danceNameFinal").innerHTML = document.getElementById("dance_name").value;
-  // autoSave();
-});
-
 
 async function initNewDance(danceName, numDancers) {
 
@@ -1701,6 +1679,7 @@ async function initNewDance(danceName, numDancers) {
     }
     );
     txSprites.push({"txSprite": txSprite, "dancerMesh": newDancer.mesh});
+    newDancer.sprite = txSprite;
     danceDesigner.scene.add( txSprite );
 
     // Add the new dancer to the scene
@@ -1955,7 +1934,7 @@ $(document).on('click', '.createNewDance', function() {
     var numDancers = document.getElementById("quantity").value;
     var danceName = document.getElementById("danceName").value;
     await initNewDance(danceName, numDancers);
-    // autoSave();
+    autoSave();
   });
 
   document.getElementById("goBack").addEventListener("click", function(userData) {
@@ -2085,14 +2064,14 @@ $(document).on('click', '.danceBtn', async function(){
   document.getElementById("danceNameFinal").innerHTML = selectedDance.dance_name;
   danceDesigner.s.dancers = [];
 
-  wavesurfer.load(selectedDance.audioURL);
-
   // TODO: Fix this bug of retrieving audio from the database
-  if (selectedDance.audioFileName === "EMPTY") {
+  if (selectedDance.audioFileName === "EMPTY" || selectedDance.audioURL === "https://res.cloudinary.com/hdcz0vo9p/video/upload/v1581906149/default_dbabou.mp3") {
     document.getElementById("audioFileName").innerHTML = "";
   } else {
     document.getElementById("audioFileName").innerHTML = selectedDance.audioFileName;
   }
+
+  wavesurfer.load(selectedDance.audioURL);
 
   dance_id = selectedDance.id;
 
@@ -2143,6 +2122,7 @@ $(document).on('click', '.danceBtn', async function(){
       }
     );
     txSprites.push({"txSprite": txSprite, "dancerMesh": newDancer.mesh});
+    newDancer.sprite = txSprite;
     danceDesigner.scene.add( txSprite );
 
     for (var i = 0; i < thisDancer.keyframePositions.length - 1; i++) {
@@ -2222,7 +2202,8 @@ function saveAsImage() {
 }
 
 $(document).keydown(function(event) {
-  if (event.keyCode == 32 && event.target.id !== "dance_name" && event.target.id !=="danceName") {
+  if (event.keyCode == 32 && event.target.id !== "dance_name" && event.target.id !=="danceName"
+  && event.target.type !== "text") {
     var playButton = document.getElementById("play");
     var playButtonIcon = document.getElementById("playIcon");
     playButtonIcon.classList.toggle("fa-pause");
@@ -2368,6 +2349,68 @@ function update() {
       innerHTML += "</div></div>";
 
       document.getElementById("modal-body").innerHTML = innerHTML;
+
+    });
+  }
+
+  if (document.getElementById("dancerQuantity")) {
+    document.getElementById("dancerQuantity").addEventListener("change", function(e) {
+
+      var dance_name = document.getElementById("danceNameFinal").innerHTML;
+      var new_num_dancers = document.getElementById("dancerQuantity").value;
+
+      var innerHTML =
+      `<div class="container">
+        <div class="row">
+          <div class="col-12">
+            <p style="color: black;">
+              Dance Name:
+              <input type="text" id="dance_name" name="Dance Name" value="${dance_name}" style="width: 200px;">
+            </p>
+            <p style="color: black;">
+              Number of Dancers:
+              <input type="number" id="dancerQuantity" name="quantity" min="${danceDesigner.s.dancers.length}" max="20" value="${new_num_dancers}" style="color: black; width: 100px;">
+            </p>
+          </div>`;
+
+      var dancerPickers =
+      `<div class="container">
+        <div class="row">
+          <div class="col-12">
+            <p style="color: black;">
+              Edit the dancers' names and colors below!
+            </p>
+          </div>
+        </div>
+        <div class="row">`;
+
+      for (var i = 0; i < new_num_dancers; i++) {
+        if (i > danceDesigner.s.dancers.length - 1) {
+          var thisColor = '#'+(Math.random()*0xFFFFFF<<0).toString(16);
+          dancerPickers +=
+          `<div class="col-6" id="Dancer${i+1}">
+            <input type="text" value="Dancer${i+1}">
+            <input type="color" value="${thisColor}">
+          </div>`
+        } else {
+          var thisColor = '#' + danceDesigner.s.dancers[i].mesh.material.color.getHexString();
+          console.log(thisColor);
+          var dancerName = danceDesigner.s.dancers[i].name;
+          console.log(dancerName);
+          dancerPickers +=
+          `<div class="col-6" id="Dancer${i+1}">
+            <input type="text" value="${dancerName}">
+            <input type="color" value=${thisColor}>
+          </div>`
+        }
+      };
+
+      dancerPickers += `</div></div>`;
+
+      innerHTML += dancerPickers;
+      innerHTML += "</div></div>";
+
+      document.getElementById("dances-modal-body").innerHTML = innerHTML;
 
     });
   }
@@ -2566,6 +2609,154 @@ function loadInitModal() {
     console.error('Error:', error);
   });
 }
+
+document.getElementById("editDanceName").addEventListener("click", async function() {
+
+  var dance_name = document.getElementById("danceNameFinal").innerHTML;
+
+  // var innerHTML =
+  // `<input type="text" style="color: black;" id="dance_name">
+  //
+  // `
+  // var danceName = document.getElementById("danceName").value;
+
+  var innerHTML =
+  `<div class="container">
+    <div class="row">
+      <div class="col-12">
+        <p style="color: black;">
+          Dance Name:
+          <input type="text" id="dance_name" name="Dance Name" value="${dance_name}" style="width: 200px;">
+        </p>
+        <p style="color: black;">
+          Number of Dancers:
+          <input type="number" id="dancerQuantity" name="quantity" min="${danceDesigner.s.dancers.length}" max="20" value="${danceDesigner.s.dancers.length}" style="color: black; width: 100px;">
+        </p>
+      </div>`;
+
+  var dancerPickers =
+  `<div class="container">
+    <div class="row">
+      <div class="col-12">
+        <p style="color: black;">
+          Edit the dancers' names and colors below!
+        </p>
+      </div>
+    </div>
+    <div class="row">`;
+
+    console.log(danceDesigner.s.dancers);
+  for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+    if (i > danceDesigner.s.dancers.length - 1) {
+      var thisColor = '#'+(Math.random()*0xFFFFFF<<0).toString(16);
+      dancerPickers +=
+      `<div class="col-6" id="Dancer${i+1}">
+        <input type="text" value="Dancer${i+1}">
+        <input type="color" value="${thisColor}">
+      </div>`
+    } else {
+      var thisColor = '#' + danceDesigner.s.dancers[i].mesh.material.color.getHexString();
+      var dancerName = danceDesigner.s.dancers[i].name;
+      dancerPickers +=
+      `<div class="col-6" id="Dancer${i+1}">
+        <input type="text" value="${dancerName}">
+        <input type="color" value=${thisColor}>
+      </div>`
+    }
+  };
+
+  dancerPickers += `</div></div>`;
+
+  innerHTML += dancerPickers;
+  innerHTML += "</div></div>";
+
+  document.getElementById("dances-modal-body").innerHTML = innerHTML;
+
+});
+
+document.getElementById("saveDanceName").addEventListener("click", async function() {
+  var danceName = document.getElementById("dance_name").value;
+  document.getElementById("danceNameFinal").innerHTML = document.getElementById("dance_name").value;
+  var numDancers = document.getElementById("dancerQuantity").value;
+
+  for (var i = 0; i < danceDesigner.s.dancers.length; i++) {
+    var dancer_id = 'Dancer' + (i + 1).toString();
+    danceDesigner.s.dancers[i].name = document.getElementById(dancer_id).children[0].value;
+
+    // Delete old text sprites
+    danceDesigner.scene.remove( danceDesigner.s.dancers[i].sprite );
+
+    // Add in the updated text sprites
+    var txSprite = makeTextSprite( danceDesigner.s.dancers[i].name,
+    danceDesigner.s.dancers[i].mesh.position.x, danceDesigner.s.dancers[i].mesh.position.y + 1.4, danceDesigner.s.dancers[i].mesh.position.z,
+    { fontsize: 200,
+      fontface: "Roboto",
+      radius:0,
+      textColor: {r:255, g:255, b:255, a:1.0},
+      borderColor: { r:0, g:0, b:0, a:0 },
+      }
+    );
+    txSprites.push({"txSprite": txSprite, "dancerMesh": danceDesigner.s.dancers[i].mesh});
+    danceDesigner.s.dancers[i].sprite = txSprite;
+    danceDesigner.scene.add( txSprite );
+
+    danceDesigner.s.dancers[i].updateColor(document.getElementById(dancer_id).children[1].value);
+  }
+
+  if (numDancers > danceDesigner.s.dancers.length) {
+    for (var i = danceDesigner.s.dancers.length - 1; i < numDancers; i++) {
+
+      // Add new dancer
+      var dancer_id = 'Dancer' + (i + 1).toString();
+      var name = document.getElementById(dancer_id).children[0].value;
+      var color = document.getElementById(dancer_id).children[1].value;
+      var loader = new THREE.TextureLoader();
+      var geometry = new THREE.BoxGeometry(1, 2, 1);
+      var material = new THREE.MeshLambertMaterial({ color: 0xffffff, map: loader.load('static/files/janet.jpg')});
+      var newMesh = new THREE.Mesh(geometry, material);
+      newMesh.name = name;
+      var newDancer = new Dancer(name, newMesh);
+      newDancer.updateColor(color);
+      var posDefault = new THREE.Vector3(-15, 0, -20 + inc);
+      inc += 2;
+
+      var d = danceDesigner.s.dancers[0];
+      for (var i = 0; i < d.keyframePositions.length; i++) {
+        newDancer.addKFPosition(d.keyframePositions[i].start, d.keyframePositions[i].end, posDefault);
+      }
+
+      newDancer.mesh.position.x = posDefault.x;
+      newDancer.mesh.position.y = posDefault.y;
+      newDancer.mesh.position.z = posDefault.z;
+
+      // Add the new dancer to the scene
+      danceDesigner.scene.add(newDancer.mesh);
+      danceDesigner.dancersArr.push(newMesh);
+      danceDesigner.s.addDancer(newDancer);
+
+      // Add in the text sprites
+      var txSprite = makeTextSprite( "Dancer" + newDancerNumber,
+      newDancer.mesh.position.x, newDancer.mesh.position.y + 1.4, newDancer.mesh.position.z,
+      { fontsize: 200,
+        fontface: "Roboto",
+        radius:0,
+        textColor: {r:255, g:255, b:255, a:1.0},
+        borderColor: { r:0, g:0, b:0, a:0 },
+        }
+      );
+      txSprites.push({"txSprite": txSprite, "dancerMesh": newDancer.mesh});
+      newDancer.sprite = txSprite;
+      danceDesigner.scene.add( txSprite );
+
+      // Increment new dancer count
+      newDancerNumber++;
+    }
+  }
+
+  console.log(danceDesigner.s.dancers);
+
+  autoSave();
+});
 
 // Initialize lesson on page load
 function initializeLesson() {

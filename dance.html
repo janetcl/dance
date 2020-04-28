@@ -56,15 +56,15 @@
 
         <!-- Modal -->
         <div class="modal fade" id="danceNameModal" tabindex="-1" role="dialog" aria-labelledby="danceNameModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
-          <div class="modal-dialog" role="document">
+          <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
               <div class="modal-header">
-                <h5 class="modal-title" style="color: black;" id="danceNameModalLabel">Edit Dance Name</h5>
+                <h5 class="modal-title" style="color: black;" id="danceNameModalLabel">Edit Dance</h5>
                 <button type="button" class="close" id="closeModalButton" data-dismiss="modal" aria-label="Close">
                   <span aria-hidden="true">&times;</span>
                 </button>
               </div>
-              <div id="modal-body" class="modal-body">
+              <div id="dances-modal-body" class="modal-body">
                 <input type="text" style="color: black;" id="dance_name">
               </div>
               <div id="modal-footer" class="modal-footer">
@@ -76,60 +76,62 @@
         </div>
 
 
-        <div class="row ml-1 mt-2">
-          <div class="col-12" style="padding-right: 0;">
-            <p id="danceNameFinal"></p>
-          </div>
-          <div class="col-12" style="padding-left: 0; padding-right: 0;">
-            <button class="btn btn-outline-light" data-toggle="modal" data-target="#danceNameModal" id="editDanceName">Edit Dance Name</button>
-          </div>
-        </div>
-        <div class="row ml-1 mt-2">
-          <canvas id="0">
-           </canvas>
-        </div>
-        <div class="row ml-1 mt-3">
-          <div class="col-6" style="padding-left: 0">
-            <button class="btn btn-outline-light" id="addDancer">Add Dancer</button>
-          </div>
-          <div class="col-6">
-            <button class="btn btn-outline-success" id="saveDance">Save Dance</button>
-          </div>
-          <div class="col-6">
-            <p id="savedStatus"></p>
-          </div>
-        </div>
-         <!-- <div class="row ml-1 mt-1">
-           <button class="btn btn-outline-danger" id="video">Export</button>
-         </div> -->
-         <div class="row ml-1 mt-1" style="align-self: flex-end; align-items: flex-end;">
-           <div class="bottomBar" id="bottomBar">
-            <div id="waveform">
-                <label class="btn btn-outline-warning btn-file">
-                    Upload music <input type="file" id="fileinput" style="display: none;">
-                </label>
-                <p id="audioFileName"></p>
+        <div class="overflow-auto specialHeight">
+          <div class="row ml-1 mt-2">
+            <div class="col-12" style="padding-right: 0;">
+              <p id="danceNameFinal"></p>
             </div>
-
-            <div class="ml-0 col-12" style="padding-left: 5px;">
-              <input type="checkbox" id="showCurves" name="showCurves"> Edit Paths
+            <div class="col-12" style="padding-left: 0; padding-right: 0;">
+              <button class="btn btn-outline-light" data-toggle="modal" data-target="#danceNameModal" id="editDanceName">Edit Dance</button>
             </div>
+          </div>
+          <div class="row ml-1 mt-2">
+            <canvas id="0">
+             </canvas>
+          </div>
+          <div class="row ml-1 mt-3">
+            <div class="col-6" style="padding-left: 0">
+              <button class="btn btn-outline-light" id="addDancer">Add Dancer</button>
+            </div>
+            <div class="col-6">
+              <button class="btn btn-outline-success" id="saveDance">Save Dance</button>
+            </div>
+            <div class="col-6">
+              <p id="savedStatus"></p>
+            </div>
+          </div>
+           <!-- <div class="row ml-1 mt-1">
+             <button class="btn btn-outline-danger" id="video">Export</button>
+           </div> -->
+           <div class="row ml-1 mt-1" style="align-self: flex-end; align-items: flex-end;">
+             <div class="bottomBar" id="bottomBar">
+              <div id="waveform">
+                  <label class="btn btn-outline-warning btn-file">
+                      Upload music <input type="file" id="fileinput" style="display: none;">
+                  </label>
+                  <p id="audioFileName"></p>
+              </div>
 
-            <div class="row mt-4">
-              <div class="col-6">
-                <div style="overflow: hidden;">
-                  <p style="float: left;">Playback:</p>
-                  <p style="float: right;" id="playbackSpeed">1x</p>
+              <div class="ml-0 col-12" style="padding-left: 5px;">
+                <input type="checkbox" id="showCurves" name="showCurves"> Edit Paths
+              </div>
+
+              <div class="row mt-4">
+                <div class="col-6">
+                  <div style="overflow: hidden;">
+                    <p style="float: left;">Playback:</p>
+                    <p style="float: right;" id="playbackSpeed">1x</p>
+                  </div>
                 </div>
-              </div>
-              <div class="col-6">
-                <input data-action="zoom" id="playbackSlider" type="range" min="0" max="500" step="5" value="100" style="width: 100px;"/>
-              </div>
+                <div class="col-6">
+                  <input data-action="zoom" id="playbackSlider" type="range" min="0" max="500" step="5" value="100" style="width: 100px;"/>
+                </div>
 
-              <div class="col-12">
-                <div style="overflow: hidden;">
-                  <p style="float: left;">Zoom:</p>
-                  <input style="margin-left:1rem; width: 100px;" data-action="zoom" id="zoomSlider" type="range" min="0" max="200" value="100"/>
+                <div class="col-12">
+                  <div style="overflow: hidden;">
+                    <p style="float: left;">Zoom:</p>
+                    <input style="margin-left:1rem; width: 100px;" data-action="zoom" id="zoomSlider" type="range" min="0" max="200" value="100"/>
+                  </div>
                 </div>
               </div>
             </div>
@@ -171,6 +173,10 @@
         src="{{ url_for('static', filename='js/three.js') }}"></script>
    <script type="text/javascript"
         src="{{ url_for('static', filename='js/OrbitControls.js') }}"></script>
+   <script type="text/javascript"
+        src="{{ url_for('static', filename='js/lodash.js') }}"></script>
+   <!-- <script type="text/javascript"
+        src="{{ url_for('static', filename='js/cloudinary-core.js') }}"></script> -->
    <script type="module"
         src="{{ url_for('static', filename='js/Dancer.js') }}"></script>
    <script type="text/javascript"
