@@ -2560,12 +2560,6 @@ function update() {
 
 }
 
-$(document).ready(function() {
-  loadInitModal();
-  document.getElementById("closeModalButton").style.display = "none";
-  document.getElementById("closeModalButton").disabled = true;
-});
-
 function loadInitModal() {
   fetch('/getDances', {
     method: 'GET', // or 'PUT'
@@ -2769,6 +2763,9 @@ document.getElementById("saveDanceName").addEventListener("click", async functio
 // Initialize lesson on page load
 function initializeLesson() {
   danceDesigner.init();
+  loadInitModal();
+  document.getElementById("closeModalButton").style.display = "none";
+  document.getElementById("closeModalButton").disabled = true;
   animate(0, 0);
   t = 0;
   $('[data-toggle="tooltip"]').tooltip();
