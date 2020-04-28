@@ -169,7 +169,7 @@ var danceDesigner = {
   scene: null, camera: null, renderer: null, rendererWidth: null,
   rendererHeight: null, movingDancer: null,
   controls: null, loader: null, container: null, light: null,
-  plane: null, selection: null,
+  plane: null, selection: null, floor: null,
   splineHelperObjects: [], splinePointsLength: 5, splines: [], positions: [],
   selectionPath: null,
   raycaster: new THREE.Raycaster(), s: null,
@@ -261,23 +261,18 @@ var danceDesigner = {
       lightMapIntensity: 0.4,
       aoMapIntensity: 0.4
     });
-    var floor = new THREE.Mesh( geometry, material );
-    floor.rotation.x = Math.PI / 2;
-    floor.position.z = -10;
-    floor.position.y = -1;
-    floor.receiveShadow = true;
-    floor.castShadow = false;
-    this.scene.add( floor );
+    this.floor = new THREE.Mesh( geometry, material );
+    this.floor.rotation.x = Math.PI / 2;
+    this.floor.position.z = -10;
+    this.floor.position.y = -1;
+    this.floor.receiveShadow = true;
+    this.floor.castShadow = false;
+    this.scene.add( this.floor );
 
     this.xMax = 17.5;
     this.xMin = -17.5;
     this.zMax = 0;
     this.zMin = -20;
-
-    // var geo = new THREE.WireframeGeometry( floor.geometry );
-    // var mat = new THREE.LineBasicMaterial( { color: 0xffffff, linewidth: 2 } );
-    // var wireframe = new THREE.LineSegments( geo, mat );
-    // floor.add( wireframe );
 
     // Set the camera and orbit controls
     this.camera.position.z = 25;
@@ -1026,6 +1021,19 @@ document.getElementById("showCurves").addEventListener("change", function(e) {
   }
 });
 
+document.getElementById("showGrid").addEventListener("change", function(e) {
+  if (!this.checked) {
+    danceDesigner.scene.getObjectByName('wireframe');
+    danceDesigner.floor.remove(danceDesigner.scene.getObjectByName('wireframe'));
+  } else {
+    var geo = new THREE.WireframeGeometry( danceDesigner.floor.geometry );
+    var mat = new THREE.LineBasicMaterial( { color: 0xffffff, linewidth: 2 } );
+    var wireframe = new THREE.LineSegments( geo, mat );
+    wireframe.name = 'wireframe';
+    danceDesigner.floor.add( wireframe );
+  }
+});
+
 var oldT = 0;
 
 function animate() {
@@ -1769,7 +1777,7 @@ function makeTextSprite( message, x, y, z, parameters )
      parameters["borderColor"] : { r:0, g:0, b:0, a:1.0 };
 
  var fillColor = parameters.hasOwnProperty("fillColor") ?
-     parameters["fillColor"] : undefined;
+     parameters["fillColor"] : { r:0, g:0, b:0, a:1.0 };
 
  var textColor = parameters.hasOwnProperty("textColor") ?
      parameters["textColor"] : { r:0, g:0, b:255, a:1.0 };
