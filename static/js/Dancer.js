@@ -836,6 +836,7 @@ document.getElementById("fileinput").addEventListener('change', function(e){
         var formData = new FormData();
         formData.append('audio', audio);
 
+        console.log("uploading audio");
         // cloudinary.uploader.upload_large(audio, { resource_type: "video" },
         // function(error, result) {
         //   console.log(result, error);
@@ -854,6 +855,8 @@ document.getElementById("fileinput").addEventListener('change', function(e){
           console.log("AUDIOURL: ", audioURL);
           console.log('Success:', JSON.stringify(response));
         });
+
+        autoSave();
     }
 
 }, false);
@@ -1232,36 +1235,6 @@ function render() {
 
     danceDesigner.renderer.render(danceDesigner.scene, danceDesigner.camera);
     danceDesigner.renderer1.render(danceDesigner.scene, danceDesigner.camera1);
-
-    // Render the timeline renderers
-    // for (let a = 0; a < danceDesigner.renderers.length; a++) {
-    //   var thisRenderer = danceDesigner.renderers[a].renderer;
-    //   var scene = danceDesigner.renderers[a].scene;
-    //   var time = danceDesigner.renderers[a].time;
-    //
-    //
-    //   if (time == t && play == false) {
-    //     thisRenderer.render(danceDesigner.scene, danceDesigner.camera1);
-    //   }``
-    //   else {
-    //     for (let i = 0; i < scene.children.length; i ++) {
-    //       if (scene.children[i].type == "Mesh" && scene.children[i].geometry.type == "BoxGeometry") {
-    //         for (let j = 0; j < danceDesigner.dancerPos.length; j++) {
-    //           var d = danceDesigner.dancerPos[i].Dancer;
-    //           if (danceDesigner.dancerPos[i][time] != null) {
-    //             if (d.name == scene.children[i].geometry.name) {
-    //               scene.children[i].position.x = danceDesigner.dancerPos[i][time].x;
-    //               scene.children[i].position.y = danceDesigner.dancerPos[i][time].y;
-    //               scene.children[i].position.z = danceDesigner.dancerPos[i][time].z;
-    //             }
-    //           }
-    //         }
-    //       }
-    //     }
-    //     thisRenderer.render(scene, danceDesigner.camera1);
-    //   }
-    // }
-
   }
 }
 
@@ -2068,7 +2041,10 @@ $(document).on('click', '.danceBtn', async function(){
     document.getElementById("audioFileName").innerHTML = selectedDance.audioFileName;
   }
 
+  console.log("audioURL: ", selectedDance.audioURL);
+  audioURL = selectedDance.audioURL;
   wavesurfer.load(selectedDance.audioURL);
+  console.log(wavesurfer);
 
   dance_id = selectedDance.id;
 
@@ -2124,7 +2100,7 @@ $(document).on('click', '.danceBtn', async function(){
 
     for (var i = 0; i < thisDancer.keyframePositions.length - 1; i++) {
       var currKeyFramePos = newDancer.keyframePositions[i];
-      console.log(currKeyFramePos);
+      // console.log(currKeyFramePos);
       // Set the curve
       setCurvesOldDance(newDancer, j, currKeyFramePos, i, thisDancer.keyframePositions[i].positions);
     }
