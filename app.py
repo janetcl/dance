@@ -4,20 +4,22 @@
 # app.py
 # Author: Janet Lee
 # Based on penny.py by Bob Dondero
+#
+# MODERNIZED Nov 2026 for deployment on Render (free tier):
+#  - Python 3.11+, Flask 3.x, Flask-SQLAlchemy 3.x / SQLAlchemy 2.x
+#  - All secrets via environment variables (nothing hardcoded)
+#  - DATABASE_URL env var, else local SQLite fallback (no Postgres needed)
+#  - Heroku-specific bits removed; Google/Facebook OAuth intact but
+#    driven by env vars (app boots fine without them; login routes
+#    return a clear 503 if their credentials are unset)
 #-----------------------------------------------------------------------
 
+import logging
 import os
-import requests_oauthlib
-from requests_oauthlib.compliance_fixes import facebook_compliance_fix
-
 from sys import argv
-from flask import Flask, request, make_response, redirect, url_for
-from flask import render_template, jsonify
-from flask_heroku import Heroku
-from dataclasses import dataclass
 
-# From https://realpython.com/flask-google-login/
-import sqlite3
+import requests
+from flask import Flask, jsonify, redirect, render_template, request, url_for
 from flask_login import (
     LoginManager,
     current_user,
@@ -26,41 +28,87 @@ from flask_login import (
     logout_user,
     UserMixin,
 )
-from oauthlib.oauth2 import WebApplicationClient
-import requests
-import json
-
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
-import cloudinary.utils
 from flask_sqlalchemy import SQLAlchemy
+from oauthlib.oauth2 import WebApplicationClient
+from requests_oauthlib import OAuth2Session
+from requests_oauthlib.compliance_fixes import facebook_compliance_fix
 from sqlalchemy import func
 
-cloudinary.config(
-  cloud_name = "hdcz0vo9p",
-  api_key = "154722578765685",
-  api_secret = "mgwaIcY8F5NRyiI8QXOeDTD33dc"
+import cloudinary
+import cloudinary.api
+import cloudinary.uploader
+import cloudinary.utils
+
+log = logging.getLogger(__name__)
+
+#-----------------------------------------------------------------------
+# Configuration — everything secret comes from the environment.
+#-----------------------------------------------------------------------
+SECRET_KEY = os.environ.get("SECRET_KEY")
+
+# Google Login (from https://console.cloud.google.com/apis/credentials)
+GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET")
+GOOGLE_DISCOVERY_URL = (
+    "https://accounts.google.com/.well-known/openid-configuration"
 )
 
-# Flask app setup
-app = Flask(__name__, template_folder='.')
-app.secret_key = os.environ.get("SECRET_KEY") or os.urandom(24)
+# Facebook Login (optional)
+FB_CLIENT_ID = os.environ.get("FB_CLIENT_ID")
+FB_CLIENT_SECRET = os.environ.get("FB_CLIENT_SECRET")
+FB_AUTHORIZATION_BASE_URL = "https://www.facebook.com/dialog/oauth"
+FB_TOKEN_URL = "https://graph.facebook.com/oauth/access_token"
+FB_SCOPE = ["email"]
 
-# Toggle between these two to switch between local testing and Heroku
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://localhost/dance'
-# heroku = Heroku(app)
+# Public base URL of this deployment, e.g. https://dance.janetlee.me
+# Used for OAuth redirect URIs. Falls back to the incoming request URL.
+APP_BASE_URL = os.environ.get("APP_BASE_URL")
+
+# Database: use DATABASE_URL when set (Render Postgres, Heroku-style),
+# otherwise a local SQLite file — zero setup locally and on Render free.
+database_url = os.environ.get("DATABASE_URL")
+if database_url and database_url.startswith("postgres://"):
+    # SQLAlchemy 2.x requires the postgresql:// scheme
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+if not database_url:
+    database_url = "sqlite:///" + os.path.join(
+        os.path.abspath(os.path.dirname(__file__)), "dance.db"
+    )
+
+# Cloudinary (image/audio uploads). Configured only when credentials exist;
+# upload routes will fail with a clear error otherwise.
+cloudinary.config(
+    cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.environ.get("CLOUDINARY_API_KEY"),
+    api_secret=os.environ.get("CLOUDINARY_API_SECRET"),
+)
+if not os.environ.get("CLOUDINARY_CLOUD_NAME"):
+    log.warning(
+        "CLOUDINARY_CLOUD_NAME not set — /saveDance and /saveAudio uploads "
+        "will fail until Cloudinary credentials are configured."
+    )
+
+# This allows a plain HTTP callback for local development.
+os.environ.setdefault("OAUTHLIB_INSECURE_TRANSPORT", "1")
+
+#-----------------------------------------------------------------------
+# Flask app setup
+#-----------------------------------------------------------------------
+app = Flask(__name__, template_folder='.')
+app.secret_key = SECRET_KEY or os.urandom(24)
+if not SECRET_KEY:
+    log.warning(
+        "SECRET_KEY not set — using a random key; user sessions will not "
+        "survive restarts."
+    )
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 
 db = SQLAlchemy(app)
 
+
 # Create our database model
-@dataclass
 class User(db.Model, UserMixin):
     __tablename__ = "users"
-    id: str
-    name: str
-    email: str
-    profile_pic: str
 
     id = db.Column(db.String(120), primary_key=True, unique=True)
     name = db.Column(db.String(120))
@@ -76,20 +124,10 @@ class User(db.Model, UserMixin):
     def __repr__(self):
         return '<E-mail %r>' % self.email
 
+
 # Create our dance database model
-@dataclass
 class Dance(db.Model):
     __tablename__ = "dances"
-    id: int
-    user_id: str
-    user_email: str
-    dance_name: str
-    dancers: 'typing.Any'
-    keyframes: 'typing.Any'
-    number_of_keyframes: int
-    image: str
-    audioFileName: str
-    audioURL: str
 
     id = db.Column(db.Integer(), primary_key=True, unique=True)
     user_id = db.Column(db.String(120), primary_key=True)
@@ -102,7 +140,9 @@ class Dance(db.Model):
     audioFileName = db.Column(db.String())
     audioURL = db.Column(db.String())
 
-    def __init__(self, id, user_id, user_email, dance_name, dancers, keyframes, number_of_keyframes, image, audioFileName, audioURL):
+    def __init__(self, id, user_id, user_email, dance_name, dancers,
+                 keyframes, number_of_keyframes, image, audioFileName,
+                 audioURL):
         self.id = id
         self.user_id = user_id
         self.user_email = user_email
@@ -117,67 +157,81 @@ class Dance(db.Model):
     def __repr__(self):
         return '<Dancers %r>' % self.dancers
 
-# Facebook Login
-FB_CLIENT_ID = os.environ.get("FB_CLIENT_ID")
-FB_CLIENT_SECRET = os.environ.get("FB_CLIENT_SECRET")
+    def to_dict(self):
+        # The frontend (static/js/Dancer.js) reads these fields from
+        # /getDances, so keep the names in sync with it.
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "user_email": self.user_email,
+            "dance_name": self.dance_name,
+            "dancers": self.dancers,
+            "keyframes": self.keyframes,
+            "number_of_keyframes": self.number_of_keyframes,
+            "image": self.image,
+            "audioFileName": self.audioFileName,
+            "audioURL": self.audioURL,
+        }
 
-FB_AUTHORIZATION_BASE_URL = "https://www.facebook.com/dialog/oauth"
-FB_TOKEN_URL = "https://graph.facebook.com/oauth/access_token"
-
-FB_SCOPE = ["email"]
-
-# Google Login
-GOOGLE_CLIENT_ID = "966768610728-t9b4b1t6gbth733k5el104tgt85edfb1.apps.googleusercontent.com"
-GOOGLE_CLIENT_SECRET = "ndTjBKN3gSvsxW_zGxgD8Mfw"
-
-GOOGLE_DISCOVERY_URL = (
-    "https://accounts.google.com/.well-known/openid-configuration"
-)
-
-# This allows us to use a plain HTTP callback
-os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
 #-----------------------------------------------------------------------
-
 # User session management setup
 # https://flask-login.readthedocs.io/en/latest
+#-----------------------------------------------------------------------
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-# OAuth 2 client setup
-client = WebApplicationClient(GOOGLE_CLIENT_ID)
 
 # Flask-Login helper to retrieve a user from our db
 @login_manager.user_loader
 def load_user(user_id):
-    return db.session.query(User).get(user_id)
+    return db.session.get(User, user_id)
+
+
+def _google_client():
+    """Build the Google OAuth client; raises a clear error if unconfigured."""
+    if not GOOGLE_CLIENT_ID:
+        raise RuntimeError("GOOGLE_CLIENT_ID environment variable is not set")
+    return WebApplicationClient(GOOGLE_CLIENT_ID)
+
+
+def _base_url():
+    return (APP_BASE_URL or request.url_root).rstrip("/")
+
+
+# Create tables on first boot (needed for fresh SQLite/Postgres deploys;
+# a no-op when tables already exist).
+with app.app_context():
+    db.create_all()
 
 #-----------------------------------------------------------------------
+
 
 @app.route("/")
 def index():
     if current_user.is_authenticated:
-        dances = db.session.query(Dance).filter(Dance.user_id == current_user.id).all()
+        dances = db.session.query(Dance).filter(
+            Dance.user_id == current_user.id).all()
 
         # Send user to dance page
         return render_template('dance.html',
-            name=current_user.name,
-            email=current_user.email,
-            avatar_url=current_user.profile_pic,
-            dances=dances)
+                               name=current_user.name,
+                               email=current_user.email,
+                               avatar_url=current_user.profile_pic,
+                               dances=dances)
 
     else:
         return render_template('index.html')
 
-# Toggle between these two to switch between local testing and Heroku
-# Your ngrok url, obtained after running "ngrok http 8000"
-# URL = "https://2d1855e0.ngrok.io"
-URL = "https://dancetigers.herokuapp.com"
 
 @app.route("/fb-login")
 def fbLogin():
-    facebook = requests_oauthlib.OAuth2Session(
-        FB_CLIENT_ID, redirect_uri=URL + "/fb-callback", scope=FB_SCOPE
+    if not FB_CLIENT_ID or not FB_CLIENT_SECRET:
+        return ("Facebook login is not configured. Set FB_CLIENT_ID and "
+                "FB_CLIENT_SECRET environment variables.", 503)
+    facebook = OAuth2Session(
+        FB_CLIENT_ID, redirect_uri=_base_url() + "/fb-callback",
+        scope=FB_SCOPE
     )
     authorization_url, _ = facebook.authorization_url(FB_AUTHORIZATION_BASE_URL)
 
@@ -186,8 +240,12 @@ def fbLogin():
 
 @app.route("/fb-callback")
 def fbCallback():
-    facebook = requests_oauthlib.OAuth2Session(
-        FB_CLIENT_ID, scope=FB_SCOPE, redirect_uri=URL + "/fb-callback"
+    if not FB_CLIENT_ID or not FB_CLIENT_SECRET:
+        return ("Facebook login is not configured. Set FB_CLIENT_ID and "
+                "FB_CLIENT_SECRET environment variables.", 503)
+    facebook = OAuth2Session(
+        FB_CLIENT_ID, scope=FB_SCOPE,
+        redirect_uri=_base_url() + "/fb-callback"
     )
 
     # we need to apply a fix for Facebook here
@@ -233,16 +291,21 @@ def fbCallback():
 
     # Send user to dance page
     return render_template('dance.html',
-        name=name,
-        email=email,
-        avatar_url=profile_pic,
-        dances=dances)
+                           name=name,
+                           email=email,
+                           avatar_url=profile_pic,
+                           dances=dances)
+
 
 def get_google_provider_cfg():
     return requests.get(GOOGLE_DISCOVERY_URL).json()
 
+
 @app.route("/google-login")
 def googleLogin():
+    if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
+        return ("Google login is not configured. Set GOOGLE_CLIENT_ID and "
+                "GOOGLE_CLIENT_SECRET environment variables.", 503)
 
     # Find out what URL to hit for Google login
     google_provider_cfg = get_google_provider_cfg()
@@ -250,7 +313,7 @@ def googleLogin():
 
     # Use library to construct the request for Google login and provide
     # scopes that let you retrieve user's profile from Google
-    request_uri = client.prepare_request_uri(
+    request_uri = _google_client().prepare_request_uri(
         authorization_endpoint,
         redirect_uri=request.base_url + "-callback",
         scope=["openid", "email", "profile"],
@@ -260,6 +323,11 @@ def googleLogin():
 
 @app.route("/google-login-callback")
 def googleCallback():
+    if not GOOGLE_CLIENT_ID or not GOOGLE_CLIENT_SECRET:
+        return ("Google login is not configured. Set GOOGLE_CLIENT_ID and "
+                "GOOGLE_CLIENT_SECRET environment variables.", 503)
+    client = _google_client()
+
     # Get authorization code Google sent back to you
     code = request.args.get("code")
 
@@ -328,11 +396,12 @@ def googleCallback():
 
     # Send user to dance page
     return render_template('dance.html',
-        name=name,
-        email=email,
-        avatar_url=profile_pic)
+                           name=name,
+                           email=email,
+                           avatar_url=profile_pic)
 
-@app.route("/saveDance", methods = ["POST"])
+
+@app.route("/saveDance", methods=["POST"])
 @login_required
 def save_dance():
 
@@ -353,12 +422,10 @@ def save_dance():
     # # Doesn't exist? Add it to the database.
     if id < 0 or not db.session.query(Dance).filter(Dance.id == id).count():
         # id = db.session.query(Dance).count()
-        if db.session.query(Dance).count() == 0:
-            max_id = -1
-        else:
-            max_id = db.session.query(func.max(Dance.id)).scalar()
-        id = max_id + 1
-        dance = Dance(id, user_id, user_email, dance_name, dancers, keyframes, number_of_keyframes, imageURL, audioFileName, audioURL)
+        max_id = db.session.query(func.max(Dance.id)).scalar()
+        id = (max_id + 1) if max_id is not None else 0
+        dance = Dance(id, user_id, user_email, dance_name, dancers, keyframes,
+                      number_of_keyframes, imageURL, audioFileName, audioURL)
         db.session.add(dance)
         db.session.commit()
     else:
@@ -375,30 +442,31 @@ def save_dance():
 
     return jsonify({"Success": "Nicely done", "id": id})
 
-@app.route("/saveAudio", methods = ["POST"])
+
+@app.route("/saveAudio", methods=["POST"])
 @login_required
 def save_audio():
 
     audio = request.files['audio']
-    response = cloudinary.uploader.upload(audio, resource_type = "video")
-    audioURL, options = cloudinary.utils.cloudinary_url(response['public_id'], resource_type="video")
+    response = cloudinary.uploader.upload(audio, resource_type="video")
+    audioURL, options = cloudinary.utils.cloudinary_url(
+        response['public_id'], resource_type="video")
     db.session.commit()
     return jsonify({"Success": "Nicely done", "audioURL": audioURL})
 
-@app.route("/getDances", methods = ["GET"])
+
+@app.route("/getDances", methods=["GET"])
 @login_required
 def get_dances():
-    next_available_id = db.session.query(Dance).count()
-    # Practice getting the dances for the given user
-    dances = db.session.query(Dance).filter(Dance.user_id == current_user.id).order_by(Dance.id).all()
-    jsonify(dances)
-    if db.session.query(Dance).filter(Dance.user_id == current_user.id).count():
-        return jsonify({"dances": dances, "next_available_id": next_available_id})
-    else:
-        print("No dances")
-        return jsonify({"dances": dances, "next_available_id": next_available_id})
+    dances = db.session.query(Dance).filter(
+        Dance.user_id == current_user.id).order_by(Dance.id).all()
+    max_id = db.session.query(func.max(Dance.id)).scalar()
+    next_available_id = (max_id + 1) if max_id is not None else 0
+    return jsonify({"dances": [d.to_dict() for d in dances],
+                    "next_available_id": next_available_id})
 
-@app.route("/deleteDance", methods = ["POST"])
+
+@app.route("/deleteDance", methods=["POST"])
 @login_required
 def delete_dance():
     id = request.json['dance_id']
@@ -413,8 +481,8 @@ def delete_dance():
         print("No matching dance found")
         return jsonify({"Success": "Nicely done"})
 
-@app.route("/logout")
 
+@app.route("/logout")
 def logout():
     logout_user()
     return redirect(url_for("index"))
