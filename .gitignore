@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.db
+*.sqlite3
+venv/
+.venv/
+# OS
+.DS_Store
+# Old Heroku-era artifacts (do not commit)
+cert.pem
+key.pem
+sqlite_db
+# Editor
+editor/
