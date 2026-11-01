@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: dance
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.4
+      - key: SECRET_KEY
+        generateValue: true
+      # Database intentionally unset -> app falls back to local SQLite
+      # (dance.db). Attach Render Postgres later and set DATABASE_URL if
+      # persistence across deploys is needed. NOTE: Render's free web
+      # service filesystem is ephemeral — the SQLite file resets on every
+      # deploy/restart.
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      # Public URL of the deployment, e.g. https://dance.janetlee.me —
+      # used for OAuth redirect URIs.
+      - key: APP_BASE_URL
+        sync: false
