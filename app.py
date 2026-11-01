@@ -29,6 +29,7 @@ from flask_login import (
     UserMixin,
 )
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
 from oauthlib.oauth2 import WebApplicationClient
 from requests_oauthlib import OAuth2Session
 from requests_oauthlib.compliance_fixes import facebook_compliance_fix
@@ -114,12 +115,22 @@ class User(db.Model, UserMixin):
     name = db.Column(db.String(120))
     email = db.Column(db.String(120))
     profile_pic = db.Column(db.String(), unique=True)
+    # Set for email/password accounts; NULL for Google/Facebook OAuth users.
+    password_hash = db.Column(db.String(255))
 
-    def __init__(self, id, name, email, profile_pic):
+    def __init__(self, id, name, email, profile_pic, password_hash=None):
         self.id = id
         self.name = name
         self.email = email
         self.profile_pic = profile_pic
+        self.password_hash = password_hash
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return bool(self.password_hash) and check_password_hash(
+            self.password_hash, password)
 
     def __repr__(self):
         return '<E-mail %r>' % self.email
@@ -480,6 +491,53 @@ def delete_dance():
     else:
         print("No matching dance found")
         return jsonify({"Success": "Nicely done"})
+
+
+@app.route("/register", methods=["GET", "POST"])
+def register():
+    """Email/password sign-up. OAuth routes below are kept for later."""
+    if current_user.is_authenticated:
+        return redirect(url_for("index"))
+    error = None
+    if request.method == "POST":
+        name = (request.form.get("name") or "").strip()
+        email = (request.form.get("email") or "").strip().lower()
+        password = request.form.get("password") or ""
+        if not name or not email or not password:
+            error = "Please fill in your name, email, and password."
+        elif "@" not in email:
+            error = "That email doesn't look right — mind checking it?"
+        elif len(password) < 8:
+            error = "Password needs to be at least 8 characters."
+        elif db.session.query(User).filter(User.email == email).count():
+            error = "An account with that email already exists — try signing in."
+        else:
+            user = User(id="local:" + email, name=name, email=email,
+                        profile_pic=None)
+            user.set_password(password)
+            db.session.add(user)
+            db.session.commit()
+            login_user(user)
+            return redirect(url_for("index"))
+    return render_template("register.html", error=error)
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    """Email/password sign-in. The landing page form posts here."""
+    if current_user.is_authenticated:
+        return redirect(url_for("index"))
+    if request.method == "GET":
+        return redirect(url_for("index"))
+    email = (request.form.get("email") or "").strip().lower()
+    password = request.form.get("password") or ""
+    user = db.session.query(User).filter(User.email == email).first()
+    if user and user.check_password(password):
+        login_user(user)
+        return redirect(url_for("index"))
+    return render_template("index.html",
+                           error="Email or password didn't match. "
+                                 "Try again, or create an account below.")
 
 
 @app.route("/logout")
