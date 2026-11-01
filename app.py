@@ -34,6 +34,7 @@ from oauthlib.oauth2 import WebApplicationClient
 from requests_oauthlib import OAuth2Session
 from requests_oauthlib.compliance_fixes import facebook_compliance_fix
 from sqlalchemy import func
+from sqlalchemy import inspect as sa_inspect
 
 import cloudinary
 import cloudinary.api
@@ -214,6 +215,16 @@ def _base_url():
 # a no-op when tables already exist).
 with app.app_context():
     db.create_all()
+    # Lightweight migration: create_all() never alters existing tables, so
+    # databases created before password_hash existed need the column added.
+    try:
+        user_cols = [c["name"] for c in sa_inspect(db.engine).get_columns("users")]
+    except Exception:
+        user_cols = []
+    if "password_hash" not in user_cols:
+        with db.engine.begin() as conn:
+            conn.execute(db.text("ALTER TABLE users ADD COLUMN password_hash VARCHAR(255)"))
+        log.info("Migrated users table: added password_hash column.")
 
 #-----------------------------------------------------------------------
 
