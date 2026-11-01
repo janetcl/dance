@@ -30,7 +30,11 @@
                <p style="align-self: right; text-align: left; color: black; font-size: 26px;">Hi, {{name}}!</p>
              </div>
              <div class="col-2" style="padding-left: 0px; font-size: 26px;">
+               {% if is_guest %}
+               <a href="/login" style="font-size: 16px; color: #454ADE; white-space: nowrap;">Sign in</a>
+               {% else %}
                <a href="/logout"><i class="fas fa-power-off" style="color: #454ADE;"></i></a>
+               {% endif %}
              </div>
            </div>
          </div>
@@ -178,6 +182,11 @@
         src="{{ url_for('static', filename='js/lodash.js') }}"></script>
    <!-- <script type="text/javascript"
         src="{{ url_for('static', filename='js/cloudinary-core.js') }}"></script> -->
+   <script type="text/javascript">
+     // Rendered by Flask: true when the visitor hasn't signed in. Guests can
+     // choreograph freely; saving/uploading prompts them to sign in.
+     var IS_GUEST = {{ 'true' if is_guest else 'false' }};
+   </script>
    <script type="module"
         src="{{ url_for('static', filename='js/Dancer.js') }}"></script>
    <script type="text/javascript"
