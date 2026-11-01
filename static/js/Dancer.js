@@ -848,9 +848,17 @@ document.getElementById("fileinput").addEventListener('change', function(e){
           method: 'POST', // or 'PUT'
           body: formData,
         })
-        .then((response) => response.json())
+        .then((response) => {
+          if (response.status === 401) {
+            document.getElementById("audioFileName").innerHTML =
+              ' <a href="/register" target="_blank" rel="noopener" style="color:#ffd166;">Create a free account</a> or <a href="/login" target="_blank" rel="noopener" style="color:#ffd166;">sign in</a> to upload music.';
+            return null;
+          }
+          return response.json();
+        })
         .catch(error => console.error('Error:', error))
         .then((response) => {
+          if (!response) return;
           audioURL = response.audioURL;
           console.log("AUDIOURL: ", audioURL);
           console.log('Success:', JSON.stringify(response));
@@ -1205,8 +1213,16 @@ function autoSave() {
     },
     body: JSON.stringify(data),
   })
-  .then((response) => response.json())
+  .then((response) => {
+    if (response.status === 401) {
+      // Guest: prompt sign-in (opens in a new tab so no work is lost).
+      promptLoginToSave();
+      return null;
+    }
+    return response.json();
+  })
   .then((data) => {
+    if (!data) return;
     document.getElementById("savedStatus").innerHTML = "Saved!"
     document.getElementById("savedStatus").style.color = "white";
     dance_id = data.id;
@@ -1219,8 +1235,18 @@ function autoSave() {
   });
 }
 
-function retrieveUndo() {
-  if (undoBuffer.length == 0) {
+// Guests can choreograph without an account; saving needs one. The
+// sign-in opens in a new tab so the in-progress dance is never lost —
+// after signing in, the guest just hits Save Dance again in this tab.
+function promptLoginToSave() {
+  document.getElementById("savedStatus").innerHTML =
+    ' <a href="/register" target="_blank" rel="noopener" style="color:#ffd166; text-decoration: underline;">Create a free account</a>' +
+    ' or <a href="/login" target="_blank" rel="noopener" style="color:#ffd166; text-decoration: underline;">sign in</a>' +
+    ' to save &mdash; your dance stays right here, then hit Save Dance again.';
+  document.getElementById("savedStatus").style.color = "white";
+}
+
+function retrieveUndo() {  if (undoBuffer.length == 0) {
     return;
   }
 
@@ -1986,10 +2012,17 @@ $(document).on('click', '.deleteDance', async function() {
     usersDances = myBlob.dances;
     var innerHTML = '<div class="container"><div class="row">';
     if (usersDances.length == 0) {
-      innerHTML +=
-      `<div class="col">
-        <p style="color: black;">You haven't created any dances yet. 😔</p>
+      if (typeof IS_GUEST !== "undefined" && IS_GUEST) {
+        innerHTML +=
+        `<div class="col">
+          <p style="color: black;">Welcome! Hit <b>Create new dance</b> to start choreographing &mdash; no account needed. <a href="/register" target="_blank" rel="noopener">Create a free account</a> or <a href="/login" target="_blank" rel="noopener">sign in</a> whenever you're ready to save.</p>
         </div>`;
+      } else {
+        innerHTML +=
+        `<div class="col">
+          <p style="color: black;">You haven't created any dances yet. 😔</p>
+          </div>`;
+      }
     }
     else {
         for (var i = 0; i < usersDances.length; i++) {
@@ -2542,10 +2575,17 @@ function loadInitModal() {
     usersDances = myBlob.dances;
     var innerHTML = '<div class="container"><div class="row">';
     if (usersDances.length == 0) {
-      innerHTML +=
-      `<div class="col">
-        <p style="color: black;">You haven't created any dances yet. 😔</p>
+      if (typeof IS_GUEST !== "undefined" && IS_GUEST) {
+        innerHTML +=
+        `<div class="col">
+          <p style="color: black;">Welcome! Hit <b>Create new dance</b> to start choreographing &mdash; no account needed. <a href="/register" target="_blank" rel="noopener">Create a free account</a> or <a href="/login" target="_blank" rel="noopener">sign in</a> whenever you're ready to save.</p>
         </div>`;
+      } else {
+        innerHTML +=
+        `<div class="col">
+          <p style="color: black;">You haven't created any dances yet. 😔</p>
+          </div>`;
+      }
     }
     else {
         for (var i = 0; i < usersDances.length; i++) {
