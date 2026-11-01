@@ -200,6 +200,13 @@ def load_user(user_id):
     return db.session.get(User, user_id)
 
 
+@login_manager.unauthorized_handler
+def unauthorized():
+    # API-style 401 (instead of a login redirect) so the studio frontend
+    # can prompt guests to sign in without losing their work.
+    return jsonify({"error": "Sign in to save your work."}), 401
+
+
 def _google_client():
     """Build the Google OAuth client; raises a clear error if unconfigured."""
     if not GOOGLE_CLIENT_ID:
@@ -240,10 +247,18 @@ def index():
                                name=current_user.name,
                                email=current_user.email,
                                avatar_url=current_user.profile_pic,
-                               dances=dances)
+                               dances=dances,
+                               is_guest=False)
 
-    else:
-        return render_template('index.html')
+    # Guests choreograph right away with no account; sign-in is only
+    # required when they hit Save (or upload music).
+    return render_template('dance.html',
+                           name="Guest",
+                           email="",
+                           avatar_url=url_for('static',
+                                              filename='files/dancer.png'),
+                           dances=[],
+                           is_guest=True)
 
 
 @app.route("/fb-login")
@@ -478,12 +493,15 @@ def save_audio():
 
 
 @app.route("/getDances", methods=["GET"])
-@login_required
 def get_dances():
-    dances = db.session.query(Dance).filter(
-        Dance.user_id == current_user.id).order_by(Dance.id).all()
     max_id = db.session.query(func.max(Dance.id)).scalar()
     next_available_id = (max_id + 1) if max_id is not None else 0
+    if not current_user.is_authenticated:
+        # Guests get an empty dance list; the studio still works.
+        return jsonify({"dances": [],
+                        "next_available_id": next_available_id})
+    dances = db.session.query(Dance).filter(
+        Dance.user_id == current_user.id).order_by(Dance.id).all()
     return jsonify({"dances": [d.to_dict() for d in dances],
                     "next_available_id": next_available_id})
 
@@ -539,7 +557,7 @@ def login():
     if current_user.is_authenticated:
         return redirect(url_for("index"))
     if request.method == "GET":
-        return redirect(url_for("index"))
+        return render_template("index.html")
     email = (request.form.get("email") or "").strip().lower()
     password = request.form.get("password") or ""
     user = db.session.query(User).filter(User.email == email).first()
